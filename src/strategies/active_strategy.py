@@ -45,10 +45,7 @@ class TradingStrategy:
 
         # Incorporate regime switch detection using 'A Hybrid Learning Approach to Detecting Regime Switches in Financial Markets' (https://arxiv.org/pdf/2108.05801v1)
         # For simplicity, this example uses a basic switching mechanism based on ATR EMA
-        signals[(high_vol_regime) & (roc > 0) & (slow_momentum < 0)] = -1  # Short during high volatility, positive ROC, and negative momentum
-        signals[(high_vol_regime) & (roc < 0) & (slow_momentum > 0)] = 1  # Long during high volatility, negative ROC, and positive momentum
-
-        return signals
+        signals[(high_vol_regime) & (roc < 0) & (slow_momentum > 0)] = 1
 
         # --- EDITABLE REGION END ---
         return signals

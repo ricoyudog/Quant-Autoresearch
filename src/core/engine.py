@@ -10,7 +10,8 @@ from groq import Groq
 from dotenv import load_dotenv
 
 # Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+# Add parent directory to path for imports if needed, though cli.py handles this
+# from .research import get_research_context
 
 from .research import get_research_context
 from context.compactor import ContextCompactor
@@ -32,7 +33,8 @@ class QuantAutoresearchEngine:
                  max_context_percent: int = 95, thinking_model: str = "llama-3.1-8b-instant",
                  reasoning_model: str = "llama-3.3-70b-versatile", lazy_tools: bool = True,
                  approval_mode: ApprovalMode = ApprovalMode.SEMI,
-                 db_path: str = "experiments/database/playbook.db"):
+                 db_path: str = "experiments/database/playbook.db",
+                 strategy_file: str = "src/strategies/active_strategy.py"):
         self.client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         self.safety_level = safety_level
         self.max_context_percent = max_context_percent
@@ -46,8 +48,9 @@ class QuantAutoresearchEngine:
         self.safety_guard = SafetyGuard(safety_level=safety_level, approval_mode=approval_mode)
         
         # OPENDEV components
+        self.strategy_file = strategy_file
         self.model_router = model_router
-        self.tool_registry = LazyToolRegistry() if lazy_tools else None
+        self.tool_registry = LazyToolRegistry(strategy_file=self.strategy_file) if lazy_tools else None
         self.playbook = Playbook(db_path=db_path)
         self.prompt_composer = PromptComposer()
         
@@ -60,7 +63,6 @@ class QuantAutoresearchEngine:
         self.model_router.models["summarization"]["primary"] = thinking_model
         
         # File paths
-        self.strategy_file = "src/strategies/active_strategy.py"
         self.program_file = "src/prompts/program.md"
         self.backtest_runner = "src/core/backtester.py"
         self.experiment_log = "experiments/results/experiment_log.json"
@@ -149,7 +151,7 @@ class QuantAutoresearchEngine:
         logger.info(f"🚀 Starting Quant Autoresearch OPENDEV Session (Max: {max_iterations})")
         
         # Initial status check
-        current_score, _, _, _ = self.run_backtest_with_output()
+        current_score, _, _, _, _ = self.run_backtest_with_output()
         self.best_score = current_score
         logger.info(f"📈 Baseline Score: {self.best_score:.3f}")
         
@@ -380,8 +382,8 @@ class QuantAutoresearchEngine:
 
     def _fallback_tool_dispatch(self, tool_name: str, params: Dict[str, Any]) -> Any:
         if tool_name == "run_backtest":
-            score, dd, trades, output = self.run_backtest_with_output()
-            return {"score": score, "drawdown": dd, "trades": trades, "output": output}
+            score, dd, trades, p_val, output = self.run_backtest_with_output()
+            return {"score": score, "drawdown": dd, "trades": trades, "p_value": p_val, "output": output}
         elif tool_name == "search_research":
             return get_research_context(params.get("query", ""))
         return f"Tool {tool_name} not available"

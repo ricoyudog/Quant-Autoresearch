@@ -26,7 +26,12 @@ async def test_engine_full_loop_iteration(mock_env, tmp_path):
     engine = QuantAutoresearchEngine(safety_level=SafetyLevel.LOW)
     
     # Mock Backtest Result (Baseline)
-    engine.run_backtest_with_output = MagicMock(return_value=(0.5, 0.1, 0, {}))
+    engine.run_backtest_with_output = MagicMock(return_value=(0.5, 0.1, 0, 0.05, {}))
+    
+    # Ensure strategy_file points to the local one created for the test
+    engine.strategy_file = "active_strategy_test.py"
+    with open("active_strategy_test.py", "w") as f:
+        f.write("class TradingStrategy:\n    def generate_signals(self, data):\n        # --- EDITABLE REGION BREAK ---\n        # --- EDITABLE REGION END ---\n        return pd.Series(0, index=data.index)")
     
     # Mock Model Router
     engine.model_router = MagicMock()

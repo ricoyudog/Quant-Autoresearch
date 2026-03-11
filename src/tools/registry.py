@@ -5,13 +5,19 @@ import json
 import hashlib
 from typing import Dict, List, Any, Optional, Callable
 from datetime import datetime
+from datetime import datetime
+import subprocess
+import re
+from typing import Dict, List, Any, Optional, Callable
 from safety.guard import SafetyGuard, SubagentType
+from core.research import get_research_context
 
 class LazyToolRegistry:
     """Tool registry with lazy discovery and schema gating"""
     
-    def __init__(self):
+    def __init__(self, strategy_file: str = "src/strategies/active_strategy.py"):
         # All available tools (not loaded by default)
+        self.strategy_file = strategy_file
         self.all_tools = {}
         self._initialize_all_tools()
         
@@ -443,22 +449,22 @@ class LazyToolRegistry:
             )[:5]
         }
     
-    # Tool handlers (simplified implementations)
+    # Tool handlers
     def _handle_search_research(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle search_research tool"""
+        """Handle search_research tool with real research context"""
         query = parameters.get("query", "")
         max_papers = parameters.get("max_papers", 5)
         
-        # This would integrate with the actual research engine
-        return {
-            "success": True,
-            "papers_found": 3,
-            "papers": [
-                {"title": f"Paper on {query}", "summary": "Research summary..."},
-                {"title": f"Analysis of {query}", "summary": "Analysis summary..."}
-            ],
-            "query": query
-        }
+        try:
+            context = get_research_context(query)
+            return {
+                "success": True,
+                "context": context,
+                "query": query,
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
     
     def _handle_analyze_data(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Handle analyze_data tool"""
@@ -482,41 +488,60 @@ class LazyToolRegistry:
         }
     
     def _handle_generate_strategy_code(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle generate_strategy_code tool"""
-        hypothesis = parameters.get("hypothesis", "")
-        position_size = parameters.get("position_size", 0.5)
-        
-        # Generate simple strategy code
-        code = f"""
-# Strategy based on: {hypothesis}
-position_size = {position_size}
+        """Handle generate_strategy_code tool - writes to strategy_file"""
+        code = parameters.get("code", "")
+        if not code:
+            return {"success": False, "error": "No code provided"}
 
-# Generate signals
-signals = (data['Close'] > data['Close'].rolling(20).mean()).astype(int)
+        strategy_path = self.strategy_file
+        try:
+            with open(strategy_path, "r") as f:
+                content = f.read()
 
-# Apply position sizing
-final_signals = signals * position_size
-"""
-        
-        return {
-            "success": True,
-            "strategy_code": code,
-            "hypothesis": hypothesis,
-            "position_size": position_size
-        }
+            # Replace content between markers
+            pattern = r"(# --- EDITABLE REGION BREAK ---).*?(# --- EDITABLE REGION END ---)"
+            # Ensure the replacement is properly indented
+            replacement = f"\\1\n{code}\n        \\2"
+            new_content = re.sub(pattern, replacement, content, flags=re.DOTALL)
+
+            with open(strategy_path, "w") as f:
+                f.write(new_content)
+
+            return {
+                "success": True,
+                "file_path": strategy_path,
+                "bytes_written": len(code)
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
     
     def _handle_run_backtest(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle run_backtest tool"""
-        return {
-            "success": True,
-            "performance_metrics": {
-                "sharpe_ratio": 1.2,
-                "max_drawdown": 0.15,
-                "total_return": 0.18,
-                "win_rate": 0.55
-            },
-            "backtest_period": "2020-2023"
-        }
+        """Handle run_backtest tool with real execution"""
+        try:
+            # Import engine here to avoid circular dependencies if needed, 
+            # but since registry is used by engine, we might need a different approach.
+            # For now, use the same subprocess approach as QuantAutoresearchEngine.run_backtest_with_output
+            cmd = ["uv", "run", "python", "src/core/backtester.py"]
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            
+            output = result.stdout
+            # Extract metrics using regex (simplified from engine.py)
+            score_match = re.search(r"AVERAGE_OOS_SHARPE:\s*([\d\.-]+)", output)
+            dd_match = re.search(r"MAX_DRAWDOWN:\s*([\d\.-]+)", output)
+            trades_match = re.search(r"TOTAL_TRADES:\s*(\d+)", output)
+            pval_match = re.search(r"P_VALUE:\s*([\d\.-]+)", output)
+
+            return {
+                "success": result.returncode == 0,
+                "score": float(score_match.group(1)) if score_match else 0.0,
+                "drawdown": float(dd_match.group(1)) if dd_match else 0.0,
+                "trades": int(trades_match.group(1)) if trades_match else 0,
+                "p_value": float(pval_match.group(1)) if pval_match else 1.0,
+                "stdout": output,
+                "stderr": result.stderr
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
     
     def _handle_optimize_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """Handle optimize_parameters tool"""

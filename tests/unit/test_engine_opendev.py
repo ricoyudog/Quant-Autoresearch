@@ -8,7 +8,7 @@ def engine(tmp_path):
     db_path = tmp_path / "test_playbook.db"
     with patch("core.engine.Groq"):
         # Mocking dependencies that might try to reach out
-        engine = QuantAutoresearchEngine(safety_level=SafetyLevel.LOW, db_path=str(db_path))
+        engine = QuantAutoresearchEngine(safety_level=SafetyLevel.LOW, db_path=str(db_path), strategy_file="mock_strategy.py")
         # Mock core components
         engine.model_router = MagicMock()
         engine.safety_guard = MagicMock()

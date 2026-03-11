@@ -19,7 +19,7 @@ async def test_safety_blocking_integration(mock_env, tmp_path):
         with open(f"prompts/{p}", "w") as f: f.write(f"# {p}")
     
     engine = QuantAutoresearchEngine(safety_level=SafetyLevel.HIGH)
-    engine.run_backtest_with_output = MagicMock(return_value=(0.5, 0.1, 0, {}))
+    engine.run_backtest_with_output = MagicMock(return_value=(0.5, 0.1, 0, 0.05, {}))
     
     # Mock Model Router to propose a dangerous command
     engine.model_router = MagicMock()

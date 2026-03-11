@@ -2,96 +2,92 @@ import pytest
 import os
 import json
 from unittest.mock import MagicMock, patch
-from core.runner import agent_iteration
+from core.engine import QuantAutoresearchEngine
+from safety.guard import SafetyLevel
 
-def test_agent_iteration_reversion(monkeypatch, tmp_path):
-    """Verifies that the agent reverts changes when the score does not improve."""
+@pytest.fixture
+def mock_env(monkeypatch, tmp_path):
     os.chdir(tmp_path)
+    monkeypatch.setenv("GROQ_API_KEY", "mock_key")
     
-    monkeypatch.setattr("core.runner.STRATEGY_FILE", "strategy.py")
-    monkeypatch.setattr("core.runner.PROGRAM_FILE", "program.md")
-    monkeypatch.setattr("core.runner.EXPERIMENT_LOG", "experiment_log.json")
-    
+    # Setup minimal project structure
     with open("program.md", "w") as f: f.write("Role: Researcher")
-    with open("strategy.py", "w") as f:
+    os.makedirs("prompts", exist_ok=True)
+    for p in ["identity.md", "safety_policy.md", "tool_guidance.md", "quant_rules.md", "git_rules.md"]:
+        with open(f"prompts/{p}", "w") as f: f.write(f"# {p}")
+        
+    os.makedirs("src/strategies", exist_ok=True)
+
+@pytest.mark.asyncio
+async def test_engine_reversion(mock_env, monkeypatch, tmp_path):
+    """Verifies that the engine reverts changes when the score does not improve."""
+    test_strategy_path = os.path.join(tmp_path, "local_strategy_rev.py")
+    with open(test_strategy_path, "w") as f:
         f.write("class TradingStrategy:\n    def generate_signals(self, data):\n        # --- EDITABLE REGION BREAK ---\n        # Original\n        # --- EDITABLE REGION END ---\n        return pd.Series(0, index=data.index)")
+        
+    engine = QuantAutoresearchEngine(safety_level=SafetyLevel.LOW, strategy_file=test_strategy_path)
     
     # Mock research context
-    monkeypatch.setattr("core.runner.get_research_context", lambda x: "Mock Research Context")
+    monkeypatch.setattr("core.engine.get_research_context", lambda x: "Mock Research Context")
     
-    # Mock Groq Client
-    mock_client = MagicMock()
+    # Mock Model Router
+    engine.model_router = MagicMock()
+    # Phase 1 Thinking response
+    engine.model_router.thinking_phase.return_value = {"success": True, "content": "Thinking trace", "model_used": "mock"}
     
-    # Mock Response 1: Hypothesis
-    mock_resp_h = MagicMock()
-    mock_resp_h.choices[0].message.content = json.dumps({
-        "hypothesis": "Test Hypothesis",
-        "search_query": "test query"
-    })
+    # Phase 2 Reasoning (Generate Hypothesis and then Code)
+    def mock_route_request(phase, messages):
+        if "propose a financial hypothesis" in str(messages).lower():
+            return {"success": True, "content": '```json\n[{"tool_name": "generate_strategy_code", "parameters": {"code": "# Improved?"}}]\n```', "model_used": "mock"}
+        return {"success": True, "content": "[]", "model_used": "mock"}
     
-    # Mock Response 2: Code
-    mock_resp_c = MagicMock()
-    mock_resp_c.choices[0].message.content = json.dumps({
-        "code": "pass # Improved?"
-    })
+    engine.model_router.route_request.side_effect = mock_route_request
     
-    # Configure mock_client to return different values sequentially
-    mock_client.chat.completions.create.side_effect = [mock_resp_h, mock_resp_c]
-    
-    monkeypatch.setattr("core.runner.client", mock_client)
-    
-    # Mock run_backtest_with_output: score 0.5 then 0.1 (reversion)
-    scores = [0.5, 0.1]
+    # Mock run_backtest_with_output: score 0.5 (baseline) then 0.1 (new strategy)
+    scores = [0.5, 0.1, 0.5, 0.1, 0.5]
     def mock_run_backtest():
-        return scores.pop(0), 0.0, 0, {"stdout": "SCORE: 0.5", "stderr": ""}
-    monkeypatch.setattr("core.runner.run_backtest_with_output", mock_run_backtest)
+        return scores.pop(0), 0.0, 0, 0.05, {"stdout": "SCORE: 0.5", "stderr": ""}
+    engine.run_backtest_with_output = MagicMock(side_effect=mock_run_backtest)
     
-    # Run iteration
-    agent_iteration()
+    # Run 1 iteration
+    await engine.run(max_iterations=1)
     
     # Verify reversion
-    with open("strategy.py", "r") as f:
+    with open(test_strategy_path, "r") as f:
         content = f.read()
     assert "Original" in content
     assert "Improved?" not in content
 
-def test_agent_iteration_improvement(monkeypatch, tmp_path):
-    """Verifies that the agent keeps changes when the score improves."""
-    os.chdir(tmp_path)
-    
-    monkeypatch.setattr("core.runner.STRATEGY_FILE", "strategy.py")
-    monkeypatch.setattr("core.runner.PROGRAM_FILE", "program.md")
-    monkeypatch.setattr("core.runner.EXPERIMENT_LOG", "experiment_log.json")
-    
-    with open("program.md", "w") as f: f.write("Role: Researcher")
-    with open("strategy.py", "w") as f:
+@pytest.mark.asyncio
+async def test_engine_improvement(mock_env, monkeypatch, tmp_path):
+    """Verifies that the engine keeps changes when the score improves."""
+    test_strategy_path = os.path.join(tmp_path, "local_strategy_imp.py")
+    with open(test_strategy_path, "w") as f:
         f.write("class TradingStrategy:\n    def generate_signals(self, data):\n        # --- EDITABLE REGION BREAK ---\n        # Original\n        # --- EDITABLE REGION END ---\n        return pd.Series(0, index=data.index)")
         
-    monkeypatch.setattr("core.runner.get_research_context", lambda x: "Mock Research Context")
+    engine = QuantAutoresearchEngine(safety_level=SafetyLevel.LOW, strategy_file=test_strategy_path)
     
-    mock_client = MagicMock()
-    mock_resp_h = MagicMock()
-    mock_resp_h.choices[0].message.content = json.dumps({
-        "hypothesis": "Better Hypothesis",
-        "search_query": "better query"
-    })
-    mock_resp_c = MagicMock()
-    mock_resp_c.choices[0].message.content = json.dumps({
-        "code": "pass # Better!"
-    })
-    mock_client.chat.completions.create.side_effect = [mock_resp_h, mock_resp_c]
-            
-    monkeypatch.setattr("core.runner.client", mock_client)
+    monkeypatch.setattr("core.engine.get_research_context", lambda x: "Mock Research Context")
     
-    # Mock run_backtest_with_output: score 0.1 then 0.5 (improvement)
-    scores = [0.1, 0.5]
+    engine.model_router = MagicMock()
+    engine.model_router.thinking_phase.return_value = {"success": True, "content": "Thinking trace", "model_used": "mock"}
+    
+    def mock_route_request(phase, messages):
+        if "propose a financial hypothesis" in str(messages).lower():
+            return {"success": True, "content": '```json\n[{"tool_name": "generate_strategy_code", "parameters": {"code": "# Better!"}}]\n```', "model_used": "mock"}
+        return {"success": True, "content": "[]", "model_used": "mock"}
+    
+    engine.model_router.route_request.side_effect = mock_route_request
+    
+    # Mock run_backtest_with_output: score 0.1 (baseline) then 0.5 (new strategy)
+    scores = [0.1, 0.5, 0.1, 0.5, 0.1]
     def mock_run_backtest():
-        return scores.pop(0), 0.0, 0, {"stdout": "SCORE: 0.5", "stderr": ""}
-    monkeypatch.setattr("core.runner.run_backtest_with_output", mock_run_backtest)
+        return scores.pop(0), 0.0, 0, 0.05, {"stdout": "SCORE: 0.5", "stderr": ""}
+    engine.run_backtest_with_output = MagicMock(side_effect=mock_run_backtest)
     
-    agent_iteration()
+    await engine.run(max_iterations=1)
     
-    with open("strategy.py", "r") as f:
+    with open(test_strategy_path, "r") as f:
         content = f.read()
     assert "Better!" in content
     assert "Original" not in content

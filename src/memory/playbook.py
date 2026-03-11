@@ -8,6 +8,8 @@ from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 from pathlib import Path
 import re
+import collections
+import math
 
 class Playbook:
     """SQLite-based dual-memory system for storing successful strategy patterns"""
@@ -20,6 +22,19 @@ class Playbook:
         # Semantic similarity cache
         self.similarity_cache = {}
         self.embedding_cache = {}
+        
+        # TF-IDF vocabulary (curated quant/trading terms)
+        self.vocab = [
+            "momentum", "mean-reversion", "volatility", "trend", "breakout", "rsi", "macd", "bollinger", "atr", "sharpe", 
+            "drawdown", "return", "risk", "alpha", "beta", "correlation", "covariance", "arbitrage", "hedging", "leverage",
+            "spread", "liquidity", "slippage", "backtest", "oos", "walk-forward", "monte-carlo", "p-value", "significance",
+            "skewness", "kurtosis", "stationarity", "cointegration", "kalman", "markov", "bayesian", "regression", "svm",
+            "random-forest", "neural-network", "lstm", "transformer", "attention", "reinforcement", "optimization",
+            "kelly", "sortino", "calmar", "information-ratio", "var", "expected-shortfall"
+        ]
+        
+        # Migration check for embeddings
+        self._check_and_migrate_embeddings()
     
     def _initialize_database(self):
         """Initialize SQLite database with required tables"""
@@ -294,18 +309,50 @@ class Playbook:
                 """, (new_success_rate, pattern_hash))
             
             conn.commit()
+
+    def _check_and_migrate_embeddings(self):
+        """Check for patterns with missing or legacy embeddings and re-generate them"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("SELECT pattern_hash, hypothesis, strategy_code FROM strategy_patterns")
+            rows = cursor.fetchall()
+            
+            for pattern_hash, hypothesis, strategy_code in rows:
+                # Always re-generate to ensure consistent TF-IDF format even if length matched
+                new_emb_list = self._generate_embedding(hypothesis + " " + strategy_code)
+                new_emb_str = json.dumps(new_emb_list)
+                
+                conn.execute("""
+                    UPDATE strategy_patterns 
+                    SET embedding = ?
+                    WHERE pattern_hash = ?
+                """, (new_emb_str, pattern_hash))
+            
+            conn.commit()
+            if rows:
+                logger.info(f"💾 Migrated TF-IDF embeddings for {len(rows)} patterns")
     
     def _generate_embedding(self, text: str) -> List[float]:
-        """Generate simple keyword-based embedding"""
-        # Normalize text
+        """Generate TF-IDF based embedding using curated vocabulary"""
+        # Normalize text: lower, remove non-alphanumeric except hyphens
         text = text.lower()
+        words = re.findall(r'[a-z0-9-]+', text)
+        word_counts = collections.Counter(words)
         
-        # Extract keywords (simple approach for now)
-        keywords = re.findall(r'\b(momentum|mean.*reversion|volatility|trend|breakout|rsi|macd|bollinger|atr|sharpe|drawdown|return|risk)\b', text)
-        
-        # Create simple embedding based on keyword presence
-        all_keywords = ['momentum', 'mean_reversion', 'volatility', 'trend', 'breakout', 'rsi', 'macd', 'bollinger', 'atr', 'sharpe', 'drawdown', 'return', 'risk']
-        embedding = [1.0 if kw in keywords else 0.0 for kw in all_keywords]
+        # Calculate term frequency (simple bag-of-words / frequency)
+        # In a real TF-IDF we'd use Inverse Document Frequency, 
+        # but with a small local playbook, keyword frequency weighted by vocab is a good proxy.
+        embedding = []
+        for term in self.vocab:
+            # Check for exact match or partial match for compound terms
+            count = word_counts.get(term, 0)
+            if count == 0:
+                # Check if term exists as a substring (e.g. 'mean-reversion' in 'mean_reversion')
+                if term.replace('-', ' ') in text or term.replace('-', '_') in text:
+                    count = 1
+            
+            # Use log-scaling for frequency
+            score = math.log1p(count) if count > 0 else 0.0
+            embedding.append(score)
         
         return embedding
     
