@@ -168,5 +168,47 @@ def test():
     except Exception as e:
         typer.echo(f"   ❌ Error: {e}")
 
+@app.command()
+def research(
+    query: str = typer.Option(..., "--query", "-q", help="Research query to investigate"),
+    web: bool = typer.Option(True, "--web/--no-web", help="Include web search"),
+    academic: bool = typer.Option(True, "--academic/--no-academic", help="Include academic search"),
+    max_results: int = typer.Option(5, "--max", "-m", help="Max results per source")
+):
+    """Run research on a topic using web and/or academic sources"""
+    typer.echo(f"🔍 Researching: {query}")
+    typer.echo("=" * 60)
+    
+    from core.research import (
+        get_research_context,
+        search_web,
+        get_comprehensive_research_context
+    )
+    
+    if web and academic:
+        typer.echo("📚 Fetching both academic and web sources...\n")
+        context = get_comprehensive_research_context(
+            query,
+            max_papers=max_results,
+            max_web_results=max_results,
+            include_web=True
+        )
+        typer.echo(context)
+    elif web:
+        typer.echo("🌐 Fetching web sources...\n")
+        results = search_web(query, num_results=max_results)
+        if results:
+            for i, r in enumerate(results, 1):
+                typer.echo(f"**Result {i}**: {r.get('title', 'N/A')}")
+                typer.echo(f"   URL: {r.get('url', 'N/A')}")
+                typer.echo(f"   Summary: {r.get('snippet', 'N/A')[:200]}...")
+                typer.echo()
+        else:
+            typer.echo("❌ No web results. Configure EXA_API_KEY or SERPAPI_KEY in .env")
+    else:
+        typer.echo("📄 Fetching academic sources...\n")
+        context = get_research_context(query, max_papers=max_results)
+        typer.echo(context)
+
 if __name__ == "__main__":
     app()

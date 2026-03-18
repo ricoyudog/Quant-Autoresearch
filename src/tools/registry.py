@@ -43,7 +43,7 @@ class LazyToolRegistry:
         self.all_tools.update({
             "search_research": {
                 "name": "search_research",
-                "description": "Search academic papers and research literature",
+                "description": "Search academic papers and research literature (ArXiv)",
                 "parameters": {
                     "query": {"type": "string", "description": "Search query for research papers"},
                     "max_papers": {"type": "integer", "description": "Maximum number of papers to return", "default": 5}
@@ -52,6 +52,31 @@ class LazyToolRegistry:
                 "subagent_access": [SubagentType.PLANNER, SubagentType.ANALYZER],
                 "risk_level": "low",
                 "handler": self._handle_search_research
+            },
+            "search_web": {
+                "name": "search_web",
+                "description": "Search the web for current events, macroeconomic data, geopolitical analysis, and real-world information (not academic)",
+                "parameters": {
+                    "query": {"type": "string", "description": "Search query for web search"},
+                    "num_results": {"type": "integer", "description": "Number of results to return", "default": 8},
+                    "search_type": {"type": "string", "description": "Type: 'auto', 'fast', or 'deep'", "default": "auto"}
+                },
+                "category": "research",
+                "subagent_access": [SubagentType.PLANNER, SubagentType.ANALYZER, SubagentType.EXECUTOR],
+                "risk_level": "low",
+                "handler": self._handle_search_web
+            },
+            "fetch_url": {
+                "name": "fetch_url",
+                "description": "Fetch and extract content from a specific URL",
+                "parameters": {
+                    "url": {"type": "string", "description": "URL to fetch content from"},
+                    "max_chars": {"type": "integer", "description": "Maximum characters to extract", "default": 10000}
+                },
+                "category": "research",
+                "subagent_access": [SubagentType.PLANNER, SubagentType.ANALYZER, SubagentType.EXECUTOR],
+                "risk_level": "low",
+                "handler": self._handle_fetch_url
             },
             "analyze_data": {
                 "name": "analyze_data",
@@ -463,6 +488,150 @@ class LazyToolRegistry:
                 "query": query,
                 "timestamp": datetime.now().isoformat()
             }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+    
+    def _handle_search_web(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle search_web tool for macroeconomic/geopolitical research"""
+        query = parameters.get("query", "")
+        num_results = parameters.get("num_results", 8)
+        search_type = parameters.get("search_type", "auto")
+        
+        try:
+            import requests
+            
+            # Use Exa API for web search (free tier available)
+            # Falls back to a simple HTTP request if no API key
+            exa_api_key = os.getenv("EXA_API_KEY")
+            
+            if exa_api_key:
+                headers = {
+                    "Authorization": f"Bearer {exa_api_key}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "query": query,
+                    "num_results": num_results,
+                }
+                response = requests.post(
+                    "https://api.exa.ai/search",
+                    headers=headers,
+                    json=payload,
+                    timeout=30
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    results = []
+                    for item in data.get("results", []):
+                        results.append({
+                            "title": item.get("title", ""),
+                            "url": item.get("url", ""),
+                            "snippet": item.get("snippet", "")[:500],
+                            "published": item.get("published_date", "")
+                        })
+                    return {
+                        "success": True,
+                        "query": query,
+                        "results": results,
+                        "timestamp": datetime.now().isoformat()
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": f"Exa API error: {response.status_code}",
+                        "query": query
+                    }
+            
+            # Fallback: Try SerpAPI if available
+            serpapi_key = os.getenv("SERPAPI_KEY")
+            if serpapi_key:
+                params = {
+                    "q": query,
+                    "num": num_results,
+                    "api_key": serpapi_key
+                }
+                response = requests.get(
+                    "https://serpapi.com/search",
+                    params=params,
+                    timeout=30
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    results = []
+                    for item in data.get("organic_results", [])[:num_results]:
+                        results.append({
+                            "title": item.get("title", ""),
+                            "url": item.get("link", ""),
+                            "snippet": item.get("snippet", "")[:500],
+                            "published": ""
+                        })
+                    return {
+                        "success": True,
+                        "query": query,
+                        "results": results,
+                        "timestamp": datetime.now().isoformat()
+                    }
+            
+            # No API key available - return guidance
+            return {
+                "success": False,
+                "error": "No web search API key configured. Set EXA_API_KEY or SERPAPI_KEY in .env",
+                "query": query,
+                "fallback_hint": "Configure EXA_API_KEY or SERPAPI_KEY for web search functionality"
+            }
+            
+        except ImportError:
+            return {"success": False, "error": "requests library not available"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+    
+    def _handle_fetch_url(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle fetch_url tool to extract content from a specific URL"""
+        url = parameters.get("url", "")
+        max_chars = parameters.get("max_chars", 10000)
+        
+        if not url:
+            return {"success": False, "error": "No URL provided"}
+        
+        try:
+            import requests
+            from bs4 import BeautifulSoup
+            
+            headers = {
+                "User-Agent": "Mozilla/5.0 (compatible; QuantAutoresearch/1.0)"
+            }
+            response = requests.get(url, headers=headers, timeout=30)
+            
+            if response.status_code != 200:
+                return {"success": False, "error": f"HTTP {response.status_code}"}
+            
+            # Parse HTML and extract text
+            soup = BeautifulSoup(response.text, "html.parser")
+            
+            # Remove script and style elements
+            for script in soup(["script", "style"]):
+                script.decompose()
+            
+            text = soup.get_text(separator="\n")
+            
+            # Clean up whitespace
+            lines = [line.strip() for line in text.split("\n")]
+            text = "\n".join(line for line in lines if line)
+            
+            # Truncate to max_chars
+            if len(text) > max_chars:
+                text = text[:max_chars] + "... [truncated]"
+            
+            return {
+                "success": True,
+                "url": url,
+                "content": text,
+                "content_length": len(text),
+                "timestamp": datetime.now().isoformat()
+            }
+            
+        except ImportError:
+            return {"success": False, "error": "requests or beautifulsoup4 not available"}
         except Exception as e:
             return {"success": False, "error": str(e)}
     

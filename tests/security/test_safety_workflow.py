@@ -10,11 +10,14 @@ def mock_env(monkeypatch):
     monkeypatch.delenv("WANDB_API_KEY", raising=False)
 
 @pytest.mark.asyncio
-async def test_safety_blocking_integration(mock_env, tmp_path):
+async def test_safety_blocking_integration(mock_env, tmp_path, monkeypatch):
     """Verify that dangerous tool calls are blocked during engine execution."""
-    os.chdir(tmp_path)
+    monkeypatch.chdir(tmp_path)
     with open("program.md", "w") as f: f.write("# Constitution")
     os.makedirs("prompts", exist_ok=True)
+    os.makedirs("src/strategies", exist_ok=True)
+    with open("src/strategies/active_strategy.py", "w") as f:
+        f.write("# Dummy strategy\nclass TradingStrategy:\n    def generate_signals(self, data): return None")
     for p in ["identity.md", "safety_policy.md", "tool_guidance.md", "quant_rules.md", "git_rules.md"]:
         with open(f"prompts/{p}", "w") as f: f.write(f"# {p}")
     

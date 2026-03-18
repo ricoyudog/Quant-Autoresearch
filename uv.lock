@@ -264,6 +264,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "arxiv" },
+    { name = "beautifulsoup4" },
     { name = "bm25s" },
     { name = "ccxt" },
     { name = "fastparquet" },
@@ -300,6 +301,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "arxiv", specifier = ">=2.1.0" },
+    { name = "beautifulsoup4", specifier = ">=4.12.0" },
     { name = "bm25s", specifier = ">=0.1.0" },
     { name = "ccxt", specifier = ">=4.2.0" },
     { name = "fastparquet", specifier = ">=2024.2.0" },

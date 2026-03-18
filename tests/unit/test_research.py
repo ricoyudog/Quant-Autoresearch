@@ -6,7 +6,7 @@ from core.research import get_research_context, search_arxiv, CACHE_FILE
 
 def test_search_arxiv_mock(tmp_path, monkeypatch):
     """Verifies that search_arxiv correctly handles ArXiv results and caching."""
-    os.chdir(tmp_path)
+    monkeypatch.chdir(tmp_path)
     
     # Mock ArXiv client results
     mock_result = MagicMock()
@@ -49,7 +49,7 @@ def test_get_research_context():
 
 def test_local_bm25_search(tmp_path, monkeypatch):
     """Verifies that local BM25 ranking works correctly."""
-    os.chdir(tmp_path)
+    monkeypatch.chdir(tmp_path)
     
     # Setup a mock cache with multiple papers
     cache = {

@@ -18,7 +18,7 @@ class TradingStrategy:
         return 1/0
 """)
     # Change to tmp_path and run backtest_runner
-    os.chdir(tmp_path)
+    monkeypatch.chdir(tmp_path)
     # Mock data cache existence
     (tmp_path / "data_cache").mkdir()
     

@@ -171,6 +171,9 @@ class QuantAutoresearchEngine:
             self.iteration_count += 1
             print(f"\n--- Iteration {self.iteration_count}/{max_iterations} ---")
             
+            # Save baseline code for possible reversion
+            self.current_iteration_baseline = self.get_current_strategy()
+            
             # Phase 0: Context Management (ACC)
             self._phase_context_mgmt()
             
@@ -341,17 +344,28 @@ class QuantAutoresearchEngine:
             
             # Backtest outcome processing
             if obs.get("tool") == "run_backtest" and obs.get("status") == "success":
+                # Handle wrapped result from LazyToolRegistry
                 res = obs.get("result", {})
-                score = res.get("score", -10.0)
+                if isinstance(res, dict) and "result" in res:
+                    actual_res = res["result"]
+                else:
+                    actual_res = res
+                
+                score = actual_res.get("score", -10.0) if isinstance(actual_res, dict) else -10.0
+                
                 if score > self.best_score:
                     self.best_score = score
-                    print(f"   ⭐ New Best Score: {self.best_score:.3f}")
                     # Playbook Storage
                     self.playbook.store_pattern(
                         hypothesis="Evolved strategy",
-                        code=self.get_current_strategy(),
-                        metrics=res
+                        strategy_code=self.get_current_strategy(),
+                        performance_metrics=actual_res
                     )
+                else:
+                    logger.info(f"   ❌ Score did NOT improve ({score:.3f} <= {self.best_score:.3f}). Reverting.")
+                    with open(self.strategy_file, "w") as f:
+                        f.write(self.current_iteration_baseline)
+                
                 
                 # Log to persistent tracker
                 iteration_tracker.log_iteration({

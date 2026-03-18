@@ -12,9 +12,9 @@ def mock_env(monkeypatch):
     monkeypatch.delenv("WANDB_API_KEY", raising=False)
 
 @pytest.mark.asyncio
-async def test_engine_full_loop_iteration(mock_env, tmp_path):
+async def test_engine_full_loop_iteration(mock_env, tmp_path, monkeypatch):
     """Integration test for the full 6-phase loop."""
-    os.chdir(tmp_path)
+    monkeypatch.chdir(tmp_path)
     
     # Setup minimal project structure
     with open("program.md", "w") as f: f.write("# Constitution")
