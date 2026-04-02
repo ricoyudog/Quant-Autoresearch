@@ -1,0 +1,120 @@
+# Sprint 2 — Backend Plan
+
+> Feature: `v2-phase3`
+> Role: Backend
+> Derived from: #9 (program.md update + CLI tests)
+> Last Updated: 2026-04-02
+
+## 0) Governing Specs
+
+1. `docs/upgrade-plan-v2.md` — Section 5 (lines 233-371: program.md complete design)
+2. `docs/upgrade-plan-v2.md` — Section 4 (lines 162-228: Obsidian experiment note format)
+3. `docs/upgrade-plan-v2.md` — Section 8 (lines 547-586: test plan — test_cli.py)
+
+## 1) Sprint Mission
+
+Create the root `program.md` with full V2 research instructions including the Obsidian note format template, and write `tests/unit/test_cli.py` to verify all CLI commands (kept, new, and removed) work correctly.
+
+## 2) Scope / Out of Scope
+
+**Scope**
+- Create root `program.md` with complete V2 agent instructions
+- Include Section 4 Obsidian experiment note format in program.md
+- Include experiment loop, decision rules, constraints, output format
+- Create `tests/unit/test_cli.py` with tests for all 3 commands + removal verification
+- Verify all tests pass
+
+**Out of Scope**
+- `CLAUDE.md` update — Phase 4
+- Changes to backtester.py or other source files
+- Any changes to the CLI commands themselves (Sprint 1 responsibility)
+
+## 3) Step-by-Step Plan
+
+### Step 1 — Create root program.md (PROG-01)
+- [ ] Create `program.md` at repository root
+- [ ] Use `docs/upgrade-plan-v2.md` Section 5 as the source template
+- [ ] Include all sections:
+  - Setup (branch creation, data verification, file initialization)
+  - Experimentation (what you CAN and CANNOT do)
+  - The goal (maximize SCORE)
+  - Output format (SCORE, SORTINO, CALMAR, etc.)
+  - Decision rules (KEEP/DISCARD criteria, simplicity criterion)
+  - Logging results (results.tsv format)
+  - Obsidian experiment notes (note format with Hypothesis/Changes/Results/Per-Symbol/Observations/Next Ideas)
+  - The experiment loop (LOOP FOREVER instructions)
+- [ ] Verify: `grep "Obsidian experiment notes" program.md`
+- [ ] Verify: `grep "Hypothesis" program.md`
+- [ ] Verify: `grep "LOOP FOREVER" program.md`
+
+### Step 2 — Create tests/unit/test_cli.py (TEST-01)
+- [ ] Create `tests/unit/test_cli.py`
+- [ ] Test cases:
+  - `test_setup_data_command_exists` — verify `setup_data` is registered
+  - `test_fetch_command_exists` — verify `fetch` is registered with symbol argument
+  - `test_backtest_command_exists` — verify `backtest` is registered
+  - `test_run_command_removed` — verify `run` is NOT registered
+  - `test_status_command_removed` — verify `status` is NOT registered
+  - `test_report_command_removed` — verify `report` is NOT registered
+  - `test_ingest_command_removed` — verify `ingest` is NOT registered
+  - `test_research_command_removed` — verify `research` is NOT registered
+  - `test_backtest_invokes_backtester` — mock backtester, verify backtest command calls it
+  - `test_fetch_creates_connector` — verify fetch command instantiates DataConnector
+- [ ] Use `typer.testing.CliRunner` for command testing
+- [ ] Verify: `pytest tests/unit/test_cli.py -v` passes
+
+### Step 3 — Run full test suite (VERIFY-01)
+- [ ] `pytest --tb=short -v` — all tests pass
+- [ ] `uv run python cli.py --help` — shows exactly 3 commands
+- [ ] `uv run python cli.py setup_data --help` — works
+- [ ] `uv run python cli.py fetch --help` — works
+- [ ] `uv run python cli.py backtest --help` — works
+
+### Step 4 — Commit sprint 2 changes
+- [ ] `git add program.md tests/unit/test_cli.py`
+- [ ] `git commit -m "feat(v2): add program.md with Obsidian notes format, add CLI tests"`
+
+## 4) Test Plan
+
+- [ ] After Step 1: `program.md` exists, contains all required sections
+- [ ] After Step 2: `pytest tests/unit/test_cli.py -v` — all 10 test cases pass
+- [ ] After Step 3: `pytest` — full suite green, no regressions
+
+## 5) Verification Commands
+
+```bash
+# program.md content checks
+test -f program.md && echo "PROGRAM.MD EXISTS"
+grep "Obsidian experiment notes" program.md && echo "OBSIDIAN SECTION OK"
+grep "Hypothesis" program.md && echo "NOTE FORMAT OK"
+grep "LOOP FOREVER" program.md && echo "LOOP SECTION OK"
+grep "results.tsv" program.md && echo "RESULTS LOGGING OK"
+
+# CLI tests
+pytest tests/unit/test_cli.py -v
+
+# Full suite
+pytest --tb=short -v
+
+# CLI smoke test
+uv run python cli.py --help
+```
+
+## 6) Implementation Update Space
+
+### Completed Work
+
+_(to be filled during implementation)_
+
+### Command Results
+
+_(to be filled during implementation)_
+
+### Blockers / Deviations
+
+_(to be filled during implementation)_
+
+### Follow-ups
+
+- All sprints complete — issue ready for review
+- Phase 4: update CLAUDE.md to reflect V2 architecture
