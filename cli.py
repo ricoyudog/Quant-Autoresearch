@@ -2,16 +2,18 @@
 """
 Quant Autoresearch CLI
 """
-import typer
+import os
+import sys
 from pathlib import Path
+from typing import Optional
+
+import typer
 
 # Add src to path
-import sys
 sys.path.append(str(Path(__file__).parent / "src"))
 
 from data.connector import DataConnector
 from data.preprocessor import prepare_data as prepare_all_data
-from typing import Optional
 
 app = typer.Typer(help="Quant Autoresearch")
 
@@ -54,14 +56,12 @@ def backtest(
             security_check,
             load_data,
             walk_forward_validation,
-            STRATEGY_FILE
         )
     except ImportError as e:
         typer.echo(f"Failed to import backtester: {e}")
         raise typer.Exit(code=1)
 
     # Set strategy file via environment
-    import os
     os.environ["STRATEGY_FILE"] = strategy
 
     # Run security check first
