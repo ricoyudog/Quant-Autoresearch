@@ -96,15 +96,58 @@ commit  sharpe  sortino  calmar  drawdown  max_dd_days  trades  win_rate  profit
 
 ## Obsidian experiment notes
 
-After each experiment, write a note to `experiments/notes/<NNN>-<slug>.md`:
-- **Hypothesis**: what are you testing and why
-- **Changes**: what did you modify
-- **Results**: key metrics in a table
-- **Per-Symbol**: individual symbol performance
-- **Observations**: what did you learn
-- **Next Ideas**: what to try next
+After each experiment, write a note to `experiments/notes/<NNN>-<slug>.md`.
 
-These notes let the human understand your reasoning when they review the session.
+### Note format
+
+Each note MUST follow this structure:
+
+````markdown
+---
+id: 003
+commit: f6g7h8i
+date: 2026-04-01T14:30:00
+status: keep
+tags: [momentum, regime-filter, combination]
+---
+
+# Experiment 003: Combine momentum + regime filter
+
+## Hypothesis
+Combining the ROC momentum signal with the ATR regime filter should reduce
+false signals during high-volatility periods while maintaining trend capture.
+
+## Changes
+- Modified signal logic in `generate_signals()`:
+  - Added ROC(14) as primary momentum indicator
+  - Used ATR EMA regime filter as gate
+  - Only go long/short when regime is low-vol AND momentum confirms
+
+## Results
+| Metric | Value | vs Baseline |
+|--------|-------|-------------|
+| Sharpe | 0.6500 | +0.1068 |
+| Sortino | 0.9800 | +0.1700 |
+| Profit Factor | 2.3000 | +0.4500 |
+| Win Rate | 60% | +5% |
+| P-Value | 0.008 | Significant |
+
+## Per-Symbol
+- SPY: 0.62 (strong in low-vol regime)
+- QQQ: 0.58 (good trend capture)
+- IWM: 0.43 (weaker, needs investigation)
+- BTC: 0.54 (decent, crypto regime detection works)
+
+## Observations
+- IWM underperforms — likely because small-cap regime behavior differs
+- Consider symbol-specific regime thresholds in next experiment
+- Profit Factor improvement suggests the filter is cutting bad trades effectively
+
+## Next Ideas
+- [ ] Try symbol-specific ATR thresholds
+- [ ] Add a momentum acceleration indicator
+- [ ] Test with longer lookback (20 → 30)
+````
 
 ## The experiment loop
 

@@ -36,7 +36,6 @@ artifacts/plots/
 *.db
 !research_cache.json
 !experiment_log.json
-!results.tsv
 
 # OS
 .DS_Store
