@@ -66,7 +66,7 @@ PER_SYMBOL:
 
 Extract:
 ```bash
-grep "^SCORE:\|^DRAWDOWN:\|^P-VALUE:\|^BASELINE_SHARPE:\|^PROFIT_FACTOR:" run.log
+grep "^SCORE:\|^DRAWDOWN:\|^P_VALUE:\|^BASELINE_SHARPE:\|^PROFIT_FACTOR:" run.log
 ```
 
 ## Decision rules

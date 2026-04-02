@@ -59,8 +59,11 @@ def calculate_metrics(combined_returns: pd.Series, trades: pd.Series) -> dict:
     trade_changes = trade_changes[trade_changes > 0]
     total_trades = int(trade_changes.sum()) if len(trade_changes) > 0 else 0
 
+    # Trade-level returns — actual returns when a position is active
+    active_mask = trades != 0
+    trade_returns = combined_returns[active_mask]
+
     # Win Rate
-    trade_returns = trades[trades != 0]
     if len(trade_returns) > 0:
         wins = (trade_returns > 0).sum()
         win_rate = float(wins / len(trade_returns))
@@ -68,8 +71,8 @@ def calculate_metrics(combined_returns: pd.Series, trades: pd.Series) -> dict:
         win_rate = 0.0
 
     # Profit Factor
-    gross_profit = trade_returns[trade_returns > 0].sum() if len(trade_returns) > 0 else 0.0
-    gross_loss = abs(trade_returns[trade_returns < 0].sum()) if len(trade_returns) > 0 else 0.0
+    gross_profit = float(trade_returns[trade_returns > 0].sum()) if len(trade_returns) > 0 else 0.0
+    gross_loss = float(abs(trade_returns[trade_returns < 0].sum())) if len(trade_returns) > 0 else 0.0
     profit_factor = gross_profit / gross_loss if gross_loss != 0 else 0.0
 
     # Avg Win / Avg Loss

@@ -271,7 +271,7 @@ class TestCalculateBaselineSharpe:
         data = {
             'SPY': pd.DataFrame({'close': [100] * 10}, index=dates),
         }
-        result = calculate_baseline_sharpe({})
+        result = calculate_baseline_sharpe(data)
         assert result == 0.0
 
 
