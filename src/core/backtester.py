@@ -2,10 +2,9 @@ import os
 import sys
 import pandas as pd
 import numpy as np
-import re
 import ast
 from RestrictedPython import compile_restricted, safe_builtins
-from RestrictedPython.Guards import safer_getattr, full_write_guard
+from RestrictedPython.Guards import safer_getattr
 from RestrictedPython.Eval import default_guarded_getiter, default_guarded_getitem
 from data.connector import DataConnector
 
