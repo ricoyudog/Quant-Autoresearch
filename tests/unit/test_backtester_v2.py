@@ -7,9 +7,14 @@ Tests cover the new functions added to the backtester:
 - run_per_symbol_analysis
 """
 
-import pytest
-import pandas as pd
+import os
+import subprocess
+import sys
+from pathlib import Path
+
 import numpy as np
+import pandas as pd
+import pytest
 
 import core.backtester as backtester_module
 
@@ -269,6 +274,60 @@ class TestCalculateBaselineSharpe:
 
         assert isinstance(result, float)
         assert result > 0
+
+
+def test_backtester_script_runs_without_import_error(tmp_path):
+    """Direct script execution should reach runtime validation instead of import failure."""
+    repo_root = Path(__file__).resolve().parents[2]
+    cache_dir = tmp_path / "cache"
+    env = os.environ.copy()
+    env["CACHE_DIR"] = str(cache_dir)
+
+    result = subprocess.run(
+        [sys.executable, "src/core/backtester.py"],
+        cwd=repo_root,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 1
+    assert "DATA ERROR: No cached data found." in result.stdout
+    assert "ModuleNotFoundError" not in result.stderr
+
+
+def test_backtester_script_prefers_repo_src_over_shadowed_data_package(tmp_path):
+    """Direct script execution should import the repo's data package before PYTHONPATH shadows."""
+    repo_root = Path(__file__).resolve().parents[2]
+    cache_dir = tmp_path / "cache"
+    shadow_root = tmp_path / "shadow"
+    shadow_package = shadow_root / "data"
+    shadow_package.mkdir(parents=True)
+    (shadow_package / "__init__.py").write_text("")
+    (shadow_package / "connector.py").write_text(
+        'raise RuntimeError("shadow data package imported")\n'
+    )
+
+    env = os.environ.copy()
+    env["CACHE_DIR"] = str(cache_dir)
+    existing_pythonpath = env.get("PYTHONPATH")
+    env["PYTHONPATH"] = (
+        f"{shadow_root}{os.pathsep}{existing_pythonpath}"
+        if existing_pythonpath
+        else str(shadow_root)
+    )
+
+    result = subprocess.run(
+        [sys.executable, "src/core/backtester.py"],
+        cwd=repo_root,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 1
+    assert "DATA ERROR: No cached data found." in result.stdout
+    assert "shadow data package imported" not in result.stderr
 
 
 class TestRuntimeStrategyResolution:

@@ -64,7 +64,7 @@ Verify repo hygiene and operator surfaces after the documentation cleanup lands:
 ```bash
 git check-ignore -v results.tsv run.log
 git check-ignore -v experiments/notes/example.md || echo "notes markdown is tracked"
-rg -n "cli.py run|GROQ_API_KEY|MOONSHOT_API_KEY" config
+! rg -n "OPENDEV|cli.py run|cli.py status|cli.py report|GROQ_API_KEY|MOONSHOT_API_KEY" CLAUDE.md README.md architecture.md config src/__init__.py
 uv sync --all-extras --dev
 uv run pytest --tb=short -q
 uv run python cli.py --help
@@ -80,9 +80,10 @@ uv run python cli.py backtest --help
 - Confirmed the current `.gitignore` behavior already matches the intended V2
   split: output artifacts (`results.tsv`, `run.log`) are ignored while
   markdown notes under `experiments/notes/` stay tracked.
-- Rewrote `config/quant-autoresearch.service` and `config/supervisord.conf` as
-  explicit obsolete templates so they stop advertising the removed
-  `cli.py run` surface and stale `GROQ_API_KEY` injection.
+- Reworked `config/quant-autoresearch.service` and `config/supervisord.conf`
+  into inert `/bin/true` placeholders so the retired `cli.py run` surface and
+  stale `GROQ_API_KEY` injection cannot accidentally run or fail if the old
+  templates are started.
 - Re-ran the full closeout verification set after the config cleanup.
 
 ### Command Results
@@ -92,8 +93,8 @@ uv run python cli.py backtest --help
   - `.gitignore:33:*.log  run.log`
 - `git check-ignore -v experiments/notes/example.md || echo "notes markdown is tracked"`
   - `notes markdown is tracked`
-- `rg -n "OPENDEV|cli.py run|cli.py status|cli.py report|GROQ_API_KEY|MOONSHOT_API_KEY" CLAUDE.md README.md architecture.md config src/__init__.py`
-  - exit code `1` with no matches
+- `! rg -n "OPENDEV|cli.py run|cli.py status|cli.py report|GROQ_API_KEY|MOONSHOT_API_KEY" CLAUDE.md README.md architecture.md config src/__init__.py`
+  - exit code `0` with no matches
 - `uv sync --all-extras --dev`
   - `Resolved 134 packages in 3ms`
   - `Checked 117 packages in 2ms`
@@ -121,6 +122,4 @@ uv run python cli.py backtest --help
 
 ### Follow-ups
 
-- Finish the issue-phase closeout: sync Phase 3 status back to issue #10, post
-  the Sprint 3 evidence note, and move the card out of `workflow::in-progress`
-  if no additional scope remains.
+- None; the Sprint 3 closeout note exists and issue #10 now sits in `workflow::review`.

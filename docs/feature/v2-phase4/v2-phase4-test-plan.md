@@ -29,7 +29,7 @@ uv run python cli.py --help
 | CLI setup-data help | `uv run python cli.py setup-data --help` | help exits successfully |
 | CLI fetch help | `uv run python cli.py fetch --help` | help exits successfully |
 | CLI backtest help | `uv run python cli.py backtest --help` | help exits successfully |
-| Stale doc wording | `rg -n "OPENDEV|cli.py run|cli.py status|cli.py report|GROQ_API_KEY|MOONSHOT_API_KEY" CLAUDE.md README.md architecture.md config src/__init__.py` | no stale references remain in the kept/current surfaces |
+| Stale doc wording | `! rg -n "OPENDEV|cli.py run|cli.py status|cli.py report|GROQ_API_KEY|MOONSHOT_API_KEY" CLAUDE.md README.md architecture.md config src/__init__.py` | command exits successfully and finds no stale references |
 | Ignore rules | `git check-ignore -v results.tsv run.log` | ignored by current rules |
 | Notes tracking | `git check-ignore -v experiments/notes/example.md || echo "tracked"` | notes markdown remains tracked |
 

@@ -44,7 +44,7 @@ Reason:
 | Phase 0 — Spec Alignment | create branch, worktree, canonical docs root, and stale-surface inventory | `feature/v2-phase4`, docs workspace, audit snapshot, rewritten issue index | completed | hand off to sprint planning |
 | Phase 1 — Agent Guidance Rewrite | replace V1 agent/operator guidance with V2 instructions | updated `CLAUDE.md`, command examples, environment section, architecture summary | completed | execute Sprint 2 backend docs cleanup |
 | Phase 2 — Docs Surface Cleanup | update or archive user-facing V1 docs still on the main path | refreshed `README.md`, `architecture.md` decision, doc cleanup notes | completed | execute Sprint 3 infra and verification |
-| Phase 3 — Repo Hygiene & Verification | align service/config surfaces, confirm `.gitignore`, and run full checks | config decisions, verification evidence, closeout note | completed | sync the final closeout note and review handoff |
+| Phase 3 — Repo Hygiene & Verification | align service/config surfaces, confirm `.gitignore`, and run full checks | config decisions, verification evidence, closeout note | completed | Sprint 3 closeout note posted; issue #10 is in `workflow::review` and no additional follow-ups remain |
 
 ## Task Table
 

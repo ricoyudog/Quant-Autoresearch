@@ -57,7 +57,7 @@ Notes:
 
 ### 1. Install Dependencies
 
-Requires Python 3.12+ and `uv`.
+Requires Python 3.10+ and `uv`.
 
 ```bash
 git clone https://github.com/ricoyudog/Quant-Autoresearch.git
@@ -84,8 +84,9 @@ EXA_API_KEY=your_key_here
 SERPAPI_KEY=your_key_here
 ```
 
-Advanced runtime overrides such as `CACHE_DIR` and `STRATEGY_FILE` are also
-supported by current code paths.
+For direct `src/core/backtester.py` runs, `CACHE_DIR` can override the cache
+location and `STRATEGY_FILE` can override the strategy path. The CLI surfaces
+continue to use their explicit options and default cache path.
 
 ### 3. Prepare Data
 

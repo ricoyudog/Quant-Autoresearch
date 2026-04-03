@@ -26,34 +26,14 @@ Bring the primary documentation and agent-guidance surfaces into line with the V
 
 ## Step-by-Step Plan
 
-### Step 1 — Rewrite `CLAUDE.md`
-- [ ] replace the project overview with a V2 description centered on `program.md`, `src/core/backtester.py`, `src/data/connector.py`, and `src/strategies/active_strategy.py`
-- [ ] remove references to `src/core/engine.py`, `src/context/*`, `src/tools/registry.py`, `src/models/router.py`, and removed prompt composition
-- [ ] update command examples to the supported V2 CLI only
-- [ ] update environment variables to the surviving set
-- [ ] verify with:
-  - `rg -n "OPENDEV|engine.py|ContextCompactor|PromptComposer|LazyToolRegistry|ModelRouter|cli.py run|cli.py status|cli.py report|GROQ_API_KEY|MOONSHOT_API_KEY" CLAUDE.md`
+### Step 1 — Completed canonical doc refresh
+- [x] Replaced the OPENDEV narrative in `CLAUDE.md` with the current V2 workflow centered on `program.md`, `cli.py`, the backtester, the connector, and the active strategy files
+- [x] Modernized `README.md`, archived `architecture.md` as a historical note, and aligned entrypoint wording (e.g., `src/__init__.py`) with the surviving command surface
+- [x] Captured the lane summary so readers can see that Sprint 1 and Sprint 2 delivered the backend/docs lane
 
-### Step 2 — Refresh `README.md`
-- [ ] replace OPENDEV-first messaging with current V2 positioning
-- [ ] update project structure to match what survived cleanup
-- [ ] replace old setup/data/run examples with supported V2 commands
-- [ ] decide whether historical research/RAG details belong in the main README or in secondary docs only
-- [ ] verify with:
-  - `rg -n "OPENDEV|cli.py run|cli.py status|cli.py report|GROQ_API_KEY|MOONSHOT_API_KEY" README.md`
-
-### Step 3 — Resolve `architecture.md`
-- [ ] choose one path and record the decision:
-  - rewrite as V2 architecture
-  - archive as historical V1 reference with clear banner
-  - remove from the primary repo surface
-- [ ] if kept, ensure the file no longer claims removed OPENDEV components are current
-- [ ] verify the chosen path from the repo root entrypoints
-
-### Step 4 — Clean residual entrypoint wording
-- [ ] update `src/__init__.py` package banner
-- [ ] scan touched docs for stale OPENDEV wording
-- [ ] note any adjacent follow-up candidates outside issue #10 scope
+### Step 2 — Close the lane and record evidence
+- [x] Verified that no `OPENDEV` or removed-command references remain via the recorded `rg` search and CLI help output
+- [x] Documented the Sprint 3 closeout note (`sprint3/sprint3-infra.md`) so issue #10 can stay in `workflow::review` with no follow-up actions
 
 ## Verification Commands
 
@@ -69,16 +49,22 @@ uv run python cli.py backtest --help
 
 ### Completed Work
 
-- none yet
+- Rewrote `CLAUDE.md` around the current V2 workflow, removing OPENDEV references and specifying the supported command surface plus survived environment variables.
+- Modernized `README.md`, archived `architecture.md` as a historical note, and aligned entrypoint wording (including `src/__init__.py`) with the surviving CLI commands.
+- Captured the verification evidence and referenced the Sprint 3 closeout note so the lane is clearly marked as done.
 
 ### Command Results
 
-- pending
+- `rg -n "OPENDEV|engine.py|ContextCompactor|PromptComposer|LazyToolRegistry|ModelRouter|cli.py run|cli.py status|cli.py report|GROQ_API_KEY|MOONSHOT_API_KEY" CLAUDE.md README.md architecture.md src/__init__.py` → exit code `1` (no matches)
+- `uv run python cli.py --help` → exit code `0` (commands shown: `fetch`, `setup-data`, `backtest`)
+- `uv run python cli.py setup-data --help` → exit code `0`
+- `uv run python cli.py fetch --help` → exit code `0` (required argument `SYMBOL`, option `--start` default `2020-01-01`)
+- `uv run python cli.py backtest --help` → exit code `0` (options `--strategy/-s`, `--symbols/-y`)
 
 ### Blockers / Deviations
 
-- pending
+- None; the backend/docs lane executed as planned.
 
 ### Follow-ups
 
-- pending
+- None; Sprint 3 closeout note is published and issue #10 is already in `workflow::review`.

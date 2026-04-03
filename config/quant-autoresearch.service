@@ -1,14 +1,8 @@
+# Obsolete V1 daemon template; retained for reference only.
 [Unit]
-Description=Quant Autoresearch V1 runtime unit (obsolete in V2)
-After=network.target
+Description=Quant Autoresearch v1 daemon template (obsolete)
 
 [Service]
 Type=oneshot
-User=apple
-WorkingDirectory=/Users/apple/quant-autoresearch
-EnvironmentFile=/Users/apple/quant-autoresearch/.env
-ExecStart=/bin/sh -lc 'echo "config/quant-autoresearch.service is obsolete for V2. Use uv run python cli.py backtest or follow program.md instead." >&2; exit 1'
+ExecStart=/bin/true
 Restart=no
-
-[Install]
-WantedBy=multi-user.target

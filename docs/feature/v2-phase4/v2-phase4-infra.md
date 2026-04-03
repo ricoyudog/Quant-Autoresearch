@@ -13,8 +13,8 @@ Confirm that repository hygiene and operator surfaces match the post-V2 command 
 | File | Current observation | Planned decision |
 | --- | --- | --- |
 | `.gitignore` | broad `*.log` and `*.tsv` patterns already exist; `experiments/notes/*.md` is currently tracked | verify behavior and only change if wrong |
-| `config/quant-autoresearch.service` | previously launched a removed long-running command | marked obsolete because V2 exposes one-shot commands only |
-| `config/supervisord.conf` | previously launched a removed long-running command and stale env var surface | marked obsolete because V2 exposes one-shot commands only |
+| `config/quant-autoresearch.service` | retained only as a historical systemd template for the removed daemon | convert it to an inert no-op placeholder so accidental starts do not fail |
+| `config/supervisord.conf` | retained only as a historical supervisor template for the removed daemon | convert it to an inert no-op placeholder |
 
 ## Step-by-Step Plan
 
@@ -39,7 +39,7 @@ Confirm that repository hygiene and operator surfaces match the post-V2 command 
 ```bash
 git check-ignore -v results.tsv run.log
 git check-ignore -v experiments/notes/example.md || echo "notes markdown is tracked"
-rg -n "cli.py run|GROQ_API_KEY|MOONSHOT_API_KEY" config
+! rg -n "OPENDEV|cli.py run|cli.py status|cli.py report|GROQ_API_KEY|MOONSHOT_API_KEY" CLAUDE.md README.md architecture.md config src/__init__.py
 uv sync --all-extras --dev
 ```
 
@@ -50,9 +50,10 @@ uv sync --all-extras --dev
 - Confirmed that `results.tsv` and `run.log` are still covered by the existing
   global `*.tsv` and `*.log` rules while markdown notes under
   `experiments/notes/` remain tracked.
-- Marked `config/quant-autoresearch.service` and `config/supervisord.conf` as
-  obsolete V1 daemon-era templates so they no longer imply `cli.py run` is a
-  supported V2 runtime path.
+- Reworked `config/quant-autoresearch.service` and `config/supervisord.conf`
+  into inert `/bin/true` placeholders, so the retired `cli.py run` surface
+  cannot accidentally execute or fail even if an operator starts the old
+  templates.
 - Re-ran the Phase 4 closeout verification set after the config cleanup.
 
 ### Command Results
@@ -62,8 +63,8 @@ uv sync --all-extras --dev
   - `.gitignore:33:*.log  run.log`
 - `git check-ignore -v experiments/notes/example.md || echo "notes markdown is tracked"`
   - `notes markdown is tracked`
-- `rg -n "OPENDEV|cli.py run|cli.py status|cli.py report|GROQ_API_KEY|MOONSHOT_API_KEY" CLAUDE.md README.md architecture.md config src/__init__.py`
-  - exit code `1` with no matches
+- `! rg -n "OPENDEV|cli.py run|cli.py status|cli.py report|GROQ_API_KEY|MOONSHOT_API_KEY" CLAUDE.md README.md architecture.md config src/__init__.py`
+  - exit code `0` with no matches
 - `uv sync --all-extras --dev`
   - `Resolved 134 packages in 3ms`
   - `Checked 117 packages in 2ms`
@@ -76,5 +77,4 @@ uv sync --all-extras --dev
 
 ### Follow-ups
 
-- Sprint 3 closeout owns the remaining pytest and CLI help evidence plus the
-  issue-review handoff.
+- None; Sprint 3 closeout documentation is posted and issue #10 now sits in `workflow::review`.

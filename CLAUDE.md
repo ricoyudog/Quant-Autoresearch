@@ -122,14 +122,14 @@ Use `.env` for runtime configuration. Common active variables include:
 
 - `WANDB_API_KEY`, `WANDB_PROJECT`, `WANDB_ENTITY` for telemetry
 - `EXA_API_KEY` or `SERPAPI_KEY` for research-related integrations
-- `CACHE_DIR` to override cache location used by the backtester
-- `STRATEGY_FILE` to override the strategy path for backtest runs
+- `CACHE_DIR` to override the cache location for direct backtester runs
+- `STRATEGY_FILE` to override the strategy path when invoking `src/core/backtester.py` directly
 
 Only document variables that are actively used by current code paths.
 
 ## Engineering Guidelines
 
-- Python target: 3.12+
+- Python target: 3.10+
 - Keep lines under 120 chars and use 4-space indentation
 - Import order: stdlib, third-party, local
 - Add type hints and concise docstrings where meaningful

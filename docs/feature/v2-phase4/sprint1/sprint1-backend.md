@@ -89,4 +89,4 @@ uv run python cli.py backtest --help
 
 ### Follow-ups
 
-- Sprint 2 still owns `README.md`, `architecture.md`, and entrypoint wording cleanup
+- None; Sprint 2 and Sprint 3 downstream lanes are complete and issue #10 remains in `workflow::review`.

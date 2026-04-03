@@ -91,7 +91,4 @@ uv run python cli.py --help
 
 ### Follow-ups
 
-- Sprint 3 owns `.gitignore`, config drift, and full closeout verification.
-- Optional follow-up candidate outside the primary entrypoint scope:
-  `src/memory/playbook.py` still contains V1-era wording in its own module
-  docstring.
+- None; Sprint 3 closeout documentation is in place and issue #10 remains in `workflow::review`.
