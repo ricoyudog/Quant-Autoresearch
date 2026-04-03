@@ -30,6 +30,12 @@ Phase 4 is the final V2 alignment pass after the Phase 1, Phase 3, and cleanup b
 - [v2-phase4-infra.md](./v2-phase4-infra.md) — `.gitignore`, service config, and command-surface alignment lane
 - [v2-phase4-test-plan.md](./v2-phase4-test-plan.md) — Verification matrix and evidence expectations
 
+## Sprint Execution Docs
+
+- [sprint1/sprint1-backend.md](./sprint1/sprint1-backend.md) — Sprint 1: `CLAUDE.md` rewrite and V2 agent-guidance alignment
+- [sprint2/sprint2-backend.md](./sprint2/sprint2-backend.md) — Sprint 2: `README.md`, `architecture.md`, and entrypoint wording cleanup
+- [sprint3/sprint3-infra.md](./sprint3/sprint3-infra.md) — Sprint 3: `.gitignore`, config drift, and full verification closeout
+
 ## Governing Specs
 
 - [upgrade-plan-v2.md](../../upgrade-plan-v2.md) — Phase 4 source scope (`CLAUDE.md`, `.gitignore`, docs cleanup, full verification)
@@ -40,4 +46,4 @@ Phase 4 is the final V2 alignment pass after the Phase 1, Phase 3, and cleanup b
 
 ## Execution Handoff
 
-This README and the linked phase plan are the planning layer only. Execution should move into `sprintN/` docs under this same root once the next implementation slice is selected.
+This README and the linked phase plan are the planning layer only. Execution now proceeds from the `sprintN/` docs under this same root, one unchecked step at a time.
