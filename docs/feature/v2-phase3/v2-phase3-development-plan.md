@@ -17,7 +17,7 @@ With the V1 architecture fully removed (Phase 2 complete), the CLI still carries
 - `tests/unit/test_cli.py` exists with 12 passing tests
 - `experiments/notes/.gitkeep` anchors the notes directory
 - Experiment outputs remain ignored via the existing global `*.log` and `*.tsv` rules in `.gitignore`
-- Closeout re-verification on 2026-04-03: `uv run pytest --tb=short -q` -> `96 passed in 1.01s`
+- Closeout re-verification on 2026-04-03: `uv run pytest --tb=short -q` -> `97 passed in 0.94s`
 
 ## Current State (Closeout Snapshot)
 
