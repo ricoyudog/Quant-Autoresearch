@@ -31,28 +31,28 @@ Clean the primary documentation path after `CLAUDE.md` is fixed: update `README.
 ## 3) Step-by-Step Plan
 
 ### Step 1 — Refresh `README.md` for V2 entrypoint alignment
-- [ ] replace OPENDEV-first positioning with current V2 positioning
-- [ ] update quick-start and command examples to the supported CLI
-- [ ] align project structure with surviving modules and directories
+- [x] replace OPENDEV-first positioning with current V2 positioning
+- [x] update quick-start and command examples to the supported CLI
+- [x] align project structure with surviving modules and directories
 
 ### Step 2 — Resolve `architecture.md`
-- [ ] decide whether to rewrite, archive with a clear banner, or remove it from the primary path
-- [ ] execute the chosen path so the file no longer misrepresents current runtime truth
+- [x] decide whether to rewrite, archive with a clear banner, or remove it from the primary path
+- [x] execute the chosen path so the file no longer misrepresents current runtime truth
 
 ### Step 3 — Clean residual entrypoint wording
-- [ ] update `src/__init__.py` and any touched primary entrypoint docs that still describe OPENDEV as current
-- [ ] verify with:
+- [x] update `src/__init__.py` and any touched primary entrypoint docs that still describe OPENDEV as current
+- [x] verify with:
   - `rg -n "OPENDEV|cli.py run|cli.py status|cli.py report|GROQ_API_KEY|MOONSHOT_API_KEY" README.md architecture.md src/__init__.py`
 
 ### Step 4 — Commit sprint 2 changes
-- [ ] `git add README.md architecture.md src/__init__.py docs/feature/v2-phase4/sprint2/sprint2-backend.md`
-- [ ] `git commit -m "docs(v2-phase4): align README and entrypoint docs with V2"`
+- [x] `git add README.md architecture.md src/__init__.py docs/feature/v2-phase4/sprint2/sprint2-backend.md`
+- [x] `git commit -m "docs(v2-phase4): align README and entrypoint docs with V2"`
 
 ## 4) Test Plan
 
-- [ ] stale V1 wording is gone from the current/kept primary docs
-- [ ] supported CLI commands still match doc examples
-- [ ] any historical-doc decision for `architecture.md` is explicit
+- [x] stale V1 wording is gone from the current/kept primary docs
+- [x] supported CLI commands still match doc examples
+- [x] any historical-doc decision for `architecture.md` is explicit
 
 ## 5) Verification Commands
 
@@ -65,16 +65,33 @@ uv run python cli.py --help
 
 ### Completed Work
 
-- leave blank until implemented
+- Rewrote `README.md` to describe the current V2 workflow around `program.md`,
+  `cli.py`, the backtester, the connector, and the active strategy file.
+- Updated quick-start instructions to the supported command surface:
+  `setup-data`, `fetch`, and `backtest`.
+- Replaced obsolete `.env` guidance with current optional integrations and
+  runtime overrides.
+- Updated `src/__init__.py` to V2 wording.
+- Converted `architecture.md` into a short legacy note that points readers to
+  current V2 references instead of presenting the V1 runtime as active.
 
 ### Command Results
 
-- leave blank until implemented
+- `rg -n "OPENDEV|cli.py run|cli.py status|cli.py report|GROQ_API_KEY|MOONSHOT_API_KEY" README.md architecture.md src/__init__.py`
+  - exit code `1` with no matches
+- `uv run python cli.py --help`
+  - exit code `0`
+  - commands shown: `fetch`, `setup-data`, `backtest`
 
 ### Blockers / Deviations
 
-- leave blank until implemented
+- `architecture.md` was archived in place rather than fully rewritten. This was
+  chosen intentionally to preserve historical context while removing ambiguity
+  about the active runtime architecture.
 
 ### Follow-ups
 
-- leave blank until implemented
+- Sprint 3 owns `.gitignore`, config drift, and full closeout verification.
+- Optional follow-up candidate outside the primary entrypoint scope:
+  `src/memory/playbook.py` still contains V1-era wording in its own module
+  docstring.

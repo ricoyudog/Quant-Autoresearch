@@ -43,7 +43,7 @@ Reason:
 | --- | --- | --- | --- | --- |
 | Phase 0 — Spec Alignment | create branch, worktree, canonical docs root, and stale-surface inventory | `feature/v2-phase4`, docs workspace, audit snapshot, rewritten issue index | completed | hand off to sprint planning |
 | Phase 1 — Agent Guidance Rewrite | replace V1 agent/operator guidance with V2 instructions | updated `CLAUDE.md`, command examples, environment section, architecture summary | completed | execute Sprint 2 backend docs cleanup |
-| Phase 2 — Docs Surface Cleanup | update or archive user-facing V1 docs still on the main path | refreshed `README.md`, `architecture.md` decision, doc cleanup notes | pending | execute after Phase 1 lands |
+| Phase 2 — Docs Surface Cleanup | update or archive user-facing V1 docs still on the main path | refreshed `README.md`, `architecture.md` decision, doc cleanup notes | completed | execute Sprint 3 infra and verification |
 | Phase 3 — Repo Hygiene & Verification | align service/config surfaces, confirm `.gitignore`, and run full checks | config decisions, verification evidence, closeout note | pending | execute after docs cleanup settles |
 
 ## Task Table
@@ -77,10 +77,10 @@ Reason:
 - [x] reconcile `CLAUDE.md` command examples with actual current CLI help output
 
 ### Phase 2 — Docs Surface Cleanup
-- [ ] update `README.md` to stop advertising OPENDEV-only architecture and unsupported commands
-- [ ] decide whether `architecture.md` becomes a V2 architecture doc, an archived historical note, or is removed
-- [ ] scan top-level docs for stale V1 language that still sits on the main user-facing path
-- [ ] update `src/__init__.py` banner text to match V2 wording
+- [x] update `README.md` to stop advertising OPENDEV-only architecture and unsupported commands
+- [x] decide whether `architecture.md` becomes a V2 architecture doc, an archived historical note, or is removed
+- [x] scan top-level docs for stale V1 language that still sits on the main user-facing path
+- [x] update `src/__init__.py` banner text to match V2 wording
 
 ### Phase 3 — Repo Hygiene & Verification
 - [ ] verify `.gitignore` already handles `results.tsv` and `run.log`
@@ -117,7 +117,7 @@ Reason:
 - [x] `docs/feature/v2-phase4/` exists with an index plus planning docs
 - [ ] issue #10 references the new docs workspace and exposes a phase table with status
 - [ ] a downstream `sprintN/` execution queue is created before implementation starts
-- [ ] `CLAUDE.md` is V2-correct and no longer references removed commands or removed OPENDEV components
-- [ ] user-facing docs on the main path no longer advertise V1 architecture as current
+- [x] `CLAUDE.md` is V2-correct and no longer references removed commands or removed OPENDEV components
+- [x] user-facing docs on the main path no longer advertise V1 architecture as current
 - [ ] `.gitignore` behavior is verified and documented
 - [ ] verification commands and outcomes are recorded in the workspace

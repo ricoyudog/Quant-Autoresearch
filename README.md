@@ -1,112 +1,151 @@
-# 📊 Quant Autoresearch: Autonomous Strategy Discovery
+# Quant Autoresearch: V2 Strategy Research Workflow
 
 <img width="2752" height="1536" alt="Quant Autoresearch Header" src="https://github.com/user-attachments/assets/5e84b668-c81f-4c41-bd0a-f4db95846b0d" />
 
-**Quant Autoresearch** is an autonomous framework for quantitative strategy discovery. Based on the **OPENDEV** terminal-agent architecture, it treats alpha generation as a long-horizon **code evolution problem**.
+Quant Autoresearch is a repository for iterative quantitative-strategy
+research. In the current V2 architecture, an external coding agent follows
+`program.md`, edits `src/strategies/active_strategy.py`, and validates changes
+through the fixed backtesting harness in `src/core/backtester.py`.
 
-Unlike traditional backtesters, this system deploys a compound AI ensemble that formulates hypotheses, analyzes academic literature (ArXiv), writes Python code, and validates performance in a secure, sandboxed environment.
+The active truth surfaces are:
 
----
+- `program.md` for the experiment contract
+- `cli.py` for supported commands
+- `src/core/backtester.py` for evaluation and sandbox rules
+- `src/data/connector.py` for data ingestion and cache loading
+- `src/strategies/active_strategy.py` for the strategy under iteration
 
-## 🏗️ Core Architecture
+## Core Workflow
 
-### 1. The Constitution (`src/prompts/program.md`)
-Defines immutable behavioral constraints, risk limits (e.g., "Max Drawdown < 20%"), and the investment mandate. These rules are injected into every reasoning step.
+1. Prepare cached market data with `setup-data` or `fetch`.
+2. Modify `src/strategies/active_strategy.py`.
+3. Run `backtest` or call `src/core/backtester.py` directly.
+4. Record outcomes in `results.tsv` and `experiments/notes/`.
+5. Iterate based on the metrics reported by the backtester.
 
-### 2. Knowledge Core (Agentic RAG)
-Powered by `bm25s` for high-speed retrieval of quantitative finance papers. The agent decides when to "read" academic theory to ground its code generation in proven science rather than LLM hallucination.
-
-### 3. Truth Engine (`src/core/backtester.py`)
-A sandboxed validation layer implementing strict **Defense-in-Depth Safety**:
-*   **Walk-Forward Validation:** Prevents overfitting via rolling out-of-sample windows.
-*   **Forced Signal Lag:** Eliminates look-ahead bias by shifting signals by 1 bar.
-*   **Volatility-Adjusted Slippage:** Models realistic market impact during choppy regimes.
-*   **RestrictedPython Sandboxing:** Executes AI strategies in a hardened, non-virtualized sandbox. It strips all standard `import` statements and provides only `pd` and `np` in a safe global namespace, blocking access to `os`, `sys`, and other sensitive built-ins.
-
-### 4. Adaptive Context Compaction (ACC)
-Ensures long-horizon autonomy by monitoring token pressure and automatically pruning or summarizing old observations to prevent context overflow.
-
----
-
-## 📂 Project Structure
+## Project Structure
 
 ```text
-├── cli.py              # Main entry point (CLI)
+├── cli.py
+├── program.md
 ├── src/
-│   ├── core/           # Engine logic, research RAG, and backtester
-│   ├── strategies/     # AI-evolved strategies (active_strategy.py)
-│   ├── safety/         # 5-layer safety guardrails
-│   ├── models/         # Multi-provider LLM routing (Groq, Moonshot)
-│   ├── memory/         # SQLite-based pattern playbook
-│   ├── tools/          # Tool registry and execution
-│   └── prompts/        # System instructions & "The Constitution"
-├── data/cache/         # Local Parquet market data files
-└── experiments/        # Results, logs, and SQLite databases
+│   ├── core/
+│   │   ├── backtester.py
+│   │   └── research.py
+│   ├── data/
+│   │   ├── connector.py
+│   │   └── preprocessor.py
+│   ├── memory/
+│   │   └── playbook.py
+│   ├── strategies/
+│   │   └── active_strategy.py
+│   └── utils/
+├── data/cache/
+├── experiments/notes/
+└── tests/
 ```
 
----
+Notes:
 
-## 🚀 Quick Start
+- `src/core/research.py` is available for academic and web-backed research
+  helpers.
+- `src/memory/playbook.py` remains available as an optional SQLite-backed memory
+  tool.
+- The primary validation path is the backtester.
 
-### 1. Installation
-Requires **Python 3.10+** and the **`uv`** package manager.
+## Quick Start
+
+### 1. Install Dependencies
+
+Requires Python 3.12+ and `uv`.
 
 ```bash
-# Clone the repository
-git clone https://github.com/yllvar/quant-autoresearch.git
-cd quant-autoresearch
-
-# Install dependencies using uv
+git clone https://github.com/ricoyudog/Quant-Autoresearch.git
+cd Quant-Autoresearch
 uv sync
 ```
 
-### 2. Configuration
-Create a `.env` file with your API keys:
+For the full development environment:
+
+```bash
+uv sync --all-extras --dev
+```
+
+### 2. Optional Configuration
+
+Create a `.env` file only for integrations you actually use:
+
 ```env
-GROQ_API_KEY=your_key_here
-MOONSHOT_API_KEY=your_key_here
 WANDB_API_KEY=your_key_here
 WANDB_PROJECT=quant-autoresearch
+WANDB_ENTITY=your_entity
+EXA_API_KEY=your_key_here
+# or
+SERPAPI_KEY=your_key_here
 ```
 
-### 3. Initialize & Ingest Data
+Advanced runtime overrides such as `CACHE_DIR` and `STRATEGY_FILE` are also
+supported by current code paths.
+
+### 3. Prepare Data
+
+Download the default dataset:
+
 ```bash
-# Fetch and index market data (SPY, QQQ, BTC, ETH)
-python src/data/preprocessor.py
+uv run python cli.py setup-data
 ```
 
-### 4. Run the Research Loop
-Start the autonomous discovery process:
+Or fetch a specific symbol:
+
 ```bash
-# Run for 10 iterations with high safety
-python cli.py run --iterations 10 --safety high --approval semi
+uv run python cli.py fetch SPY --start 2020-01-01
 ```
 
-### 5. Check Status & Reports
+### 4. Run a Backtest
+
 ```bash
-python cli.py status
-python cli.py report
+uv run python cli.py backtest
 ```
 
----
+Use a custom strategy path or symbol subset when needed:
 
-## 🛡️ Safety & Security
-This project uses a **5-Layer Defense-in-Depth** system:
-1.  **Prompt Guardrails:** Behavioral constraints in system prompts.
-2.  **Schema Gating:** Dangerous tools are hidden from non-executor subagents.
-3.  **Runtime Approval:** "Semi-Auto" mode for high-risk operations.
-4.  **Tool Validation:** Argument sanitization before execution.
-5.  **Look-Ahead Scanner:** AST-based code analysis to block `shift(-1)` or future data leaks.
+```bash
+uv run python cli.py backtest --strategy src/strategies/active_strategy.py
+uv run python cli.py backtest --symbols SPY,QQQ
+```
 
----
+### 5. Run Tests
 
-## 📊 Performance Tracking
-Integration with **Weights & Biases (W&B)** provides real-time telemetry of:
-*   Strategy Evolution (Sharpe Ratio improvement over time).
-*   Token Usage & API Cost.
-*   Agent Reasoning Traces and Tool Success Rates.
+```bash
+uv run pytest --tb=short -q
+uv run pytest tests/unit/test_cli.py -v
+uv run pytest tests/unit/test_backtester_v2.py -v
+uv run pytest tests/unit/test_strategy_interface.py -v
+```
 
----
+## Evaluation and Safety
 
-## 📄 License
-MIT License. **Disclaimer:** This software is for research purposes only. Do not deploy evolved strategies to live capital without exhaustive manual review.
+The backtester is the evaluation truth surface. Current safeguards include:
+
+- walk-forward validation
+- forced signal lag
+- volatility-aware trading-cost modeling
+- RestrictedPython sandboxing
+- AST-based look-ahead checks
+
+If a strategy cannot pass the backtester, it should not be treated as a valid
+result regardless of how plausible the logic looks.
+
+## Supporting Modules
+
+- `src/core/research.py` can gather academic and web research context.
+- `src/memory/playbook.py` stores reusable strategy patterns in SQLite.
+- `src/utils/telemetry.py` supports optional W&B telemetry.
+
+These modules support the workflow, but they do not replace the
+`program.md` + strategy-file + backtester loop.
+
+## License
+
+MIT License. This project is for research use only. Do not deploy generated
+strategies to live capital without independent review and validation.

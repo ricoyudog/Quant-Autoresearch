@@ -1,5 +1,5 @@
 """
-Quant Autoresearch - Enhanced with OPENDEV architecture
+Quant Autoresearch - V2 strategy research workflow
 """
 
 __version__ = "1.0.0"
