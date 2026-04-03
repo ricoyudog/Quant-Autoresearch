@@ -3,133 +3,192 @@
 > Feature branch: `feature/v2-data-pipeline`
 > Umbrella issue: #11
 > Canonical root: `docs/feature/v2-data-pipeline/`
+> Last updated: 2026-04-04
+> Planning status: Phase 0 complete; execution pending dependency clearance
 
-## Context
+## 1. Context
 
-The V2 data pipeline replaces the yfinance/CCXT-based data connector with a local-first architecture built on the massive-minute-aggs dataset (US Stocks SIP, 11K+ tickers, minute-level bars, ~5 years). The design uses DuckDB for a pre-computed daily aggregation cache and CLI subprocess calls for per-window minute-level queries during walk-forward backtesting.
+The V2 data pipeline replaces the yfinance/CCXT-era data flow with a local-first architecture built
+on the `massive-minute-aggs` dataset (US Stocks SIP, 11K+ tickers, minute bars, about 5 years). The
+design uses DuckDB for a pre-computed daily cache and CLI subprocess calls for per-window minute
+queries during walk-forward backtesting.
 
-The strategy interface gains a new `select_universe(daily_data)` method that allows the strategy to screen 11K+ tickers using daily data before the backtester loads minute-level bars for the selected subset. This two-phase approach balances universe breadth with query performance.
+The strategy contract expands to a two-step flow:
 
-## Source Data
+1. `select_universe(daily_data)` screens the full daily universe
+2. `generate_signals(minute_data)` emits minute-level signals for the selected tickers
 
-### massive-minute-aggs Dataset
+This keeps the searchable universe broad while limiting the minute-bar load to the tickers the
+strategy actually wants to trade.
 
-```
-Dataset Root: ~/Library/Mobile Documents/com~apple~CloudDocs/massive data/us_stocks_sip/minute_aggs_parquet_v1
-CLI Binary:   /Users/chunsingyu/softwares/massive-minute-aggs-parquet/.venv/bin/minute-aggs
-File Count:   1,256 Parquet files
-Date Range:   2021-03-30 ~ 2026-03-30 (~5 years)
-Tickers:      ~11,274 US stocks
-Granularity:  1-minute bars (OHLCV + transactions)
-```
+## 2. Root And Branch Decision
 
-### Schema
+- Active docs root: `docs/`
+- Canonical workspace: `docs/feature/v2-data-pipeline/`
+- Canonical branch: `feature/v2-data-pipeline`
 
-| Column | Type | Description |
+Repo drift note: the generic skill reference expects `docs/beta/` and `docs/dev/` planning roots,
+but the current repository snapshot does not have those trees. Planning granularity therefore
+follows the live V2 workspace precedents under `docs/feature/` plus the governing specs in
+`docs/data-pipeline-v2.md` and `docs/upgrade-plan-v2.md`.
+
+`docs/feature/v2-data-pipeline/` is the right root instead of `docs/issue/11/` because this work is
+a persistent feature-scoped V2 session, not a one-off issue-local hotfix. The branch name keeps the
+repo's existing V2 naming convention instead of introducing an issue-number-only variant.
+
+## 3. Scope
+
+- Integrate DuckDB as the daily-cache layer for the local minute-bar dataset
+- Add a strategy-driven universe-selection step before minute-bar loading
+- Update the backtester to run minute-level walk-forward evaluation on trading-day windows
+- Update CLI workflows for setup, fetch, backtest, and incremental cache refresh
+- Add the test coverage and documentation needed to make the new runtime model reviewable
+
+## 4. Out Of Scope
+
+- Phase 1 / issue #8 backtester foundation work
+- Session 3 overfit-defense design and implementation
+- Session 4 research-capability expansion
+- Performance tuning beyond what is needed to make the first version reliable and measurable
+
+## 5. Lane Ownership
+
+| Lane | Responsibility | Primary Docs | Runtime Surface |
+| --- | --- | --- | --- |
+| Planning | Keep the umbrella issue and feature workspace aligned | this plan, README | issue #11, docs workspace |
+| Backend | Deliver DuckDB connector, strategy contract, backtester, and CLI changes | `v2-data-pipeline-backend.md`, sprint docs | `src/data/`, `src/core/`, `src/strategies/`, `cli.py` |
+| Infra | Validate dataset paths, CLI binary behavior, DuckDB storage, temp-file handling, and smoke commands | `v2-data-pipeline-infra.md` | local dataset, `minute-aggs`, DuckDB file, temp CSVs |
+| QA | Define baseline, unit, integration, and merge gates | `v2-data-pipeline-test-plan.md` | `tests/`, CLI smoke runs, final issue evidence |
+
+## 6. Delivery Surface
+
+### Files To Create
+
+| File | Lane | Purpose |
 | --- | --- | --- |
-| `ticker` | string | Stock symbol |
-| `session_date` | date | Trading date |
-| `window_start_ns` | int64 | Nanosecond timestamp |
-| `open` | float64 | Open price |
-| `high` | float64 | High price |
-| `low` | float64 | Low price |
-| `close` | float64 | Close price |
-| `volume` | float64 | Volume |
-| `transactions` | int | Transaction count |
+| `src/data/duckdb_connector.py` | Backend | Daily-cache build/load helpers plus minute-query bridge |
+| `tests/unit/test_duckdb_connector.py` | QA | Unit coverage for DuckDB cache creation and query helpers |
+| `tests/integration/test_minute_backtest.py` | QA | End-to-end regression for the daily-to-minute pipeline |
 
-## Files to Create
+### Files To Modify
 
-### New modules
-
-| File | Purpose | Est. LOC |
+| File | Lane | Change |
 | --- | --- | --- |
-| `src/data/duckdb_connector.py` | DuckDB daily cache: create, query, update | ~200 |
+| `src/core/backtester.py` | Backend | Daily-cache loading, universe selection, trading-day windows, minute-level walk-forward |
+| `src/strategies/active_strategy.py` | Backend | `select_universe(daily_data)` and minute-data `generate_signals()` example |
+| `cli.py` | Backend | `setup_data`, `fetch`, `backtest`, and `update_data` runtime changes |
+| `pyproject.toml` | Backend | Add `duckdb` dependency |
+| `program.md` | Planning | Update runtime docs to the DuckDB/minute-data model |
+| `CLAUDE.md` | Planning | Update repo architecture notes after Sprint 3 lands |
+| `tests/conftest.py` | QA | Add DuckDB/minute fixtures |
+| `tests/unit/test_strategy_interface.py` | QA | Expand to the dual-method strategy contract |
+| `tests/unit/test_data.py` | QA | Remove or refactor legacy connector-only expectations |
 
-### Files to Modify
+### Files To Remove
 
-| File | Changes | Est. Effort |
+| File | Lane | Reason |
 | --- | --- | --- |
-| `src/core/backtester.py` | Add DuckDB daily loading, CLI minute queries, dual-method strategy interface, minute-level walk-forward | Large |
-| `src/strategies/active_strategy.py` | Add `select_universe(daily_data)` method, update `generate_signals` for minute data | Medium |
-| `cli.py` | Add/rewrite `setup_data` for DuckDB cache build, add `update_data` for incremental, update `fetch` for minute queries, add `backtest` command | Medium |
-| `pyproject.toml` | Add `duckdb` dependency | Small |
-| `program.md` | Add dataset docs, CLI reference, dual-method strategy interface | Medium |
+| `src/data/connector.py` | Backend | Replaced by `duckdb_connector.py` and the new cache/query flow |
+| `src/data/preprocessor.py` | Backend | Replaced by `setup_data` DuckDB cache build logic |
 
-### Files to Remove
-
-| File | Reason |
-| --- | --- |
-| `src/data/connector.py` | Replaced by `duckdb_connector.py` |
-| `src/data/preprocessor.py` | Replaced by `setup_data` cache build |
-
-## Phase Plan
+## 7. Phase Plan
 
 | Phase | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
-| Sprint 1 -- DuckDB + Daily Cache | Add DuckDB, build daily aggregation cache | `duckdb_connector.py`, updated `setup_data`, working daily queries | pending | start strategy interface |
-| Sprint 2 -- Strategy + Backtester | Dual-method strategy, minute-level walk-forward | updated `backtester.py`, updated `active_strategy.py`, per-ticker window queries | pending | start CLI |
-| Sprint 3 -- CLI + Tests | CLI commands, integration tests, documentation | updated `cli.py`, new test files, updated docs | pending | merge readiness |
+| Phase 0 -- Spec Alignment + Baseline | Confirm docs root, branch convention, dependency gate, and umbrella references | rewritten issue card, updated workspace index, lane docs, verification baseline | completed | start Sprint 1 once issue #8 closes |
+| Sprint 1 -- DuckDB + Daily Cache | Add DuckDB, create the daily cache, and replace the old data-loader entrypoint | `duckdb_connector.py`, updated `setup_data`, clean import graph, unit coverage | pending | validate dataset path and create/switch feature branch |
+| Sprint 2 -- Strategy + Backtester | Add the dual-method strategy interface and minute-level walk-forward pipeline | updated `backtester.py`, updated `active_strategy.py`, trading-day windows | pending | begin after Sprint 1 verification |
+| Sprint 3 -- CLI + Docs + Tests | Finish CLI behavior, integration coverage, and runtime docs | updated `cli.py`, integration tests, updated `program.md` and `CLAUDE.md` | pending | begin after Sprint 2 verification |
+| Phase 4 -- Verification + Closeout | Run the full gate and prepare review-ready evidence | green dependency sync, green test suite, smoke commands, issue evidence update | pending | execute after Sprint 3 |
 
-## Task Table
+## 8. Task Tables
 
-### Sprint 1 Tasks (DuckDB + Daily Cache)
+### Phase 0 -- Planning And Spec Alignment
 
-| Task ID | Task | Owner | Dependency | Effort | Acceptance |
-| --- | --- | --- | --- | --- | --- |
-| DUCK-01 | Create `feature/v2-data-pipeline` branch | Dev | Phase 1 merged | 0.1d | branch exists, tests green |
-| DUCK-02 | Add `duckdb` to pyproject.toml | Dev | DUCK-01 | 0.05d | `uv sync` succeeds |
-| DUCK-03 | Create `src/data/duckdb_connector.py` with `build_daily_cache()` | Dev | DUCK-02 | 0.5d | DuckDB file created with daily_bars table |
-| DUCK-04 | Create `load_daily_data()` query function | Dev | DUCK-03 | 0.2d | Returns filtered DataFrame from DuckDB |
-| DUCK-05 | Create `get_trading_days()` utility function | Dev | DUCK-04 | 0.1d | Returns ordered list of trading dates |
-| DUCK-06 | Update `cli.py setup_data` to call `build_daily_cache()` | Dev | DUCK-03 | 0.2d | `uv run python cli.py setup_data` creates DuckDB file |
-| DUCK-07 | Test daily cache: verify schema, row counts, date range | Dev | DUCK-06 | 0.2d | Unit tests pass |
+| Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| PLAN-01 | Confirm the live docs root and choose a single canonical workspace | Planning | none | 0.1d | completed | `docs/feature/v2-data-pipeline/` is the only planning root for this feature |
+| PLAN-02 | Preserve the repo's V2 branch convention and record the dependency gate on issue #8 | Planning | PLAN-01 | 0.05d | completed | branch name and dependency note appear in the README, plan, and issue |
+| PLAN-03 | Expand the workspace with backend, infra, and QA planning surfaces | Planning | PLAN-01 | 0.1d | completed | lane docs and updated test plan are linked from the workspace index |
+| PLAN-04 | Rewrite issue #11 as the umbrella index card | Planning | PLAN-02, PLAN-03 | 0.1d | completed | issue contains required sections, a phase table with status, and workspace references |
 
-### Sprint 2 Tasks (Strategy + Backtester)
+### Sprint 1 -- DuckDB + Daily Cache
 
-| Task ID | Task | Owner | Dependency | Effort | Acceptance |
-| --- | --- | --- | --- | --- | --- |
-| STRAT-01 | Add `select_universe(daily_data)` to strategy interface | Dev | Sprint 1 complete | 0.2d | Method defined in active_strategy.py |
-| STRAT-02 | Create `query_minute_data()` CLI subprocess function | Dev | Sprint 1 complete | 0.3d | Returns dict[str, DataFrame] for tickers |
-| STRAT-03 | Update `find_strategy_methods()` to detect `select_universe` | Dev | STRAT-01 | 0.1d | Returns (class, has_universe) tuple |
-| STRAT-04 | Update `generate_signals` signature for minute data | Dev | STRAT-01 | 0.2d | Accepts dict[str, DataFrame], returns dict[str, Series] |
-| STRAT-05 | Implement minute-level walk-forward window calculation | Dev | STRAT-02, DUCK-05 | 0.3d | 5 windows with trading-day boundaries |
-| STRAT-06 | Integrate DuckDB + CLI queries into backtester loop | Dev | STRAT-02..05 | 0.5d | Full pipeline: daily -> universe -> minute -> signals -> metrics |
-| STRAT-07 | Update `active_strategy.py` with minimal example strategy | Dev | STRAT-01, STRAT-04 | 0.2d | Working dual-method strategy |
+| Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| INFRA-01 | Validate dataset root, CLI binary, DuckDB output path, and temp-file budget | Infra | Phase 0 complete | 0.1d | pending | commands prove that paths, disk targets, and binary invocation are usable |
+| DUCK-01 | Create or switch to `feature/v2-data-pipeline` and capture the pre-change baseline | Backend | Phase 0 complete, issue #8 complete | 0.1d | pending | branch is active and baseline `pytest --tb=short` evidence is recorded |
+| DUCK-02 | Add `duckdb` dependency and implement `src/data/duckdb_connector.py` | Backend | DUCK-01, INFRA-01 | 0.6d | pending | daily-cache build/load helpers and minute-query bridge import cleanly |
+| DUCK-03 | Replace `cli.py setup_data`, remove legacy data modules, and clean imports | Backend | DUCK-02 | 0.4d | pending | `setup_data` builds the DuckDB cache and no surviving imports reference removed modules |
+| QA-01 | Add unit coverage for DuckDB helpers and capture the first data-path smoke result | QA | DUCK-02, DUCK-03 | 0.3d | pending | dedicated unit tests pass and smoke evidence is logged |
 
-### Sprint 3 Tasks (CLI + Tests)
+### Sprint 2 -- Strategy + Backtester
 
-| Task ID | Task | Owner | Dependency | Effort | Acceptance |
-| --- | --- | --- | --- | --- | --- |
-| CLI-01 | Update `cli.py fetch` for minute-level queries | Dev | Sprint 2 complete | 0.2d | `uv run python cli.py fetch AAPL --start 2025-01-01` works |
-| CLI-02 | Update `cli.py backtest` to support minute mode | Dev | Sprint 2 complete | 0.3d | Runs full minute-level backtest |
-| CLI-03 | Add `cli.py update_data` for incremental DuckDB refresh | Dev | Sprint 2 complete | 0.3d | Appends new daily bars without rebuild |
-| TEST-01 | Write `tests/unit/test_duckdb_connector.py` | Dev | DUCK-07 | 0.3d | Tests for build_daily_cache, load_daily_data, get_trading_days |
-| TEST-02 | Write `tests/unit/test_strategy_interface.py` | Dev | STRAT-03 | 0.2d | Tests for select_universe, generate_signals, dynamic loading |
-| TEST-03 | Write `tests/integration/test_minute_backtest.py` | Dev | CLI-02 | 0.5d | End-to-end minute-level backtest pipeline |
-| TEST-04 | Update `tests/conftest.py` with DuckDB fixtures | Dev | TEST-01 | 0.1d | Fixtures for test DuckDB, sample daily data |
-| DOC-01 | Update `program.md` with dataset docs and CLI reference | Dev | CLI-01..03 | 0.2d | Complete data pipeline docs in program.md |
-| DOC-02 | Update `CLAUDE.md` to reflect V2 data pipeline | Dev | DOC-01 | 0.1d | Architecture section updated |
+| Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| STRAT-01 | Extend the strategy contract with `select_universe(daily_data)` and minute-data `generate_signals()` | Backend | Sprint 1 complete | 0.3d | pending | the dual-method contract is documented and callable |
+| STRAT-02 | Update strategy discovery and trading-day window calculation in the backtester | Backend | STRAT-01, QA-01 | 0.4d | pending | the backtester detects optional universe selection and produces 5 valid windows |
+| STRAT-03 | Integrate the daily -> universe -> minute -> signals pipeline in `src/core/backtester.py` | Backend | STRAT-02 | 0.6d | pending | minute-level walk-forward runs through the full evaluation loop |
+| QA-02 | Expand strategy-interface tests and add focused backtester coverage | QA | STRAT-01, STRAT-02, STRAT-03 | 0.3d | pending | unit tests cover the dual-method contract, signal lag, and window behavior |
 
-## Acceptance Criteria
+### Sprint 3 -- CLI + Docs + Tests
 
-- [ ] `feature/v2-data-pipeline` branch exists
-- [ ] `duckdb` added to pyproject.toml, `uv sync` succeeds
-- [ ] `src/data/duckdb_connector.py` created with `build_daily_cache()`, `load_daily_data()`, `get_trading_days()`
-- [ ] `uv run python cli.py setup_data` creates `data/daily_cache.duckdb` with correct schema
-- [ ] `src/data/connector.py` and `src/data/preprocessor.py` removed
-- [ ] Strategy interface has `select_universe(daily_data)` (optional) and `generate_signals(minute_data)` methods
-- [ ] Backtester supports minute-level walk-forward with CLI subprocess queries
-- [ ] `uv run python cli.py fetch <symbol> --start <date>` returns minute data
-- [ ] `uv run python cli.py backtest` runs full minute-level backtest
-- [ ] All new unit tests pass
-- [ ] Integration test for full pipeline passes
-- [ ] No surviving file imports from old `connector.py` or `preprocessor.py`
-- [ ] `pytest` passes with 0 failures
+| Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| CLI-01 | Update `fetch`, `backtest`, and `update_data` CLI flows to the DuckDB/minute-data model | Backend | Sprint 2 complete | 0.6d | pending | the CLI exposes the intended runtime behavior with stable arguments |
+| QA-03 | Add DuckDB/minute fixtures and `tests/integration/test_minute_backtest.py` | QA | CLI-01 | 0.4d | pending | the end-to-end pipeline has either fixture-backed tests or guarded smoke coverage |
+| DOC-01 | Update `program.md`, `CLAUDE.md`, and feature docs to the final runtime contracts | Planning | CLI-01, QA-03 | 0.2d | pending | docs match the implemented behavior and verification commands |
 
-## Verification Commands
+### Phase 4 -- Verification + Closeout
+
+| Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| VER-01 | Run `uv sync --all-extras --dev`, targeted suites, and the full `pytest` gate | QA | Sprint 3 complete | 0.2d | pending | dependency sync and tests pass without unresolved skips or failures |
+| VER-02 | Run CLI smoke tests for `setup_data`, `fetch`, `backtest`, and `update_data` | Infra | VER-01 | 0.2d | pending | smoke commands succeed and the outputs are captured as review evidence |
+| VER-03 | Update the umbrella issue or PR with evidence, remaining risks, and review notes | Planning | VER-01, VER-02 | 0.1d | pending | review-ready summary links to docs, commands, and residual risks |
+
+## 9. Execution Handoff
+
+This document is the planning-layer summary. Execution must move through the sprint docs instead of
+inventing new phase-specific work queues:
+
+- `sprint1/sprint1-backend.md` for DuckDB dependency, cache build, and legacy module replacement
+- `sprint1/sprint1-infra.md` for dataset-path validation, CLI binary checks, and cache-build smoke evidence
+- `sprint2/sprint2-backend.md` for the strategy contract and backtester integration
+- `sprint3/sprint3-backend.md` for CLI completion, integration tests, and runtime docs
+- `sprint3/sprint3-infra.md` for final CLI smoke evidence and cache-refresh verification
+
+The backend and infra lane docs define cross-sprint boundaries. The test plan defines the evidence
+expected before a sprint can be considered complete.
+
+## 10. Acceptance Criteria
+
+- [x] The live docs root is confirmed as `docs/` and reused consistently
+- [x] The canonical workspace choice is explicit: `docs/feature/v2-data-pipeline/`
+- [x] The feature branch is explicitly named as `feature/v2-data-pipeline`
+- [x] The workspace has a local index, a main development plan, backend lane doc, infra lane doc,
+      test plan, and sprint execution docs
+- [x] Issue #11 is defined as the umbrella index rather than the execution queue
+- [ ] `duckdb` is added to `pyproject.toml` and `uv sync` succeeds
+- [ ] `src/data/duckdb_connector.py` is created with daily-cache build/load helpers
+- [ ] `src/data/connector.py` and `src/data/preprocessor.py` are removed with no stale imports
+- [ ] The strategy interface supports `select_universe(daily_data)` plus minute-data
+      `generate_signals()`
+- [ ] The backtester supports minute-level walk-forward via CLI minute-data queries
+- [ ] `fetch`, `backtest`, and `update_data` expose the new runtime model
+- [ ] Unit, integration, and full regression gates pass with recorded evidence
+
+## 11. Verification And Evidence Expectations
+
+The detailed gate list lives in `v2-data-pipeline-test-plan.md`. The minimum verification families
+are:
 
 ```bash
-# Verify DuckDB cache
+# Baseline / dependency sync
+uv sync --all-extras --dev
+pytest --tb=short
+
+# Data-path / cache build
 uv run python cli.py setup_data
 python -c "
 import duckdb
@@ -139,33 +198,30 @@ print(con.execute('SELECT MIN(session_date), MAX(session_date) FROM daily_bars')
 con.close()
 "
 
-# Verify old files removed
-test ! -f src/data/connector.py && echo "connector.py GONE"
-test ! -f src/data/preprocessor.py && echo "preprocessor.py GONE"
+# Import cleanliness
+grep -rn "from src.data.connector\|from src.data.preprocessor\|DataConnector\|Preprocessor" src/ tests/ cli.py || echo "CLEAN"
 
-# Verify no broken imports
-grep -rn "from src.data.connector\|from src.data.preprocessor" src/ tests/ cli.py || echo "CLEAN"
-
-# Verify dependencies
-uv sync && echo "DEPS OK"
-pytest --tb=short && echo "TESTS OK"
+# Feature-specific tests
+pytest tests/unit/test_duckdb_connector.py -v
+pytest tests/unit/test_strategy_interface.py -v
+pytest tests/integration/test_minute_backtest.py -v
 ```
 
-## Performance Budget
+## 12. Performance Budget
 
-```
-Daily cache build:     ~30-60 min (11K tickers x 5 years, CLI queries by month)
-Daily cache size:      ~100MB (DuckDB, compressed)
-Per-window query:      5-15 sec (30 tickers x 60 days x 390 bars)
+```text
+Daily cache build:     ~30-60 min (11K tickers x 5 years, CLI SQL batched by month)
+Daily cache size:      ~100 MB (DuckDB, compressed)
+Per-window minute load: 5-15 sec (about 30 tickers x 60 days x 390 bars)
 Full backtest:         ~2-3 min (5 windows + strategy computation)
 ```
 
-## Risks
+## 13. Dependencies / Risks
 
 | Risk | Mitigation |
 | --- | --- |
-| DuckDB cache build is slow (11K tickers) | Batch by month, show progress, resumable |
-| CLI subprocess timeout on large queries | Set 300s timeout, batch tickers |
-| Old connector.py still imported somewhere | Global grep as verification gate |
-| Minute data volume overwhelms memory | Per-ticker queries, streaming CSV parse |
-| `openai` dep already removed in v2-cleanup | Verify pyproject.toml is clean from Phase 1 |
+| Issue #8 changes the surviving backtester contract late | Do not start Sprint 1 implementation until Phase 1 is functionally complete |
+| DuckDB cache build is slow across the full dataset | Batch by month, log progress, and support resumable or append-only refresh |
+| CLI subprocess queries time out or emit unexpected CSV schema | Validate binary behavior in INFRA-01 and keep parsing logic defensive |
+| Legacy `connector.py` imports survive after module removal | Treat the global grep and targeted tests as a hard verification gate |
+| Minute-bar volume overwhelms memory during walk-forward | Keep universe selection daily-first and query minute data per window only |

@@ -3,12 +3,14 @@
 > Feature: `v2-data-pipeline`
 > Role: Backend
 > Scope: DuckDB integration + daily aggregation cache
-> Last Updated: 2026-04-02
+> Last Updated: 2026-04-04
 
 ## 0) Governing Specs
 
 1. `docs/data-pipeline-v2.md` -- Section 1 (data source), Section 2 (architecture), Section 3 (daily cache / DuckDB)
 2. `docs/feature/v2-data-pipeline/v2-data-pipeline-development-plan.md` -- Sprint 1 task table (DUCK-01 through DUCK-07)
+3. `docs/feature/v2-data-pipeline/v2-data-pipeline-backend.md` -- cross-sprint backend contract
+4. `docs/feature/v2-data-pipeline/v2-data-pipeline-infra.md` -- runtime paths, CLI binary, and smoke-command expectations
 
 ## 1) Sprint Mission
 

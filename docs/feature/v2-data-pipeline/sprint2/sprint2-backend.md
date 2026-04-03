@@ -3,12 +3,13 @@
 > Feature: `v2-data-pipeline`
 > Role: Backend
 > Scope: Strategy interface + backtester minute-level integration
-> Last Updated: 2026-04-02
+> Last Updated: 2026-04-04
 
 ## 0) Governing Specs
 
 1. `docs/data-pipeline-v2.md` -- Section 4 (backtester data flow), Section 5 (strategy interface), Section 6 (walk-forward design)
 2. `docs/feature/v2-data-pipeline/v2-data-pipeline-development-plan.md` -- Sprint 2 task table (STRAT-01 through STRAT-07)
+3. `docs/feature/v2-data-pipeline/v2-data-pipeline-backend.md` -- cross-sprint backend contract
 
 ## 1) Sprint Mission
 

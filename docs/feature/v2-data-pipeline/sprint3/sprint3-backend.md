@@ -3,13 +3,15 @@
 > Feature: `v2-data-pipeline`
 > Role: Backend
 > Scope: CLI commands + integration tests + documentation
-> Last Updated: 2026-04-02
+> Last Updated: 2026-04-04
 
 ## 0) Governing Specs
 
 1. `docs/data-pipeline-v2.md` -- Section 7 (CLI commands), Section 8 (file changes)
 2. `docs/feature/v2-data-pipeline/v2-data-pipeline-development-plan.md` -- Sprint 3 task table (CLI-01 through DOC-02)
 3. `docs/feature/v2-data-pipeline/v2-data-pipeline-test-plan.md` -- Full test plan
+4. `docs/feature/v2-data-pipeline/v2-data-pipeline-backend.md` -- cross-sprint backend contract
+5. `docs/feature/v2-data-pipeline/v2-data-pipeline-infra.md` -- runtime smoke-command and refresh expectations
 
 ## 1) Sprint Mission
 
