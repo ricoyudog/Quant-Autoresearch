@@ -296,6 +296,41 @@ class TestRuntimeStrategyResolution:
         assert hasattr(backtester_module, "format_p_value")
         assert backtester_module.format_p_value(None) == "NA"
 
+    def test_walk_forward_validation_avoids_duplicate_trade_indexes(self, monkeypatch, tmp_path):
+        """Multi-symbol trade aggregation should not duplicate portfolio returns per symbol."""
+        strategy_path = tmp_path / "runtime_strategy.py"
+        strategy_path.write_text(
+            "class TradingStrategy:\n"
+            "    def generate_signals(self, data):\n"
+            "        return pd.Series(1, index=data.index)\n"
+        )
+
+        dates = pd.date_range("2023-01-01", periods=20)
+        sample_frame = pd.DataFrame(
+            {
+                "returns": [0.01] * 20,
+                "volatility": [0.0] * 20,
+            },
+            index=dates,
+        )
+        data = {
+            "SPY": sample_frame.copy(),
+            "QQQ": sample_frame.copy(),
+        }
+
+        monkeypatch.setenv("STRATEGY_FILE", str(strategy_path))
+        monkeypatch.setattr(backtester_module, "load_data", lambda: data)
+
+        original_calculate_metrics = backtester_module.calculate_metrics
+
+        def spy(combined_returns, trades, *args, **kwargs):
+            assert not trades.index.has_duplicates
+            return original_calculate_metrics(combined_returns, trades, *args, **kwargs)
+
+        monkeypatch.setattr(backtester_module, "calculate_metrics", spy)
+
+        backtester_module.walk_forward_validation(str(strategy_path))
+
     def test_calculate_baseline_sharpe_zero_std(self):
         """Constant returns -> large finite value."""
         dates = pd.date_range('2023-01-01', periods=10)

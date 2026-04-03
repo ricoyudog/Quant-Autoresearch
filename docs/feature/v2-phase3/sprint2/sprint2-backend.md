@@ -116,7 +116,7 @@ uv run python cli.py --help
 - `grep -n "Obsidian experiment notes\\|Hypothesis\\|LOOP FOREVER\\|results.tsv" program.md` -> matched lines 17, 92, 97, 116, 154, 156, 163, 177
 - `uv run pytest tests/unit/test_cli.py -q` -> `12 passed in 0.33s`
 - `uv run pytest tests/unit/test_cli.py tests/unit/test_data.py tests/unit/test_runner.py tests/unit/test_security.py --tb=short -q` -> `21 passed in 0.81s`
-- `uv run pytest --tb=short -q` -> `95 passed in 1.54s`
+- `uv run pytest --tb=short -q` -> `96 passed in 1.01s`
 - `uv run python cli.py --help` -> commands are `fetch`, `setup-data`, and `backtest`
 
 ### Blockers / Deviations

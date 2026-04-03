@@ -117,7 +117,7 @@ grep "^from\|^import" cli.py
 ## Latest Verification Result
 
 - `uv run pytest tests/unit/test_cli.py -q` -> `12 passed in 0.33s`
-- `uv run pytest --tb=short -q` -> `95 passed in 1.54s`
+- `uv run pytest --tb=short -q` -> `96 passed in 1.01s`
 - `uv run python cli.py --help` -> commands are `fetch`, `setup-data`, and `backtest`
 - `test -f experiments/notes/.gitkeep && echo "NOTES DIR OK"` -> `NOTES DIR OK`
 - `grep -n "^\*\.log$|^\*\.tsv$" .gitignore` -> lines 33-34 match

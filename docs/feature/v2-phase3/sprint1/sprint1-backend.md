@@ -77,7 +77,7 @@ Simplify `cli.py` from 7 commands to 3 working commands (`setup-data`, `fetch`, 
 - [x] After Step 4: `uv run python cli.py backtest --help` works
 - [x] After Step 5: `test -f experiments/notes/.gitkeep` succeeds
 - [x] After Step 6: `.gitignore` keeps experiment outputs ignored via existing `*.log` and `*.tsv` rules
-- [x] Full suite: `uv run pytest --tb=short -q` — 95 passed, no regressions on closeout re-check
+- [x] Full suite: `uv run pytest --tb=short -q` — 96 passed, no regressions on closeout re-check
 
 ## 5) Verification Commands
 
@@ -121,7 +121,7 @@ pytest --tb=short -q
 - `grep -n "def run\\|def status\\|def report\\|def ingest\\|def research" cli.py || echo "REMOVED COMMANDS GONE"` -> `REMOVED COMMANDS GONE`
 - `test -f experiments/notes/.gitkeep && echo "NOTES DIR OK"` -> `NOTES DIR OK`
 - `grep -n "^\\*\\.log$\\|^\\*\\.tsv$" .gitignore` -> lines 33-34 contain the active ignore coverage
-- `uv run pytest --tb=short -q` -> `95 passed in 1.54s`
+- `uv run pytest --tb=short -q` -> `96 passed in 1.01s`
 
 ### Blockers / Deviations
 

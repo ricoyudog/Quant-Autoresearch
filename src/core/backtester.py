@@ -97,7 +97,9 @@ def extract_trade_returns(returns: pd.Series, positions: pd.Series) -> pd.Series
     return aligned_returns[active_mask].groupby(trade_groups[active_mask]).sum().astype(float)
 
 
-def calculate_metrics(combined_returns: pd.Series, trades: pd.Series) -> dict:
+def calculate_metrics(
+    combined_returns: pd.Series, trades: pd.Series, trade_returns: pd.Series | None = None
+) -> dict:
     """Calculate 10 performance metrics from combined returns and trade signals."""
     mean_ret = combined_returns.mean()
     std_ret = combined_returns.std()
@@ -128,7 +130,11 @@ def calculate_metrics(combined_returns: pd.Series, trades: pd.Series) -> dict:
         dd_durations = in_dd.groupby(dd_groups).sum()
         max_dd_days = int(dd_durations.max()) if len(dd_durations) > 0 else 0
 
-    trade_returns = extract_trade_returns(combined_returns, trades)
+    if trade_returns is None:
+        trade_returns = extract_trade_returns(combined_returns, trades)
+    else:
+        trade_returns = pd.Series(trade_returns).dropna().astype(float)
+
     total_trades = int(len(trade_returns))
 
     # Win Rate
@@ -440,7 +446,7 @@ def walk_forward_validation(strategy_file: str | None = None):
 
         # Collect combined returns and trades for metrics
         window_returns = []
-        window_trades = pd.Series(dtype=float)
+        window_trade_returns = []
         for symbol, df in data.items():
             history_df = df.iloc[:test_end].copy()
             try:
@@ -460,11 +466,18 @@ def walk_forward_validation(strategy_file: str | None = None):
             costs = trades * (0.0005 + slippage)
             net_returns = daily_returns - costs
             window_returns.append(net_returns)
-            window_trades = pd.concat([window_trades, signals])
+            symbol_trade_returns = extract_trade_returns(net_returns, signals)
+            if not symbol_trade_returns.empty:
+                window_trade_returns.append(symbol_trade_returns.reset_index(drop=True))
 
         if window_returns:
             combined = pd.concat(window_returns, axis=1).mean(axis=1)
-            metrics = calculate_metrics(combined, window_trades)
+            combined_trade_returns = (
+                pd.concat(window_trade_returns, ignore_index=True)
+                if window_trade_returns
+                else pd.Series(dtype=float)
+            )
+            metrics = calculate_metrics(combined, pd.Series(dtype=float), trade_returns=combined_trade_returns)
             all_metrics.append(metrics)
 
     if not all_metrics:
