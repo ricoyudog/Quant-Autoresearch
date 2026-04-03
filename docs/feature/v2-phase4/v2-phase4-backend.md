@@ -60,7 +60,7 @@ Bring the primary documentation and agent-guidance surfaces into line with the V
 ```bash
 rg -n "OPENDEV|engine.py|ContextCompactor|PromptComposer|LazyToolRegistry|ModelRouter|cli.py run|cli.py status|cli.py report|GROQ_API_KEY|MOONSHOT_API_KEY" CLAUDE.md README.md architecture.md src/__init__.py
 uv run python cli.py --help
-uv run python cli.py setup_data --help
+uv run python cli.py setup-data --help
 uv run python cli.py fetch --help
 uv run python cli.py backtest --help
 ```

@@ -44,7 +44,7 @@ Verify repo hygiene and operator surfaces after the documentation cleanup lands:
 - [ ] `uv sync --all-extras --dev`
 - [ ] `uv run pytest --tb=short -q`
 - [ ] `uv run python cli.py --help`
-- [ ] `uv run python cli.py setup_data --help`
+- [ ] `uv run python cli.py setup-data --help`
 - [ ] `uv run python cli.py fetch --help`
 - [ ] `uv run python cli.py backtest --help`
 
@@ -68,7 +68,7 @@ rg -n "cli.py run|GROQ_API_KEY|MOONSHOT_API_KEY" config
 uv sync --all-extras --dev
 uv run pytest --tb=short -q
 uv run python cli.py --help
-uv run python cli.py setup_data --help
+uv run python cli.py setup-data --help
 uv run python cli.py fetch --help
 uv run python cli.py backtest --help
 ```

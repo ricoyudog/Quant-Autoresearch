@@ -42,7 +42,7 @@ Reason:
 | Phase | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
 | Phase 0 — Spec Alignment | create branch, worktree, canonical docs root, and stale-surface inventory | `feature/v2-phase4`, docs workspace, audit snapshot, rewritten issue index | completed | hand off to sprint planning |
-| Phase 1 — Agent Guidance Rewrite | replace V1 agent/operator guidance with V2 instructions | updated `CLAUDE.md`, command examples, environment section, architecture summary | pending | derive sprint step for backend lane |
+| Phase 1 — Agent Guidance Rewrite | replace V1 agent/operator guidance with V2 instructions | updated `CLAUDE.md`, command examples, environment section, architecture summary | completed | execute Sprint 2 backend docs cleanup |
 | Phase 2 — Docs Surface Cleanup | update or archive user-facing V1 docs still on the main path | refreshed `README.md`, `architecture.md` decision, doc cleanup notes | pending | execute after Phase 1 lands |
 | Phase 3 — Repo Hygiene & Verification | align service/config surfaces, confirm `.gitignore`, and run full checks | config decisions, verification evidence, closeout note | pending | execute after docs cleanup settles |
 
@@ -71,10 +71,10 @@ Reason:
 - [x] rewrite issue #10 away from a single-phase prose card toward a docs-backed index
 
 ### Phase 1 — Agent Guidance Rewrite
-- [ ] replace the OPENDEV overview in `CLAUDE.md` with the current V2 workflow centered on `program.md`, `cli.py`, `src/core/backtester.py`, and `src/strategies/active_strategy.py`
-- [ ] remove obsolete command examples (`run`, `status`, `report`) and keep only supported V2 commands
-- [ ] update environment-variable guidance to remove `GROQ_API_KEY` and `MOONSHOT_API_KEY`
-- [ ] reconcile `CLAUDE.md` command examples with actual current CLI help output
+- [x] replace the OPENDEV overview in `CLAUDE.md` with the current V2 workflow centered on `program.md`, `cli.py`, `src/core/backtester.py`, and `src/strategies/active_strategy.py`
+- [x] remove obsolete command examples (`run`, `status`, `report`) and keep only supported V2 commands
+- [x] update environment-variable guidance to remove `GROQ_API_KEY` and `MOONSHOT_API_KEY`
+- [x] reconcile `CLAUDE.md` command examples with actual current CLI help output
 
 ### Phase 2 — Docs Surface Cleanup
 - [ ] update `README.md` to stop advertising OPENDEV-only architecture and unsupported commands
@@ -105,7 +105,7 @@ Reason:
 - Re-run full suite: `uv run pytest --tb=short -q`
 - Smoke-test supported commands:
   - `uv run python cli.py --help`
-  - `uv run python cli.py setup_data --help`
+  - `uv run python cli.py setup-data --help`
   - `uv run python cli.py fetch --help`
   - `uv run python cli.py backtest --help`
 - Grep for stale guidance in touched docs before closeout:

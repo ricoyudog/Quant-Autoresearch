@@ -26,7 +26,7 @@ uv run python cli.py --help
 | Dependencies | `uv sync --all-extras --dev` | succeeds without introducing new dependency drift |
 | Full tests | `uv run pytest --tb=short -q` | suite remains green |
 | CLI root help | `uv run python cli.py --help` | only supported commands shown |
-| CLI setup-data help | `uv run python cli.py setup_data --help` | help exits successfully |
+| CLI setup-data help | `uv run python cli.py setup-data --help` | help exits successfully |
 | CLI fetch help | `uv run python cli.py fetch --help` | help exits successfully |
 | CLI backtest help | `uv run python cli.py backtest --help` | help exits successfully |
 | Stale doc wording | `rg -n "OPENDEV|cli.py run|cli.py status|cli.py report|GROQ_API_KEY|MOONSHOT_API_KEY" CLAUDE.md README.md architecture.md config src/__init__.py` | no stale references remain in the kept/current surfaces |
