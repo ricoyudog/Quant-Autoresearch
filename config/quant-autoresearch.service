@@ -1,15 +1,14 @@
 [Unit]
-Description=Quant Autoresearch OPENDEV Engine
+Description=Quant Autoresearch V1 runtime unit (obsolete in V2)
 After=network.target
 
 [Service]
-Type=simple
+Type=oneshot
 User=apple
 WorkingDirectory=/Users/apple/quant-autoresearch
 EnvironmentFile=/Users/apple/quant-autoresearch/.env
-ExecStart=/Users/apple/quant-autoresearch/.venv/bin/python cli.py run --iterations 100 --safety high
-Restart=always
-RestartSec=10
+ExecStart=/bin/sh -lc 'echo "config/quant-autoresearch.service is obsolete for V2. Use uv run python cli.py backtest or follow program.md instead." >&2; exit 1'
+Restart=no
 
 [Install]
 WantedBy=multi-user.target

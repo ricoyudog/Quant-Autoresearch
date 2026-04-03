@@ -13,27 +13,26 @@ Confirm that repository hygiene and operator surfaces match the post-V2 command 
 | File | Current observation | Planned decision |
 | --- | --- | --- |
 | `.gitignore` | broad `*.log` and `*.tsv` patterns already exist; `experiments/notes/*.md` is currently tracked | verify behavior and only change if wrong |
-| `config/quant-autoresearch.service` | still launches `cli.py run --iterations 100 --safety high` | update or mark obsolete |
-| `config/supervisord.conf` | still launches `cli.py run` and injects `GROQ_API_KEY` | update or mark obsolete |
+| `config/quant-autoresearch.service` | previously launched a removed long-running command | marked obsolete because V2 exposes one-shot commands only |
+| `config/supervisord.conf` | previously launched a removed long-running command and stale env var surface | marked obsolete because V2 exposes one-shot commands only |
 
 ## Step-by-Step Plan
 
 ### Step 1 — Confirm `.gitignore` behavior
-- [ ] verify `results.tsv` and `run.log` are ignored by the current patterns
-- [ ] verify markdown notes under `experiments/notes/` are not ignored
-- [ ] document whether any `.gitignore` change is actually required
+- [x] verify `results.tsv` and `run.log` are ignored by the current patterns
+- [x] verify markdown notes under `experiments/notes/` are not ignored
+- [x] document that no `.gitignore` change is required
 
 ### Step 2 — Audit service/config drift
-- [ ] inspect `config/quant-autoresearch.service`
-- [ ] inspect `config/supervisord.conf`
-- [ ] decide whether these files are still active deployment surfaces or stale examples
-- [ ] if active, align them to supported V2 commands and current env vars
-- [ ] if stale, mark them clearly so they stop misleading operators
+- [x] inspect `config/quant-autoresearch.service`
+- [x] inspect `config/supervisord.conf`
+- [x] decide that both files are stale daemon-era examples rather than active V2 deployment surfaces
+- [x] mark both files clearly obsolete instead of force-aligning them to `backtest`
 
 ### Step 3 — Closeout evidence
-- [ ] record the exact verification commands used for ignore checks
-- [ ] record the chosen config decision
-- [ ] hand off to QA/test-plan verification
+- [x] record the exact verification commands used for ignore checks
+- [x] record the chosen config decision
+- [x] hand off to QA/test-plan verification
 
 ## Verification Commands
 
@@ -48,16 +47,34 @@ uv sync --all-extras --dev
 
 ### Completed Work
 
-- none yet
+- Confirmed that `results.tsv` and `run.log` are still covered by the existing
+  global `*.tsv` and `*.log` rules while markdown notes under
+  `experiments/notes/` remain tracked.
+- Marked `config/quant-autoresearch.service` and `config/supervisord.conf` as
+  obsolete V1 daemon-era templates so they no longer imply `cli.py run` is a
+  supported V2 runtime path.
+- Re-ran the Phase 4 closeout verification set after the config cleanup.
 
 ### Command Results
 
-- pending
+- `git check-ignore -v results.tsv run.log`
+  - `.gitignore:34:*.tsv  results.tsv`
+  - `.gitignore:33:*.log  run.log`
+- `git check-ignore -v experiments/notes/example.md || echo "notes markdown is tracked"`
+  - `notes markdown is tracked`
+- `rg -n "OPENDEV|cli.py run|cli.py status|cli.py report|GROQ_API_KEY|MOONSHOT_API_KEY" CLAUDE.md README.md architecture.md config src/__init__.py`
+  - exit code `1` with no matches
+- `uv sync --all-extras --dev`
+  - `Resolved 134 packages in 3ms`
+  - `Checked 117 packages in 2ms`
 
 ### Blockers / Deviations
 
-- pending
+- The stale service and supervisor files were not re-pointed to
+  `uv run python cli.py backtest`. That command is a one-shot batch surface, so
+  keeping daemon-style restart semantics would still mislead operators.
 
 ### Follow-ups
 
-- pending
+- Sprint 3 closeout owns the remaining pytest and CLI help evidence plus the
+  issue-review handoff.

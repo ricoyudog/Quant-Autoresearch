@@ -19,9 +19,9 @@ Phase 4 is the final V2 alignment pass after the Phase 1, Phase 3, and cleanup b
 | Phase | Goal | Status | Next Step |
 | --- | --- | --- | --- |
 | Phase 0 | Bootstrap planning workspace and inventory stale V1 references | completed | start Phase 1 execution docs |
-| Phase 1 | Rewrite `CLAUDE.md` and align agent/operator command surfaces with V2 | pending | derive sprint steps from backend + infra lane docs |
-| Phase 2 | Clean or archive stale V1-facing documentation | pending | execute after Phase 1 command surface is correct |
-| Phase 3 | Confirm `.gitignore`, service/config surfaces, and full verification closure | pending | run after docs cleanup settles |
+| Phase 1 | Rewrite `CLAUDE.md` and align agent/operator command surfaces with V2 | completed | execute Sprint 2 backend cleanup |
+| Phase 2 | Clean or archive stale V1-facing documentation | completed | execute Sprint 3 infra and verification |
+| Phase 3 | Confirm `.gitignore`, service/config surfaces, and full verification closure | completed | sync closeout evidence back to the issue and hand off for review |
 
 ## Docs
 

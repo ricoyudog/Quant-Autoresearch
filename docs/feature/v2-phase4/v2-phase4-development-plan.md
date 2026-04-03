@@ -44,7 +44,7 @@ Reason:
 | Phase 0 — Spec Alignment | create branch, worktree, canonical docs root, and stale-surface inventory | `feature/v2-phase4`, docs workspace, audit snapshot, rewritten issue index | completed | hand off to sprint planning |
 | Phase 1 — Agent Guidance Rewrite | replace V1 agent/operator guidance with V2 instructions | updated `CLAUDE.md`, command examples, environment section, architecture summary | completed | execute Sprint 2 backend docs cleanup |
 | Phase 2 — Docs Surface Cleanup | update or archive user-facing V1 docs still on the main path | refreshed `README.md`, `architecture.md` decision, doc cleanup notes | completed | execute Sprint 3 infra and verification |
-| Phase 3 — Repo Hygiene & Verification | align service/config surfaces, confirm `.gitignore`, and run full checks | config decisions, verification evidence, closeout note | pending | execute after docs cleanup settles |
+| Phase 3 — Repo Hygiene & Verification | align service/config surfaces, confirm `.gitignore`, and run full checks | config decisions, verification evidence, closeout note | completed | sync the final closeout note and review handoff |
 
 ## Task Table
 
@@ -83,10 +83,10 @@ Reason:
 - [x] update `src/__init__.py` banner text to match V2 wording
 
 ### Phase 3 — Repo Hygiene & Verification
-- [ ] verify `.gitignore` already handles `results.tsv` and `run.log`
-- [ ] verify `experiments/notes/*.md` is intentionally tracked
-- [ ] decide whether `config/quant-autoresearch.service` and `config/supervisord.conf` should be updated or explicitly marked obsolete
-- [ ] run full verification and record evidence in the lane docs
+- [x] verify `.gitignore` already handles `results.tsv` and `run.log`
+- [x] verify `experiments/notes/*.md` is intentionally tracked
+- [x] decide that `config/quant-autoresearch.service` and `config/supervisord.conf` should be explicitly marked obsolete instead of being force-aligned to a one-shot V2 command
+- [x] run full verification and record evidence in the lane docs
 
 ## Dependencies / Risks
 
@@ -115,9 +115,9 @@ Reason:
 
 - [x] `feature/v2-phase4` branch exists from `main-dev`
 - [x] `docs/feature/v2-phase4/` exists with an index plus planning docs
-- [ ] issue #10 references the new docs workspace and exposes a phase table with status
-- [ ] a downstream `sprintN/` execution queue is created before implementation starts
+- [x] issue #10 references the new docs workspace and exposes a phase table with status
+- [x] a downstream `sprintN/` execution queue is created before implementation starts
 - [x] `CLAUDE.md` is V2-correct and no longer references removed commands or removed OPENDEV components
 - [x] user-facing docs on the main path no longer advertise V1 architecture as current
-- [ ] `.gitignore` behavior is verified and documented
-- [ ] verification commands and outcomes are recorded in the workspace
+- [x] `.gitignore` behavior is verified and documented
+- [x] verification commands and outcomes are recorded in the workspace

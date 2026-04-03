@@ -35,11 +35,11 @@ uv run python cli.py --help
 
 ## Manual Review Checklist
 
-- [ ] `CLAUDE.md` now describes the current V2 workflow instead of the removed OPENDEV runtime
-- [ ] `README.md` no longer instructs users to run unsupported commands
-- [ ] `architecture.md` has an explicit keep/archive/remove decision
-- [ ] config files no longer imply `cli.py run` is the supported runtime if that is no longer true
-- [ ] issue #10 references the new docs workspace
+- [x] `CLAUDE.md` now describes the current V2 workflow instead of the removed OPENDEV runtime
+- [x] `README.md` no longer instructs users to run unsupported commands
+- [x] `architecture.md` has an explicit keep/archive/remove decision
+- [x] config files no longer imply `cli.py run` is the supported runtime if that is no longer true
+- [x] issue #10 references the new docs workspace
 
 ## Evidence Capture
 
@@ -52,8 +52,8 @@ Record the following in the sprint/update docs during execution:
 
 ## Acceptance Criteria
 
-- [ ] all verification commands succeed
-- [ ] the docs updated by Phase 4 are V2-correct
-- [ ] `.gitignore` behavior is verified and documented
-- [ ] config drift decisions are recorded
-- [ ] issue #10 points to the canonical planning workspace
+- [x] all verification commands succeed
+- [x] the docs updated by Phase 4 are V2-correct
+- [x] `.gitignore` behavior is verified and documented
+- [x] config drift decisions are recorded
+- [x] issue #10 points to the canonical planning workspace
