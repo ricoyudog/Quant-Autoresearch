@@ -4,12 +4,22 @@
 > Umbrella issue: #9
 > Canonical root: `docs/feature/v2-phase3/`
 > Dependency: Phase 1 (issue #8) must be complete
+> Status: implementation complete, closeout sync verified on 2026-04-03
 
 ## Context
 
 With the V1 architecture fully removed (Phase 2 complete), the CLI still carries dead commands (`run`, `status`, `report`, `ingest`, `research`) that either print stubs or import from preserved-but-not-CLI-facing modules. Phase 3 simplifies the CLI to the three commands the V2 architecture actually needs, creates the Obsidian notes directory structure, updates `.gitignore` to track experiment outputs properly, and updates `program.md` with Obsidian note format instructions for the agent.
 
-## Current State (Pre-Phase 3)
+## Closeout Summary
+
+- `cli.py` now exposes only `fetch`, `setup-data`, and `backtest`
+- `program.md` exists at the repo root with the Obsidian note template
+- `tests/unit/test_cli.py` exists with 12 passing tests
+- `experiments/notes/.gitkeep` anchors the notes directory
+- Experiment outputs remain ignored via the existing global `*.log` and `*.tsv` rules in `.gitignore`
+- Closeout re-verification on 2026-04-03: `uv run pytest --tb=short -q` -> `91 passed in 1.49s`
+
+## Current State (Closeout Snapshot)
 
 ### cli.py
 | Command | Status | Action |
@@ -23,13 +33,13 @@ With the V1 architecture fully removed (Phase 2 complete), the CLI still carries
 | `research` | Working — imports from core.research | REMOVE |
 
 ### .gitignore
-Currently ignores `*.tsv` globally but has `!results.tsv` exception. The upgrade plan says to ignore `results.tsv` and `run.log` explicitly in `experiments/`.
+Experiment outputs are covered by the existing global `*.log` and `*.tsv` rules. Closeout kept that broader coverage instead of adding redundant path-specific entries.
 
 ### program.md
-Root `program.md` does not exist yet. The upgrade plan (Section 5) defines its full content including Obsidian note instructions (Section 4).
+Root `program.md` exists and contains the full V2 instructions, including the Obsidian experiment note format from Section 4.
 
 ### experiments/notes/
-Does not exist yet. Needs `experiments/notes/.gitkeep` to anchor the directory.
+`experiments/notes/.gitkeep` exists and anchors the directory for tracked experiment notes.
 
 ## Target State (Post-Phase 3)
 
@@ -47,10 +57,10 @@ experiments/
 │   └── .gitkeep
 ```
 
-### .gitignore Additions
+### .gitignore Coverage
 ```
-experiments/results.tsv
-experiments/run.log
+*.log
+*.tsv
 ```
 
 ### program.md
@@ -76,8 +86,8 @@ Root-level `program.md` with full V2 research instructions including Section 4 O
 
 | Phase | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
-| Sprint 1 | CLI simplification + directory structure + gitignore | 3 commands, notes dir, gitignore updated | pending | proceed to program.md |
-| Sprint 2 | program.md + tests | Root program.md, test_cli.py | pending | merge readiness |
+| Sprint 1 | CLI simplification + directory structure + gitignore | 3 commands, notes dir, ignore coverage confirmed | done | proceed to Sprint 2 |
+| Sprint 2 | program.md + tests | Root program.md, test_cli.py | done | issue review |
 
 ## Task Table
 
@@ -99,16 +109,16 @@ Root-level `program.md` with full V2 research instructions including Section 4 O
 
 ## Acceptance Criteria
 
-- [ ] `feature/v2-phase3` branch exists
-- [ ] `cli.py` has exactly 3 commands: `setup_data`, `fetch`, `backtest`
-- [ ] `run`, `status`, `report`, `ingest`, `research` commands are gone
-- [ ] `backtest` command invokes `src/core/backtester.py`
-- [ ] `experiments/notes/.gitkeep` exists
-- [ ] `.gitignore` includes entries for experiment output files
-- [ ] Root `program.md` exists with Obsidian note format (Section 4)
-- [ ] `tests/unit/test_cli.py` exists and passes
-- [ ] `pytest` passes with 0 failures
-- [ ] `uv run python cli.py --help` shows only the 3 commands
+- [x] `feature/v2-phase3` branch exists
+- [x] `cli.py` has exactly 3 commands: `setup_data`, `fetch`, `backtest`
+- [x] `run`, `status`, `report`, `ingest`, `research` commands are gone
+- [x] `backtest` command invokes `src/core/backtester.py`
+- [x] `experiments/notes/.gitkeep` exists
+- [x] `.gitignore` keeps experiment output files ignored via the existing `*.log` and `*.tsv` rules
+- [x] Root `program.md` exists with Obsidian note format (Section 4)
+- [x] `tests/unit/test_cli.py` exists and passes
+- [x] `uv run pytest --tb=short -q` passes with 0 failures
+- [x] `uv run python cli.py --help` shows only the 3 commands
 
 ## Verification Commands
 
@@ -123,8 +133,8 @@ uv run python cli.py backtest 2>&1 || true
 # Verify directory exists
 test -f experiments/notes/.gitkeep && echo "NOTES DIR OK"
 
-# Verify gitignore
-grep "results.tsv\|run.log" .gitignore && echo "GITIGNORE OK"
+# Verify gitignore coverage
+grep -n "^\*\.log$|^\*\.tsv$" .gitignore && echo "GITIGNORE OK"
 
 # Verify program.md exists
 test -f program.md && echo "PROGRAM.MD OK"

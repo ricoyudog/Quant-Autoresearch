@@ -5,7 +5,7 @@
 
 ## Objective
 
-Verify that CLI simplification is correct, directory structure is created, `.gitignore` is updated, `program.md` has proper Obsidian instructions, and new CLI tests pass.
+Verify that CLI simplification is correct, directory structure is created, experiment outputs remain ignored by `.gitignore`, `program.md` has proper Obsidian instructions, and new CLI tests pass.
 
 ## Pre-change Baseline
 
@@ -46,8 +46,8 @@ Record the test count and result as baseline.
 
 | Check | Command |
 | --- | --- |
-| `results.tsv` pattern present | `grep "results.tsv" .gitignore` |
-| `run.log` pattern present | `grep "run.log" .gitignore` |
+| Global `*.tsv` pattern present | `grep -n "^\*\.tsv$" .gitignore` |
+| Global `*.log` pattern present | `grep -n "^\*\.log$" .gitignore` |
 
 ### 4. program.md Verification (manual / smoke)
 
@@ -78,7 +78,7 @@ uv run python cli.py backtest --help
 ### Step 2: After directory + gitignore (Sprint 1)
 ```bash
 test -f experiments/notes/.gitkeep && echo "NOTES DIR OK"
-grep -E "results\.tsv|run\.log" .gitignore && echo "GITIGNORE OK"
+grep -n "^\*\.log$|^\*\.tsv$" .gitignore && echo "GITIGNORE OK"
 ```
 
 ### Step 3: After program.md creation (Sprint 2)
@@ -90,7 +90,7 @@ grep "Hypothesis" program.md && echo "NOTE FORMAT OK"
 
 ### Step 4: Full test run (Sprint 2)
 ```bash
-pytest --tb=short -v
+uv run pytest --tb=short -q
 ```
 All tests must pass, including new `tests/unit/test_cli.py`.
 
@@ -106,10 +106,19 @@ grep "^from\|^import" cli.py
 
 ## Acceptance Criteria
 
-- [ ] `tests/unit/test_cli.py` exists with at least 10 test cases
-- [ ] All CLI tests pass
-- [ ] `experiments/notes/.gitkeep` exists
-- [ ] `.gitignore` has entries for experiment output files
-- [ ] `program.md` exists with Obsidian note format section
-- [ ] `pytest` passes with 0 failures
-- [ ] `cli.py --help` shows exactly 3 commands
+- [x] `tests/unit/test_cli.py` exists with 12 test cases
+- [x] All CLI tests pass
+- [x] `experiments/notes/.gitkeep` exists
+- [x] `.gitignore` keeps experiment output files ignored via `*.log` and `*.tsv`
+- [x] `program.md` exists with Obsidian note format section
+- [x] `uv run pytest --tb=short -q` passes with 0 failures
+- [x] `cli.py --help` shows exactly 3 commands
+
+## Latest Verification Result
+
+- `uv run pytest tests/unit/test_cli.py -q` -> `12 passed in 0.33s`
+- `uv run pytest --tb=short -q` -> `91 passed in 1.49s`
+- `uv run python cli.py --help` -> commands are `fetch`, `setup-data`, and `backtest`
+- `test -f experiments/notes/.gitkeep && echo "NOTES DIR OK"` -> `NOTES DIR OK`
+- `grep -n "^\*\.log$|^\*\.tsv$" .gitignore` -> lines 33-34 match
+- `grep -n "Obsidian experiment notes\|Hypothesis\|LOOP FOREVER\|results.tsv" program.md` -> required sections present

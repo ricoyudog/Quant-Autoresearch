@@ -2,7 +2,7 @@
 
 ## Overview
 
-Phase 3 of the V2 upgrade. Simplifies the CLI to three working commands (`setup_data`, `fetch`, `backtest`), creates the Obsidian directory structure for experiment notes, updates `.gitignore` with runtime output files, and updates `program.md` with Obsidian note format instructions.
+Phase 3 of the V2 upgrade. Simplifies the CLI to three working commands (`setup_data`, `fetch`, `backtest`), creates the Obsidian directory structure for experiment notes, keeps runtime outputs ignored via the existing global `.gitignore` rules (`*.log`, `*.tsv`), and updates `program.md` with Obsidian note format instructions.
 
 ## Branch
 
@@ -17,7 +17,7 @@ Phase 3 of the V2 upgrade. Simplifies the CLI to three working commands (`setup_
 
 | Issue | Scope | Status |
 | --- | --- | --- |
-| [#9](https://github.com/ricoyudog/Quant-Autoresearch/issues/9) | Umbrella: Phase 3 — CLI + Obsidian + program.md | pending |
+| [#9](https://github.com/ricoyudog/Quant-Autoresearch/issues/9) | Umbrella: Phase 3 — CLI + Obsidian + program.md | review |
 
 ## Execution Order
 

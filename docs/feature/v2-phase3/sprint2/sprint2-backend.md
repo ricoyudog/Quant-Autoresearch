@@ -3,7 +3,7 @@
 > Feature: `v2-phase3`
 > Role: Backend
 > Derived from: #9 (program.md update + CLI tests)
-> Last Updated: 2026-04-02
+> Last Updated: 2026-04-03
 
 ## 0) Governing Specs
 
@@ -32,9 +32,9 @@ Create the root `program.md` with full V2 research instructions including the Ob
 ## 3) Step-by-Step Plan
 
 ### Step 1 — Create root program.md (PROG-01)
-- [ ] Create `program.md` at repository root
-- [ ] Use `docs/upgrade-plan-v2.md` Section 5 as the source template
-- [ ] Include all sections:
+- [x] Create `program.md` at repository root
+- [x] Use `docs/upgrade-plan-v2.md` Section 5 as the source template
+- [x] Include all sections:
   - Setup (branch creation, data verification, file initialization)
   - Experimentation (what you CAN and CANNOT do)
   - The goal (maximize SCORE)
@@ -43,13 +43,13 @@ Create the root `program.md` with full V2 research instructions including the Ob
   - Logging results (results.tsv format)
   - Obsidian experiment notes (note format with Hypothesis/Changes/Results/Per-Symbol/Observations/Next Ideas)
   - The experiment loop (LOOP FOREVER instructions)
-- [ ] Verify: `grep "Obsidian experiment notes" program.md`
-- [ ] Verify: `grep "Hypothesis" program.md`
-- [ ] Verify: `grep "LOOP FOREVER" program.md`
+- [x] Verify: `grep "Obsidian experiment notes" program.md`
+- [x] Verify: `grep "Hypothesis" program.md`
+- [x] Verify: `grep "LOOP FOREVER" program.md`
 
 ### Step 2 — Create tests/unit/test_cli.py (TEST-01)
-- [ ] Create `tests/unit/test_cli.py`
-- [ ] Test cases:
+- [x] Create `tests/unit/test_cli.py`
+- [x] Test cases:
   - `test_setup_data_command_exists` — verify `setup_data` is registered
   - `test_fetch_command_exists` — verify `fetch` is registered with symbol argument
   - `test_backtest_command_exists` — verify `backtest` is registered
@@ -60,25 +60,27 @@ Create the root `program.md` with full V2 research instructions including the Ob
   - `test_research_command_removed` — verify `research` is NOT registered
   - `test_backtest_invokes_backtester` — mock backtester, verify backtest command calls it
   - `test_fetch_creates_connector` — verify fetch command instantiates DataConnector
-- [ ] Use `typer.testing.CliRunner` for command testing
-- [ ] Verify: `pytest tests/unit/test_cli.py -v` passes
+  - `test_fetch_with_custom_start_date` — verify fetch forwards explicit start date
+  - `test_fetch_handles_failure` — verify fetch reports connector failures cleanly
+- [x] Use `typer.testing.CliRunner` for command testing
+- [x] Verify: `uv run pytest tests/unit/test_cli.py -q` passes
 
 ### Step 3 — Run full test suite (VERIFY-01)
-- [ ] `pytest --tb=short -v` — all tests pass
-- [ ] `uv run python cli.py --help` — shows exactly 3 commands
-- [ ] `uv run python cli.py setup_data --help` — works
-- [ ] `uv run python cli.py fetch --help` — works
-- [ ] `uv run python cli.py backtest --help` — works
+- [x] `uv run pytest --tb=short -q` — all tests pass
+- [x] `uv run python cli.py --help` — shows exactly 3 commands
+- [x] `uv run python cli.py setup-data --help` — works
+- [x] `uv run python cli.py fetch --help` — works
+- [x] `uv run python cli.py backtest --help` — works
 
 ### Step 4 — Commit sprint 2 changes
-- [ ] `git add program.md tests/unit/test_cli.py`
-- [ ] `git commit -m "feat(v2): add program.md with Obsidian notes format, add CLI tests"`
+- [x] `git add program.md tests/unit/test_cli.py`
+- [x] `git commit -m "feat(v2): add program.md with Obsidian notes format, add CLI tests"`
 
 ## 4) Test Plan
 
-- [ ] After Step 1: `program.md` exists, contains all required sections
-- [ ] After Step 2: `pytest tests/unit/test_cli.py -v` — all 10 test cases pass
-- [ ] After Step 3: `pytest` — full suite green, no regressions
+- [x] After Step 1: `program.md` exists, contains all required sections
+- [x] After Step 2: `uv run pytest tests/unit/test_cli.py -q` — all 12 test cases pass
+- [x] After Step 3: `uv run pytest --tb=short -q` — full suite green, no regressions
 
 ## 5) Verification Commands
 
@@ -104,17 +106,24 @@ uv run python cli.py --help
 
 ### Completed Work
 
-_(to be filled during implementation)_
+- Created the root `program.md` with the full V2 execution loop and Obsidian note template
+- Added `tests/unit/test_cli.py` with 12 command-registration and behavior tests
+- Re-verified the CLI and test suite on 2026-04-03 during closeout sync
+- Closed out in commit `fa68734`
 
 ### Command Results
 
-_(to be filled during implementation)_
+- `grep -n "Obsidian experiment notes\\|Hypothesis\\|LOOP FOREVER\\|results.tsv" program.md` -> matched lines 17, 92, 97, 116, 154, 156, 163, 177
+- `uv run pytest tests/unit/test_cli.py -q` -> `12 passed in 0.33s`
+- `uv run pytest tests/unit/test_cli.py tests/unit/test_data.py tests/unit/test_runner.py tests/unit/test_security.py --tb=short -q` -> `21 passed in 0.81s`
+- `uv run pytest --tb=short -q` -> `91 passed in 1.49s`
+- `uv run python cli.py --help` -> commands are `fetch`, `setup-data`, and `backtest`
 
 ### Blockers / Deviations
 
-_(to be filled during implementation)_
+- None on closeout re-verification.
 
 ### Follow-ups
 
 - All sprints complete — issue ready for review
-- Phase 4: update CLAUDE.md to reflect V2 architecture
+- Phase 4: update `CLAUDE.md` to reflect V2 architecture
