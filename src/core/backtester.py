@@ -10,6 +10,11 @@ from RestrictedPython import compile_restricted, safe_builtins
 from RestrictedPython.Guards import safer_getattr
 from RestrictedPython.Eval import default_guarded_getiter, default_guarded_getitem
 
+if __package__ in {None, ""}:
+    SRC_DIR = Path(__file__).resolve().parents[1]
+    if str(SRC_DIR) not in sys.path:
+        sys.path.insert(0, str(SRC_DIR))
+
 from data.connector import DataConnector
 
 CACHE_DIR = os.environ.get("CACHE_DIR", "data/cache")

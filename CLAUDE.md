@@ -1,103 +1,150 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file gives coding-agent guidance for working in this repository.
 
 ## Project Overview
 
-Quant Autoresearch is an autonomous quantitative strategy discovery framework. It deploys a compound AI ensemble (OPENDEV architecture) that formulates hypotheses, searches ArXiv literature, writes Python trading strategy code, and validates performance in a sandboxed environment. The system runs a 6-phase autonomous research loop treating alpha generation as a long-horizon code evolution problem.
+Quant Autoresearch is a V2 strategy-research workflow centered on:
 
-## Commands
+- `program.md` as the experiment instruction contract
+- `src/strategies/active_strategy.py` as the strategy under iteration
+- `src/core/backtester.py` as the fixed evaluation harness
+- `src/data/connector.py` as the market-data ingestion and cache interface
+- `cli.py` as the supported command entrypoint
 
-### Install & Run
+Treat the repository as execution-first. Run experiments through the backtester,
+keep the strategy compatible with the sandbox, and keep docs aligned with the
+current CLI and output surfaces.
+
+## Supported Commands
+
+### Setup and Data
 
 ```bash
-uv sync                              # Install all dependencies
-uv sync --all-extras --dev           # Install with dev dependencies
-uv run python cli.py run --iterations 10 --safety high --approval semi  # Run research loop
-uv run python cli.py setup_data      # Download default market data (SPY, QQQ, IWM, BTC, ETH)
-uv run python cli.py fetch SPY --start 2020-01-01  # Fetch specific symbol
-uv run python cli.py status          # Check system status
-uv run python cli.py report          # Generate performance report
+uv sync
+uv sync --all-extras --dev
+uv run python cli.py --help
+uv run python cli.py setup-data
+uv run python cli.py fetch SPY --start 2020-01-01
+```
+
+### Backtesting
+
+```bash
+uv run python cli.py backtest
+uv run python cli.py backtest --strategy src/strategies/active_strategy.py
+uv run python src/core/backtester.py > run.log 2>&1
 ```
 
 ### Testing
 
 ```bash
-pytest                                          # Run all tests
-pytest tests/unit/test_engine_opendev.py         # Run single test file
-pytest tests/unit/test_engine_opendev.py::test_engine_initialization  # Run single test
-pytest --cov=src --cov-report=term-missing       # Run with coverage
-pytest tests/unit/                               # Run unit tests only
-pytest tests/integration/                        # Run integration tests only
-pytest tests/security/                           # Run security tests only
-pytest tests/regression/                         # Run regression tests only
+uv run pytest
+uv run pytest --tb=short -q
+uv run pytest tests/unit/test_cli.py -v
+uv run pytest tests/unit/test_backtester_v2.py -v
+uv run pytest tests/unit/test_strategy_interface.py -v
+uv run pytest tests/security/test_adversarial.py -v
 ```
 
-Test config is in `pytest.ini`: `asyncio_mode = auto`, `pythonpath = src`, `testpaths = tests`. Shared fixtures are in `tests/conftest.py`.
+The current suite also includes coverage for data, playbook memory, research,
+retry logic, telemetry, tracker metrics, determinism, and integration flows
+under `tests/`.
 
-## Architecture
+## Current Architecture Surfaces
 
-### 6-Phase OPENDEV Loop (`src/core/engine.py`)
+### `program.md`
 
-The engine runs an enhanced ReAct loop:
+Defines the operating contract for autonomous experimentation, including:
 
-1. **Phase 0 - Context Management (ACC)**: `ContextCompactor` (`src/context/compactor.py`) monitors token usage. At 70% warning, 80% mask old outputs, 90% aggressive pruning, 99% LLM summarization.
-2. **Phase 1 - Thinking**: A reasoning model generates a reasoning trace without tool access (prevents action-first hallucinations).
-3. **Phase 2 - Action Selection**: Primary model reviews reasoning trace, selects tools from `LazyToolRegistry` (`src/tools/registry.py`), produces JSON tool calls. Prompts assembled by `PromptComposer` (`src/context/composer.py`).
-4. **Phase 3 - Doom-Loop Detection**: Fingerprints planned actions. If same action repeats 3+ times in 20-operation window, execution pauses.
-5. **Phase 4 - Execution**: Tools execute through 5-layer safety system. Results >8k chars auto-masked.
-6. **Phase 5 - Observation**: Results logged. Successful strategies (improved Sharpe) stored in `Playbook`. Failed strategies trigger code reversion.
+- setup sequence
+- keep/discard rules
+- output schema expectations
+- notes workflow under `experiments/notes/`
 
-Loop terminates when OOS Sharpe > 2.0 or max iterations reached.
+When code and `program.md` disagree, align changes to the current repository
+behavior and keep the contract internally consistent.
 
-### Key Components
+### `src/core/backtester.py`
 
-- **`src/core/engine.py`** - `QuantAutoresearchEngine`: central orchestrator
-- **`src/core/backtester.py`** - Walk-forward validation with RestrictedPython sandbox, Monte Carlo permutation test, AST analysis blocks `shift(-1)` and dangerous builtins
-- **`src/core/research.py`** - ArXiv search + BM25 local paper retrieval + web search (Exa/SerpAPI)
-- **`src/safety/guard.py`** - `SafetyGuard`: 5-layer defense-in-depth (prompt guardrails, schema gating, runtime approval, tool validation, lifecycle hooks)
-- **`src/models/router.py`** - `ModelRouter`: multi-provider LLM routing (Groq, Moonshot/OpenAI-compatible) with fallback, cost tracking, retry with backoff
-- **`src/memory/playbook.py`** - `Playbook`: SQLite-based episodic memory with TF-IDF similarity search
-- **`src/data/connector.py`** - `DataConnector`: unified market data (yfinance for equities, CCXT/Binance for crypto, Parquet/CSV cache)
-- **`src/strategies/active_strategy.py`** - The strategy file the AI agent evolves. Only the `EDITABLE REGION` section is modified. `TradingStrategy` class.
+Backtester responsibilities:
 
-### Critical Patterns
+- load cached data
+- run strategy code with RestrictedPython protections
+- enforce AST checks, including look-ahead bias blocking
+- perform walk-forward validation
+- print the score and risk metrics used by decision rules
 
-- **Strategy Evolution**: The AI modifies ONLY the `# --- EDITABLE REGION BREAK ---` to `# --- EDITABLE REGION END ---` section in `active_strategy.py`. The backtester runs this in a RestrictedPython sandbox with only `pd` and `np` available.
-- **Walk-Forward Validation**: 5 rolling OOS windows (70/30 train/test) with forced signal lag, volatility-adjusted slippage, Monte Carlo permutation testing.
-- **Model Router**: Routes by phase to different LLM providers with automatic fallback. Global singleton `model_router`.
-- **Lazy Tool Discovery**: Tools loaded into context only when needed, saving context window space.
-- **Global Singletons**: `model_router`, `telemetry`, `iteration_tracker`, `token_counter`, `logger` are module-level singletons.
-- **Prompt Composition**: `PromptComposer` assembles modular prompts from sections in `src/prompts/` (identity, safety, tools, quant rules, git rules) with dynamic system reminders.
+Treat this file as the evaluation truth surface.
 
-### Immutable Constraints
+### `src/strategies/active_strategy.py`
 
-`src/prompts/program.md` ("The Constitution") defines behavioral constraints, risk limits (e.g., max drawdown < 20%), and investment mandate injected into every reasoning step.
+Strategy requirements:
+
+- define at least one class with `generate_signals(self, data)`
+- return signals compatible with backtester expectations
+- keep logic vectorized with pandas and numpy
+- avoid look-ahead behavior such as negative shifts
+
+The full file is editable in V2 as long as sandbox and interface constraints
+hold.
+
+### `src/data/connector.py`
+
+Data responsibilities:
+
+- fetch equity and crypto data
+- enrich data with required features such as `returns`, `volatility`, and `atr`
+- cache datasets under `data/cache/`
+- load cached datasets for backtesting
+
+Prefer connector interfaces over ad-hoc data-path logic.
+
+### `cli.py`
+
+Supported commands are:
+
+- `setup-data`
+- `fetch`
+- `backtest`
+
+Keep docs and examples aligned with this surface.
+
+### `src/core/research.py`
+
+This module is still present for research helpers and optional web-backed
+context gathering. It is not the primary runtime loop and should not be
+documented as if it replaces the backtester-driven V2 workflow.
 
 ## Environment Variables
 
-Required in `.env`:
-- `GROQ_API_KEY` - Groq LLM API (required)
-- `MOONSHOT_API_KEY` - Moonshot API (optional, enables Moonshot models)
-- `WANDB_API_KEY` / `WANDB_PROJECT` - W&B telemetry (optional)
-- `EXA_API_KEY` or `SERPAPI_KEY` - Web search (optional)
-- `THINKING_MODEL` / `REASONING_MODEL` - Override default model choices (optional)
+Use `.env` for runtime configuration. Common active variables include:
 
-## Code Style
+- `WANDB_API_KEY`, `WANDB_PROJECT`, `WANDB_ENTITY` for telemetry
+- `EXA_API_KEY` or `SERPAPI_KEY` for research-related integrations
+- `CACHE_DIR` to override the cache location for direct backtester runs
+- `STRATEGY_FILE` to override the strategy path when invoking `src/core/backtester.py` directly
 
-- Python 3.10+ syntax (project uses 3.12.0), lines under 120 chars, 4-space indent
-- Import order: stdlib -> third-party -> local (alphabetical within groups)
-- Type hints on all function signatures (`from typing import Dict, List, Optional, Tuple, Any`)
-- Google-style docstrings
-- `PascalCase` classes, `snake_case` functions/variables, `UPPER_SNAKE_CASE` constants
-- Private methods prefixed with underscore
-- Async/await for I/O-bound operations, `asyncio.run()` at entry points
+Only document variables that are actively used by current code paths.
 
-## Data & Cache
+## Engineering Guidelines
 
-- `data/cache/` (Parquet files) is gitignored. Run `uv run python cli.py setup_data` to populate.
-- `experiments/` (logs, results, databases) is gitignored. Logs rotate at 10MB with 5 backups in `experiments/logs/`.
+- Python target: 3.10+
+- Keep lines under 120 chars and use 4-space indentation
+- Import order: stdlib, third-party, local
+- Add type hints and concise docstrings where meaningful
+- Keep strategy and backtester interfaces stable
+- Prefer small, auditable changes with explicit verification commands
+
+## Data and Output Hygiene
+
+- `data/cache/` holds cached market-data artifacts
+- `results.tsv` and `run.log` are local experiment outputs and should not be
+  committed
+- `experiments/notes/` holds markdown experiment notes and is intended to
+  remain tracked
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`): uv install -> Python 3.12 -> `uv sync --all-extras --dev` -> `pytest --cov=.` -> upload to Codecov.
+CI runs dependency install and tests via `uv` and `pytest`. Keep command
+examples and verification steps CI-compatible.
