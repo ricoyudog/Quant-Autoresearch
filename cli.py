@@ -39,7 +39,9 @@ def setup_data():
 @app.command()
 def backtest(
     strategy: str = typer.Option("src/strategies/active_strategy.py", "--strategy", "-s", help="Path to strategy file"),
-    symbols: Optional[str] = typer.Option(None, "--symbols", "-y", help="Comma-separated symbol list (default: all cached)")
+    symbols: Optional[str] = typer.Option(
+        None, "--symbols", "-y", help="Comma-separated symbol list (default: all cached)"
+    ),
 ):
     """Run backtest on a strategy"""
     typer.echo(f"Running backtest with strategy: {strategy}")
@@ -50,22 +52,17 @@ def backtest(
         typer.echo(f"Strategy file not found: {strategy}")
         raise typer.Exit(code=1)
 
-    # Import backtester functions
+    os.environ["STRATEGY_FILE"] = strategy
+
+    # Import backtester module after resolving the active strategy path
     try:
-        from core.backtester import (
-            security_check,
-            load_data,
-            walk_forward_validation,
-        )
+        import core.backtester as bt_module
     except ImportError as e:
         typer.echo(f"Failed to import backtester: {e}")
         raise typer.Exit(code=1)
 
-    # Set strategy file via environment
-    os.environ["STRATEGY_FILE"] = strategy
-
     # Run security check first
-    is_safe, msg = security_check(strategy)
+    is_safe, msg = bt_module.security_check(strategy)
     if not is_safe:
         typer.echo(f"Security check failed: {msg}")
         raise typer.Exit(code=1)
@@ -73,9 +70,9 @@ def backtest(
     typer.echo("Security check passed")
 
     # Load data to verify availability
-    data = load_data()
+    data = bt_module.load_data()
     if not data:
-        typer.echo("No cached data found. Run 'setup_data' or 'fetch' first.")
+        typer.echo("No cached data found. Run 'setup-data' or 'fetch' first.")
         raise typer.Exit(code=1)
 
     # Filter symbols if specified
@@ -96,19 +93,16 @@ def backtest(
     typer.echo("-" * 50)
 
     # Run the backtest
+    original_load_data = bt_module.load_data
     try:
         # Temporarily monkey-patch load_data to use filtered data
-        import core.backtester as bt_module
-        original_load_data = bt_module.load_data
         bt_module.load_data = lambda: data
-
-        walk_forward_validation()
-
-        # Restore original
-        bt_module.load_data = original_load_data
+        bt_module.walk_forward_validation(strategy)
     except Exception as e:
         typer.echo(f"Backtest failed: {e}")
         raise typer.Exit(code=1)
+    finally:
+        bt_module.load_data = original_load_data
 
 
 if __name__ == "__main__":

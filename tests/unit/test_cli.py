@@ -117,8 +117,9 @@ class TestBacktestCommandBehavior:
         try:
             result = runner.invoke(app, ["backtest", "-s", strategy_path])
             assert result.exit_code == 0
-            mock_security_check.assert_called_once()
-            mock_walk_forward.assert_called_once()
+            mock_security_check.assert_called_once_with(strategy_path)
+            mock_load_data.assert_called_once()
+            mock_walk_forward.assert_called_once_with(strategy_path)
         finally:
             Path(strategy_path).unlink(missing_ok=True)
 

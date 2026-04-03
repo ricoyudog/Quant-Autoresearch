@@ -13,7 +13,7 @@
 
 ## 1) Sprint Mission
 
-Simplify `cli.py` from 7 commands to 3 working commands (`setup_data`, `fetch`, `backtest`), create the `experiments/notes/` directory with `.gitkeep`, and update `.gitignore` to properly track experiment runtime outputs (`results.tsv`, `run.log`).
+Simplify `cli.py` from 7 commands to 3 working commands (`setup-data`, `fetch`, `backtest`), create the `experiments/notes/` directory with `.gitkeep`, and update `.gitignore` to properly track experiment runtime outputs (`results.tsv`, `run.log`).
 
 ## 2) Scope / Out of Scope
 
@@ -77,14 +77,14 @@ Simplify `cli.py` from 7 commands to 3 working commands (`setup_data`, `fetch`, 
 - [x] After Step 4: `uv run python cli.py backtest --help` works
 - [x] After Step 5: `test -f experiments/notes/.gitkeep` succeeds
 - [x] After Step 6: `.gitignore` keeps experiment outputs ignored via existing `*.log` and `*.tsv` rules
-- [x] Full suite: `uv run pytest --tb=short -q` — 91 passed, no regressions on closeout re-check
+- [x] Full suite: `uv run pytest --tb=short -q` — 95 passed, no regressions on closeout re-check
 
 ## 5) Verification Commands
 
 ```bash
 # CLI commands
 uv run python cli.py --help
-uv run python cli.py setup_data --help
+uv run python cli.py setup-data --help
 uv run python cli.py fetch --help
 uv run python cli.py backtest --help
 
@@ -92,7 +92,7 @@ uv run python cli.py backtest --help
 test -f experiments/notes/.gitkeep && echo "NOTES DIR OK"
 
 # Gitignore
-grep -E "results\.tsv|run\.log" .gitignore && echo "GITIGNORE OK"
+grep -n "^\*\.log$|^\*\.tsv$" .gitignore && echo "GITIGNORE OK"
 
 # No removed command references
 grep -n "def run\|def status\|def report\|def ingest\|def research" cli.py || echo "REMOVED COMMANDS GONE"
@@ -121,7 +121,7 @@ pytest --tb=short -q
 - `grep -n "def run\\|def status\\|def report\\|def ingest\\|def research" cli.py || echo "REMOVED COMMANDS GONE"` -> `REMOVED COMMANDS GONE`
 - `test -f experiments/notes/.gitkeep && echo "NOTES DIR OK"` -> `NOTES DIR OK`
 - `grep -n "^\\*\\.log$\\|^\\*\\.tsv$" .gitignore` -> lines 33-34 contain the active ignore coverage
-- `uv run pytest --tb=short -q` -> `91 passed in 1.49s`
+- `uv run pytest --tb=short -q` -> `95 passed in 1.54s`
 
 ### Blockers / Deviations
 

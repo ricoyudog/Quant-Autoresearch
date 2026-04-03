@@ -24,7 +24,7 @@ Record the test count and result as baseline.
 
 | Test | What it verifies |
 | --- | --- |
-| `test_setup_data_command_exists` | `setup_data` command registered in Typer app |
+| `test_setup_data_command_exists` | `setup-data` command registered in Typer app |
 | `test_fetch_command_exists` | `fetch` command registered, accepts `--symbol` arg |
 | `test_backtest_command_exists` | `backtest` command registered in Typer app |
 | `test_run_command_removed` | `run` command not in registered commands |
@@ -70,7 +70,7 @@ uv run python cli.py --help 2>&1 | grep -cE "run|status|report|ingest|research"
 uv run python cli.py --help 2>&1 | grep -E "setup.data|fetch|backtest"
 
 # Smoke test each command
-uv run python cli.py setup_data --help
+uv run python cli.py setup-data --help
 uv run python cli.py fetch --help
 uv run python cli.py backtest --help
 ```
@@ -117,7 +117,7 @@ grep "^from\|^import" cli.py
 ## Latest Verification Result
 
 - `uv run pytest tests/unit/test_cli.py -q` -> `12 passed in 0.33s`
-- `uv run pytest --tb=short -q` -> `91 passed in 1.49s`
+- `uv run pytest --tb=short -q` -> `95 passed in 1.54s`
 - `uv run python cli.py --help` -> commands are `fetch`, `setup-data`, and `backtest`
 - `test -f experiments/notes/.gitkeep && echo "NOTES DIR OK"` -> `NOTES DIR OK`
 - `grep -n "^\*\.log$|^\*\.tsv$" .gitignore` -> lines 33-34 match

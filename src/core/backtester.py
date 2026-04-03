@@ -1,26 +1,100 @@
+import ast
+import inspect
 import os
 import sys
-import pandas as pd
+from pathlib import Path
+
 import numpy as np
-import ast
+import pandas as pd
 from RestrictedPython import compile_restricted, safe_builtins
 from RestrictedPython.Guards import safer_getattr
 from RestrictedPython.Eval import default_guarded_getiter, default_guarded_getitem
+
 from data.connector import DataConnector
 
 CACHE_DIR = os.environ.get("CACHE_DIR", "data/cache")
-STRATEGY_FILE = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("STRATEGY_FILE", "src/strategies/active_strategy.py")
+DEFAULT_STRATEGY_FILE = "src/strategies/active_strategy.py"
+STRATEGY_FILE = DEFAULT_STRATEGY_FILE
 
 FORBIDDEN_BUILTINS = {'exec', 'eval', 'open', 'getattr', 'setattr', 'delattr'}
 FORBIDDEN_MODULES = {'socket', 'requests', 'urllib', 'os', 'sys', 'shutil', 'subprocess'}
 
 
+def resolve_strategy_file(file_path: str | None = None) -> str:
+    """Resolve the active strategy path using runtime inputs instead of import-time state."""
+    if file_path:
+        return file_path
+
+    env_strategy_file = os.environ.get("STRATEGY_FILE")
+    if env_strategy_file:
+        return env_strategy_file
+
+    if len(sys.argv) > 1 and Path(sys.argv[0]).name == "backtester.py":
+        return sys.argv[1]
+
+    return STRATEGY_FILE
+
+
+def format_p_value(p_value: float | None) -> str:
+    """Render the p-value field without implying significance when unavailable."""
+    if p_value is None or pd.isna(p_value):
+        return "NA"
+    return f"{p_value:.4f}"
+
+
+def _is_instantiable_without_args(strategy_class: type) -> bool:
+    """Return True when a strategy class can be instantiated with no arguments."""
+    try:
+        signature = inspect.signature(strategy_class.__init__)
+    except (TypeError, ValueError):
+        return False
+
+    for name, parameter in signature.parameters.items():
+        if name == "self":
+            continue
+        if parameter.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD):
+            continue
+        if parameter.default is inspect._empty:
+            return False
+    return True
+
+
 def find_strategy_class(sandbox_locals: dict) -> type | None:
-    """Dynamically find the first class with a generate_signals method in sandbox locals."""
+    """Select the most concrete zero-arg strategy class from sandbox locals."""
+    direct_candidates = []
+    inherited_candidates = []
+
     for obj in sandbox_locals.values():
-        if isinstance(obj, type) and hasattr(obj, "generate_signals"):
-            return obj
+        if not isinstance(obj, type):
+            continue
+        if not hasattr(obj, "generate_signals"):
+            continue
+        if not _is_instantiable_without_args(obj):
+            continue
+
+        if "generate_signals" in obj.__dict__:
+            direct_candidates.append(obj)
+        else:
+            inherited_candidates.append(obj)
+
+    if direct_candidates:
+        return direct_candidates[-1]
+    if inherited_candidates:
+        return inherited_candidates[-1]
     return None
+
+
+def extract_trade_returns(returns: pd.Series, positions: pd.Series) -> pd.Series:
+    """Aggregate per-bar returns into closed-trade returns over contiguous positions."""
+    aligned_positions = positions.fillna(0)
+    aligned_returns = returns.reindex(aligned_positions.index).fillna(0.0)
+    active_mask = aligned_positions != 0
+
+    if not active_mask.any():
+        return pd.Series(dtype=float)
+
+    trade_groups = (aligned_positions != aligned_positions.shift(fill_value=0)).cumsum()
+    return aligned_returns[active_mask].groupby(trade_groups[active_mask]).sum().astype(float)
 
 
 def calculate_metrics(combined_returns: pd.Series, trades: pd.Series) -> dict:
@@ -54,14 +128,8 @@ def calculate_metrics(combined_returns: pd.Series, trades: pd.Series) -> dict:
         dd_durations = in_dd.groupby(dd_groups).sum()
         max_dd_days = int(dd_durations.max()) if len(dd_durations) > 0 else 0
 
-    # Trades count — number of position changes
-    trade_changes = trades.diff().abs()
-    trade_changes = trade_changes[trade_changes > 0]
-    total_trades = int(trade_changes.sum()) if len(trade_changes) > 0 else 0
-
-    # Trade-level returns — actual returns when a position is active
-    active_mask = trades != 0
-    trade_returns = combined_returns[active_mask]
+    trade_returns = extract_trade_returns(combined_returns, trades)
+    total_trades = int(len(trade_returns))
 
     # Win Rate
     if len(trade_returns) > 0:
@@ -145,11 +213,8 @@ def run_per_symbol_analysis(strategy_instance, data: dict, start_idx: int, end_i
         running_max = cum.cummax()
         dd = ((cum - running_max) / running_max).min()
 
-        trade_changes = signals.diff().abs()
-        trade_changes = trade_changes[trade_changes > 0]
-        trade_count = int(trade_changes.sum()) if len(trade_changes) > 0 else 0
-
-        trade_rets = net_returns[signals != 0]
+        trade_rets = extract_trade_returns(net_returns, signals)
+        trade_count = int(len(trade_rets))
         if len(trade_rets) > 0:
             wins = (trade_rets > 0).sum()
             wr = float(wins / len(trade_rets))
@@ -176,7 +241,7 @@ def security_check(file_path: str = None):
     """
     Performs security analysis on a strategy file using AST to find forbidden patterns.
     """
-    target = file_path or STRATEGY_FILE
+    target = resolve_strategy_file(file_path)
     if not os.path.exists(target):
         return False, f"Strategy file not found: {target}"
     
@@ -306,15 +371,17 @@ def run_backtest(strategy_instance, data, start_idx, end_idx):
 
     return sharpe, max_drawdown, total_trades
 
-def walk_forward_validation():
-    is_safe, msg = security_check()
+def walk_forward_validation(strategy_file: str | None = None):
+    target = resolve_strategy_file(strategy_file)
+
+    is_safe, msg = security_check(target)
     if not is_safe:
         print(f"SECURITY ERROR: {msg}")
         sys.exit(1)
         
     # Load Strategy via RestrictedPython Sandbox
     try:
-        with open(STRATEGY_FILE, "r") as f:
+        with open(target, "r") as f:
             strategy_lines = f.readlines()
         
         # Strip import statements for restricted execution
@@ -346,7 +413,7 @@ def walk_forward_validation():
         
         strategy_class = find_strategy_class(sandbox_locals)
         if not strategy_class:
-            print("STRATEGY ERROR: No class with generate_signals found in strategy.py")
+            print(f"STRATEGY ERROR: No class with generate_signals found in {target}")
             sys.exit(1)
             
         strategy_instance = strategy_class()
@@ -425,7 +492,7 @@ def walk_forward_validation():
     print(f"DRAWDOWN: {avg_metrics['drawdown']:.4f}")
     print(f"MAX_DD_DAYS: {avg_metrics['max_dd_days']}")
     print(f"TRADES: {avg_metrics['trades']}")
-    print(f"P_VALUE: 0.0000")
+    print(f"P_VALUE: {format_p_value(None)}")
     print(f"WIN_RATE: {avg_metrics['win_rate']:.4f}")
     print(f"PROFIT_FACTOR: {avg_metrics['profit_factor']:.4f}")
     print(f"AVG_WIN: {avg_metrics['avg_win']:.4f}")

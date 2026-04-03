@@ -12,7 +12,7 @@ To set up a new experiment:
    - `src/core/backtester.py` — fixed evaluation harness. Do NOT modify.
    - `src/strategies/active_strategy.py` — the file you modify.
 4. **Verify data exists**: Check `data/cache/` has Parquet files.
-   If not, tell the human to run `uv run python cli.py setup_data`.
+   If not, tell the human to run `uv run python cli.py setup-data`.
 5. **Initialize files**:
    - Create `results.tsv` with header row.
    - Create `experiments/notes/` directory.
@@ -52,7 +52,7 @@ CALMAR: 1.2300
 DRAWDOWN: -0.1200
 MAX_DD_DAYS: 45
 TRADES: 120
-P_VALUE: 0.0300
+P_VALUE: NA
 WIN_RATE: 0.5500
 PROFIT_FACTOR: 1.8500
 AVG_WIN: 0.0120
@@ -69,16 +69,16 @@ Extract:
 grep "^SCORE:\|^DRAWDOWN:\|^P_VALUE:\|^BASELINE_SHARPE:\|^PROFIT_FACTOR:" run.log
 ```
 
+`P_VALUE` may be `NA` in the current runtime. Do not treat it as a hard keep/discard gate unless a real significance test is available.
+
 ## Decision rules
 
 **KEEP if:**
 - SCORE > previous best AND
-- P_VALUE <= 0.05 AND
 - SCORE > BASELINE_SHARPE
 
 **DISCARD if:**
 - SCORE <= previous best OR
-- P_VALUE > 0.05 (not statistically significant) OR
 - SCORE <= BASELINE_SHARPE (can't beat Buy&Hold)
 
 **Simplicity criterion**:
@@ -93,6 +93,7 @@ Log to `results.tsv` (tab-separated, do NOT commit):
 ```
 commit  sharpe  sortino  calmar  drawdown  max_dd_days  trades  win_rate  profit_factor  p_value  baseline_sharpe  status  description
 ```
+Record `NA` in the `p_value` column when significance is unavailable.
 
 ## Obsidian experiment notes
 
@@ -130,7 +131,7 @@ false signals during high-volatility periods while maintaining trend capture.
 | Sortino | 0.9800 | +0.1700 |
 | Profit Factor | 2.3000 | +0.4500 |
 | Win Rate | 60% | +5% |
-| P-Value | 0.008 | Significant |
+| P_VALUE | NA | Informational only in current runtime |
 
 ## Per-Symbol
 - SPY: 0.62 (strong in low-vol regime)
@@ -157,9 +158,9 @@ LOOP FOREVER:
 3. Propose hypothesis -> modify `src/strategies/active_strategy.py`
 4. `git add src/strategies/active_strategy.py && git commit -m "<description>"`
 5. `uv run python src/core/backtester.py > run.log 2>&1`
-6. `grep "^SCORE:\|^P-VALUE:\|^BASELINE_SHARPE:" run.log`
+6. `grep "^SCORE:\|^P_VALUE:\|^BASELINE_SHARPE:" run.log`
 7. If grep empty -> crash. `tail -n 50 run.log`. Fix or skip.
-8. Check hard constraints (p_value, baseline_sharpe)
+8. Check hard constraints (baseline_sharpe)
 9. Record in results.tsv
 10. Write Obsidian note
 11. If KEEP -> keep commit, advance branch

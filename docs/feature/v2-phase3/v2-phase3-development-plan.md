@@ -17,7 +17,7 @@ With the V1 architecture fully removed (Phase 2 complete), the CLI still carries
 - `tests/unit/test_cli.py` exists with 12 passing tests
 - `experiments/notes/.gitkeep` anchors the notes directory
 - Experiment outputs remain ignored via the existing global `*.log` and `*.tsv` rules in `.gitignore`
-- Closeout re-verification on 2026-04-03: `uv run pytest --tb=short -q` -> `91 passed in 1.49s`
+- Closeout re-verification on 2026-04-03: `uv run pytest --tb=short -q` -> `95 passed in 1.54s`
 
 ## Current State (Closeout Snapshot)
 
@@ -29,7 +29,7 @@ With the V1 architecture fully removed (Phase 2 complete), the CLI still carries
 | `report` | Stub ("not available in V2") | REMOVE |
 | `fetch` | Working — uses DataConnector | KEEP |
 | `ingest` | Working — uses DataConnector | REMOVE |
-| `setup_data` | Working — uses prepare_all_data | KEEP |
+| `setup-data` | Working — uses prepare_all_data | KEEP |
 | `research` | Working — imports from core.research | REMOVE |
 
 ### .gitignore
@@ -46,7 +46,7 @@ Root `program.md` exists and contains the full V2 instructions, including the Ob
 ### CLI Commands
 | Command | Purpose |
 | --- | --- |
-| `setup_data` | Download default market data symbols |
+| `setup-data` | Download default market data symbols |
 | `fetch SYMBOL` | Fetch specific symbol data |
 | `backtest` | Run backtester on active_strategy.py |
 
@@ -110,7 +110,7 @@ Root-level `program.md` with full V2 research instructions including Section 4 O
 ## Acceptance Criteria
 
 - [x] `feature/v2-phase3` branch exists
-- [x] `cli.py` has exactly 3 commands: `setup_data`, `fetch`, `backtest`
+- [x] `cli.py` has exactly 3 commands: `setup-data`, `fetch`, `backtest`
 - [x] `run`, `status`, `report`, `ingest`, `research` commands are gone
 - [x] `backtest` command invokes `src/core/backtester.py`
 - [x] `experiments/notes/.gitkeep` exists
@@ -124,7 +124,7 @@ Root-level `program.md` with full V2 research instructions including Section 4 O
 
 ```bash
 # Verify CLI has only 3 commands
-uv run python cli.py --help 2>&1 | grep -E "setup_data|fetch|backtest"
+uv run python cli.py --help 2>&1 | grep -E "setup-data|fetch|backtest"
 uv run python cli.py --help 2>&1 | grep -E "run|status|report|ingest|research" || echo "REMOVED COMMANDS GONE"
 
 # Verify backtest command works (should fail gracefully without data)

@@ -11,6 +11,8 @@ import pytest
 import pandas as pd
 import numpy as np
 
+import core.backtester as backtester_module
+
 from core.backtester import (
     find_strategy_class,
     calculate_metrics,
@@ -27,6 +29,16 @@ class DummyStrategy:
 
 class AnotherStrategy:
     """Another strategy class for testing."""
+    def generate_signals(self, data):
+        return pd.Series(0, index=data.index)
+
+
+class HelperStrategy:
+    """Helper/base class that should not be auto-selected."""
+
+    def __init__(self, lookback):
+        self.lookback = lookback
+
     def generate_signals(self, data):
         return pd.Series(0, index=data.index)
 
@@ -81,6 +93,17 @@ class TestFindStrategyClass:
         }
         result = find_strategy_class(sandbox_locals)
         assert result is None
+
+    def test_find_strategy_class_skips_non_instantiable_helper_classes(self):
+        """Concrete zero-arg strategy should win over helper/base classes."""
+        sandbox_locals = {
+            "HelperStrategy": HelperStrategy,
+            "DummyStrategy": DummyStrategy,
+        }
+
+        result = find_strategy_class(sandbox_locals)
+
+        assert result is DummyStrategy
 
 
 # =============================================================================
@@ -217,6 +240,16 @@ class TestCalculateMetrics:
         # Avg loss should be negative
         assert result['avg_loss'] < 0
 
+    def test_calculate_metrics_aggregates_closed_trade_returns(self):
+        """Multi-bar holds should count as one trade, not one bar per trade."""
+        returns = pd.Series([0.01, -0.005, 0.01, 0.0])
+        trades = pd.Series([1, 1, 1, 0], index=returns.index)
+
+        result = calculate_metrics(returns, trades)
+
+        assert result["win_rate"] == 1.0
+        assert result["avg_win"] == pytest.approx(0.015)
+
 
 # =============================================================================
 # calculate_baseline_sharpe tests
@@ -235,8 +268,33 @@ class TestCalculateBaselineSharpe:
         result = calculate_baseline_sharpe(data)
 
         assert isinstance(result, float)
-        # Positive returns should give positive Sharpe
         assert result > 0
+
+
+class TestRuntimeStrategyResolution:
+    """Tests for resolving strategy paths at runtime."""
+
+    def test_security_check_uses_current_env_strategy_file(self, monkeypatch, tmp_path):
+        """Runtime STRATEGY_FILE env var should override stale module globals."""
+        strategy_path = tmp_path / "forbidden_strategy.py"
+        strategy_path.write_text("import os\n")
+
+        monkeypatch.setattr(
+            backtester_module,
+            "STRATEGY_FILE",
+            "src/strategies/active_strategy.py",
+        )
+        monkeypatch.setenv("STRATEGY_FILE", str(strategy_path))
+
+        is_safe, message = backtester_module.security_check()
+
+        assert is_safe is False
+        assert "Forbidden module import found: os" in message
+
+    def test_format_p_value_reports_unavailable_placeholder(self):
+        """Unavailable significance should not masquerade as a passing p-value."""
+        assert hasattr(backtester_module, "format_p_value")
+        assert backtester_module.format_p_value(None) == "NA"
 
     def test_calculate_baseline_sharpe_zero_std(self):
         """Constant returns -> large finite value."""

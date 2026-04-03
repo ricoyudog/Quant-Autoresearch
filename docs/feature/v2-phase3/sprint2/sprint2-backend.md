@@ -50,7 +50,7 @@ Create the root `program.md` with full V2 research instructions including the Ob
 ### Step 2 — Create tests/unit/test_cli.py (TEST-01)
 - [x] Create `tests/unit/test_cli.py`
 - [x] Test cases:
-  - `test_setup_data_command_exists` — verify `setup_data` is registered
+  - `test_setup_data_command_exists` — verify `setup-data` is registered
   - `test_fetch_command_exists` — verify `fetch` is registered with symbol argument
   - `test_backtest_command_exists` — verify `backtest` is registered
   - `test_run_command_removed` — verify `run` is NOT registered
@@ -116,7 +116,7 @@ uv run python cli.py --help
 - `grep -n "Obsidian experiment notes\\|Hypothesis\\|LOOP FOREVER\\|results.tsv" program.md` -> matched lines 17, 92, 97, 116, 154, 156, 163, 177
 - `uv run pytest tests/unit/test_cli.py -q` -> `12 passed in 0.33s`
 - `uv run pytest tests/unit/test_cli.py tests/unit/test_data.py tests/unit/test_runner.py tests/unit/test_security.py --tb=short -q` -> `21 passed in 0.81s`
-- `uv run pytest --tb=short -q` -> `91 passed in 1.49s`
+- `uv run pytest --tb=short -q` -> `95 passed in 1.54s`
 - `uv run python cli.py --help` -> commands are `fetch`, `setup-data`, and `backtest`
 
 ### Blockers / Deviations
