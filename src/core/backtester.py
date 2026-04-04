@@ -15,12 +15,12 @@ FORBIDDEN_BUILTINS = {'exec', 'eval', 'open', 'getattr', 'setattr', 'delattr'}
 FORBIDDEN_MODULES = {'socket', 'requests', 'urllib', 'os', 'sys', 'shutil', 'subprocess'}
 
 
-def find_strategy_class(sandbox_locals: dict) -> type | None:
-    """Dynamically find the first class with a generate_signals method in sandbox locals."""
+def find_strategy_class(sandbox_locals: dict) -> tuple[type | None, bool]:
+    """Find the first strategy class and whether it exposes select_universe."""
     for obj in sandbox_locals.values():
         if isinstance(obj, type) and hasattr(obj, "generate_signals"):
-            return obj
-    return None
+            return obj, hasattr(obj, "select_universe")
+    return None, False
 
 
 def calculate_metrics(combined_returns: pd.Series, trades: pd.Series) -> dict:
@@ -344,7 +344,7 @@ def walk_forward_validation():
         sandbox_locals = {}
         exec(byte_code, safe_globals, sandbox_locals)
         
-        strategy_class = find_strategy_class(sandbox_locals)
+        strategy_class, _ = find_strategy_class(sandbox_locals)
         if not strategy_class:
             print("STRATEGY ERROR: No class with generate_signals found in strategy.py")
             sys.exit(1)

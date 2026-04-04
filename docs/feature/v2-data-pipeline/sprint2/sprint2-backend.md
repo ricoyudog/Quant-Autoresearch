@@ -51,11 +51,11 @@ Extend the strategy interface with `select_universe(daily_data)` for strategy-dr
 - [x] Verify: returns correct schema and data
 
 ### Step 3 -- Update find_strategy_methods (STRAT-03)
-- [ ] Locate `find_strategy_methods()` or `find_strategy_class()` in `src/core/backtester.py`
-- [ ] Update return value: `(class, has_universe)` tuple
-- [ ] `has_universe = hasattr(obj, 'select_universe')`
-- [ ] If no method found, return `(None, False)`
-- [ ] Verify: test with a class that has both methods, one method, and no methods
+- [x] Locate `find_strategy_methods()` or `find_strategy_class()` in `src/core/backtester.py`
+- [x] Update return value: `(class, has_universe)` tuple
+- [x] `has_universe = hasattr(obj, 'select_universe')`
+- [x] If no method found, return `(None, False)`
+- [x] Verify: test with a class that has both methods, one method, and no methods
 
 ### Step 4 -- Update generate_signals for minute data (STRAT-04)
 - [ ] Update `generate_signals()` signature in strategy to accept `dict[str, pd.DataFrame]`
@@ -115,7 +115,7 @@ Extend the strategy interface with `select_universe(daily_data)` for strategy-dr
 ## 4) Test Plan
 
 - [x] After Step 1: `from src.strategies.active_strategy import *` works
-- [ ] After Step 3: `find_strategy_methods()` correctly detects both methods
+- [x] After Step 3: `find_strategy_methods()` correctly detects both methods
 - [ ] After Step 5: walk-forward windows have correct trading-day boundaries
 - [ ] After Step 6: backtester pipeline runs end-to-end (manual test with small date range)
 - [ ] After Step 8: all strategy interface tests pass
@@ -162,6 +162,13 @@ pytest --tb=short -q
   its ranked ticker output.
 - Re-verified `query_minute_data()` from Sprint 1 against both the unit suite and the live
   `minute-aggs bars` runtime path, so Sprint 2 can depend on the bridge without adding new code.
+- Updated `find_strategy_class()` in `src/core/backtester.py` to return
+  `(strategy_class, has_universe)` and detect `select_universe` without changing the broader
+  backtester flow yet.
+- Synced the `walk_forward_validation()` strategy-loading call site to unpack the new tuple contract.
+- Extended both `tests/unit/test_strategy_interface.py` and `tests/unit/test_backtester_v2.py` to
+  cover the three required Step 3 cases: both methods present, `generate_signals` only, and no valid
+  strategy class.
 
 ### Command Results
 
@@ -169,6 +176,8 @@ pytest --tb=short -q
 - `uv run python -c "from src.strategies.active_strategy import *; print('IMPORT OK')"` -> `IMPORT OK`
 - `uv run pytest tests/unit/test_duckdb_connector.py -v` -> 6 passed
 - `uv run python -c "from src.data.duckdb_connector import query_minute_data; result = query_minute_data(['AAPL'], '2025-11-03', '2025-11-07'); frame = result.get('AAPL'); print('tickers=', sorted(result.keys())); print('rows=', 0 if frame is None else len(frame)); print('columns=', [] if frame is None else list(frame.columns)); print('first_session=', None if frame is None or frame.empty else frame['session_date'].min()); print('last_session=', None if frame is None or frame.empty else frame['session_date'].max()); print('first_close=', None if frame is None or frame.empty else frame.iloc[0]['close'])"` -> `tickers=['AAPL']`, `rows=3612`, schema `['ticker', 'session_date', 'window_start_ns', 'open', 'high', 'low', 'close', 'volume', 'transactions']`, date range `2025-11-03` to `2025-11-07`
+- `PYTHONPATH=src uv run python -c "from core.backtester import find_strategy_class; print('IMPORT OK', find_strategy_class({}))"` -> `IMPORT OK (None, False)`
+- `PYTHONPATH=src uv run pytest tests/unit/test_strategy_interface.py tests/unit/test_backtester_v2.py -q` -> `44 passed in 0.31s`
 
 ### Blockers / Deviations
 
@@ -180,4 +189,4 @@ pytest --tb=short -q
 
 ### Follow-ups
 
-- Sprint 3: CLI commands, integration tests, documentation updates
+- Next execution target: Step 4 in this sprint doc (`generate_signals()` minute-data contract)

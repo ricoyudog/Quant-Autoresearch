@@ -36,10 +36,11 @@ class TestDynamicLoading:
                 return pd.Series(1, index=data.index)
 
         sandbox_locals = {'MomentumStrategy': MomentumStrategy}
-        result = find_strategy_class(sandbox_locals)
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
 
-        assert result is MomentumStrategy
-        assert result.__name__ == 'MomentumStrategy'
+        assert strategy_class is MomentumStrategy
+        assert strategy_class.__name__ == 'MomentumStrategy'
+        assert has_universe is False
 
     def test_custom_class_name(self):
         """'MomentumStrategy' loads correctly."""
@@ -54,13 +55,14 @@ class TestDynamicLoading:
             'MomentumStrategy': MomentumStrategy,
             'TradingStrategy': None,
         }
-        result = find_strategy_class(sandbox_locals)
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
 
-        assert result is MomentumStrategy
-        assert result.__name__ == 'MomentumStrategy'
+        assert strategy_class is MomentumStrategy
+        assert strategy_class.__name__ == 'MomentumStrategy'
+        assert has_universe is False
 
     def test_multiple_methods_allowed(self):
-        """Class with generate_signals + helper methods."""
+        """Class with generate_signals + select_universe sets has_universe."""
         class ComplexStrategy:
             def __init__(self):
                 self.param = 10
@@ -73,18 +75,22 @@ class TestDynamicLoading:
                 """Another public method."""
                 return x * 2
 
+            def select_universe(self, daily_data):
+                return ['AAPL']
+
             def generate_signals(self, data):
                 signals = pd.Series(0, index=data.index)
                 signals.iloc[10:] = 1
                 return signals
 
         sandbox_locals = {'ComplexStrategy': ComplexStrategy}
-        result = find_strategy_class(sandbox_locals)
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
 
-        assert result is ComplexStrategy
-        assert hasattr(result, 'generate_signals')
-        assert hasattr(result, '_helper_method')
-        assert hasattr(result, 'another_method')
+        assert strategy_class is ComplexStrategy
+        assert hasattr(strategy_class, 'generate_signals')
+        assert hasattr(strategy_class, '_helper_method')
+        assert hasattr(strategy_class, 'another_method')
+        assert has_universe is True
 
     def test_no_generate_signals_rejected(self):
         """Class without generate_signals returns None."""
@@ -96,9 +102,10 @@ class TestDynamicLoading:
                 return data
 
         sandbox_locals = {'IncompleteStrategy': IncompleteStrategy}
-        result = find_strategy_class(sandbox_locals)
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
 
-        assert result is None
+        assert strategy_class is None
+        assert has_universe is False
 
     def test_non_class_with_generate_signals_ignored(self):
         """Function named generate_signals ignored."""
@@ -113,10 +120,11 @@ class TestDynamicLoading:
             'generate_signals': generate_signals,  # Function, not class
             'ValidStrategy': ValidStrategy,
         }
-        result = find_strategy_class(sandbox_locals)
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
 
         # Should find ValidStrategy, not the function
-        assert result is ValidStrategy
+        assert strategy_class is ValidStrategy
+        assert has_universe is False
 
 
 # =============================================================================
@@ -328,6 +336,9 @@ class MyAlphaStrategy:
     def __init__(self, threshold=0.5):
         self.threshold = threshold
 
+    def select_universe(self, daily_data):
+        return ['AAPL', 'MSFT']
+
     def generate_signals(self, data):
         signals = pd.Series(0, index=data.index)
         signals.iloc[10:] = 1
@@ -357,15 +368,19 @@ class HelperClass:
         sandbox_locals = {}
         exec(byte_code, safe_globals, sandbox_locals)
 
-        result = find_strategy_class(sandbox_locals)
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
 
-        assert result is not None
-        assert result.__name__ == 'MyAlphaStrategy'
+        assert strategy_class is not None
+        assert strategy_class.__name__ == 'MyAlphaStrategy'
+        assert has_universe is True
 
     def test_multiple_strategies_returns_first(self):
-        """When multiple classes have generate_signals, first is returned."""
+        """When multiple classes have generate_signals, first is returned with universe flag."""
         strategy_code = """
 class StrategyA:
+    def select_universe(self, daily_data):
+        return ['AAPL']
+
     def generate_signals(self, data):
         return pd.Series(1, index=data.index)
 
@@ -394,8 +409,9 @@ class StrategyB:
         sandbox_locals = {}
         exec(byte_code, safe_globals, sandbox_locals)
 
-        result = find_strategy_class(sandbox_locals)
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
 
-        assert result is not None
-        assert hasattr(result, 'generate_signals')
-        assert result.__name__ in {'StrategyA', 'StrategyB'}
+        assert strategy_class is not None
+        assert hasattr(strategy_class, 'generate_signals')
+        assert strategy_class.__name__ in {'StrategyA', 'StrategyB'}
+        assert has_universe is (strategy_class.__name__ == 'StrategyA')

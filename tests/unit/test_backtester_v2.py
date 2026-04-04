@@ -45,32 +45,42 @@ class TestFindStrategyClass:
     """Tests for find_strategy_class function."""
 
     def test_find_strategy_class_found(self):
-        """Mock class with generate_signals is found."""
+        """Mock class with generate_signals is found and has_universe is False."""
         sandbox_locals = {
             'DummyStrategy': DummyStrategy,
             'other_var': 42,
         }
-        result = find_strategy_class(sandbox_locals)
-        assert result is DummyStrategy
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
+        assert strategy_class is DummyStrategy
+        assert has_universe is False
 
     def test_find_strategy_class_not_found(self):
-        """Empty dict returns None."""
-        result = find_strategy_class({})
-        assert result is None
+        """Empty dict returns (None, False)."""
+        strategy_class, has_universe = find_strategy_class({})
+        assert strategy_class is None
+        assert has_universe is False
 
     def test_find_strategy_class_multiple(self):
-        """First matching class returned."""
+        """First matching class returned with universe detection."""
+        class UniverseStrategy:
+            def select_universe(self, daily_data):
+                return ['SPY']
+
+            def generate_signals(self, data):
+                return pd.Series(1, index=data.index)
+
         sandbox_locals = {
-            'AnotherStrategy': AnotherStrategy,
+            'UniverseStrategy': UniverseStrategy,
             'DummyStrategy': DummyStrategy,
         }
-        result = find_strategy_class(sandbox_locals)
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
         # First matching class in iteration order
-        assert result in (AnotherStrategy, DummyStrategy)
-        assert hasattr(result, 'generate_signals')
+        assert strategy_class in (UniverseStrategy, DummyStrategy)
+        assert hasattr(strategy_class, 'generate_signals')
+        assert has_universe is (strategy_class is UniverseStrategy)
 
     def test_find_strategy_class_non_class_ignored(self):
-        """Functions/variables ignored."""
+        """Functions/variables ignored and no strategy returns False flag."""
         def generate_signals(data):
             return pd.Series(1, index=data.index)
 
@@ -79,8 +89,9 @@ class TestFindStrategyClass:
             'generate_signals': generate_signals,
             'some_number': 42,
         }
-        result = find_strategy_class(sandbox_locals)
-        assert result is None
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
+        assert strategy_class is None
+        assert has_universe is False
 
 
 # =============================================================================
