@@ -4,7 +4,7 @@
 > Umbrella issue: #11
 > Canonical root: `docs/feature/v2-data-pipeline/`
 > Last updated: 2026-04-04
-> Planning status: Sprint 2 execution in progress; Sprint 2 Steps 1-5 closed out
+> Planning status: Sprint 2 execution in progress; Sprint 2 Steps 1-6 closed out
 
 ## 1. Context
 
@@ -97,7 +97,7 @@ repo's existing V2 naming convention instead of introducing an issue-number-only
 | --- | --- | --- | --- | --- |
 | Phase 0 -- Spec Alignment + Baseline | Confirm docs root, branch convention, dependency gate, and umbrella references | rewritten issue card, updated workspace index, lane docs, verification baseline | completed | start Sprint 1 once issue #8 closes |
 | Sprint 1 -- DuckDB + Daily Cache | Add DuckDB, create the daily cache, and replace the old data-loader entrypoint | `duckdb_connector.py`, updated `setup-data`, clean import graph, unit coverage | completed | begin Sprint 2 backend execution |
-| Sprint 2 -- Strategy + Backtester | Add the dual-method strategy interface and minute-level walk-forward pipeline | updated `backtester.py`, updated `active_strategy.py`, trading-day windows | in progress | continue Step 6 in `sprint2/sprint2-backend.md` |
+| Sprint 2 -- Strategy + Backtester | Add the dual-method strategy interface and minute-level walk-forward pipeline | updated `backtester.py`, updated `active_strategy.py`, trading-day windows | in progress | continue Step 7 in `sprint2/sprint2-backend.md` |
 | Sprint 3 -- CLI + Docs + Tests | Finish CLI behavior, integration coverage, and runtime docs | updated `cli.py`, integration tests, updated `program.md` and `CLAUDE.md` | pending | begin after Sprint 2 verification |
 | Phase 4 -- Verification + Closeout | Run the full gate and prepare review-ready evidence | green dependency sync, green test suite, smoke commands, issue evidence update | pending | execute after Sprint 3 |
 
@@ -126,10 +126,10 @@ repo's existing V2 naming convention instead of introducing an issue-number-only
 
 | Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
 | --- | --- | --- | --- | --- | --- | --- |
-| STRAT-01 | Extend the strategy contract with `select_universe(daily_data)` and minute-data `generate_signals()` | Backend | Sprint 1 complete | 0.3d | in progress | the dual-method contract is documented and callable |
-| STRAT-02 | Update strategy discovery and trading-day window calculation in the backtester | Backend | STRAT-01, QA-01 | 0.4d | pending | the backtester detects optional universe selection and produces 5 valid windows |
-| STRAT-03 | Integrate the daily -> universe -> minute -> signals pipeline in `src/core/backtester.py` | Backend | STRAT-02 | 0.6d | pending | minute-level walk-forward runs through the full evaluation loop |
-| QA-02 | Expand strategy-interface tests and add focused backtester coverage | QA | STRAT-01, STRAT-02, STRAT-03 | 0.3d | pending | unit tests cover the dual-method contract, signal lag, and window behavior |
+| STRAT-01 | Extend the strategy contract with `select_universe(daily_data)` and minute-data `generate_signals()` | Backend | Sprint 1 complete | 0.3d | completed | the dual-method contract is documented and callable |
+| STRAT-02 | Update strategy discovery and trading-day window calculation in the backtester | Backend | STRAT-01, QA-01 | 0.4d | completed | the backtester detects optional universe selection and produces 5 valid windows |
+| STRAT-03 | Integrate the daily -> universe -> minute -> signals pipeline in `src/core/backtester.py` | Backend | STRAT-02 | 0.6d | completed | minute-level walk-forward runs through the full evaluation loop |
+| QA-02 | Expand strategy-interface tests and add focused backtester coverage | QA | STRAT-01, STRAT-02, STRAT-03 | 0.3d | in progress | unit tests cover the dual-method contract, signal lag, and window behavior |
 
 ### Sprint 3 -- CLI + Docs + Tests
 
@@ -172,9 +172,9 @@ expected before a sprint can be considered complete.
 - [x] `duckdb` is added to `pyproject.toml` and `uv sync` succeeds
 - [x] `src/data/duckdb_connector.py` is created with daily-cache build/load helpers
 - [x] `src/data/connector.py` and `src/data/preprocessor.py` are removed with no stale imports
-- [ ] The strategy interface supports `select_universe(daily_data)` plus minute-data
+- [x] The strategy interface supports `select_universe(daily_data)` plus minute-data
       `generate_signals()`
-- [ ] The backtester supports minute-level walk-forward via CLI minute-data queries
+- [x] The backtester supports minute-level walk-forward via CLI minute-data queries
 - [ ] `fetch`, `backtest`, and `update_data` expose the new runtime model
 - [ ] Unit, integration, and full regression gates pass with recorded evidence
 

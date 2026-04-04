@@ -75,7 +75,7 @@ Extend the strategy interface with `select_universe(daily_data)` for strategy-dr
 - [x] Verify: 5 windows, no date gaps, no overlap
 
 ### Step 6 -- Integrate into backtester (STRAT-06)
-- [ ] Update `src/core/backtester.py` walk_forward_validation():
+- [x] Update `src/core/backtester.py` walk_forward_validation():
   - Phase A: Load daily data from DuckDB via `load_daily_data()`
   - Phase B: Call `strategy.select_universe(daily_data)` if available
     - If no `select_universe`: use default tickers or all tickers
@@ -87,9 +87,9 @@ Extend the strategy interface with `select_universe(daily_data)` for strategy-dr
   - Phase D: Aggregate across windows
   - Phase E: Per-symbol analysis
   - Phase F: Output metrics in standard format
-- [ ] Preserve RestrictedPython sandbox for strategy execution
-- [ ] Preserve AST security checks (shift(-N), forbidden builtins)
-- [ ] Verify: `python -c "from src.core.backtester import *; print('IMPORT OK')"`
+- [x] Preserve RestrictedPython sandbox for strategy execution
+- [x] Preserve AST security checks (shift(-N), forbidden builtins)
+- [x] Verify: `python -c "from src.core.backtester import *; print('IMPORT OK')"`
 
 ### Step 7 -- Update active_strategy.py example (STRAT-07)
 - [ ] Write a working dual-method strategy example:
@@ -184,6 +184,20 @@ pytest --tb=short -q
   inputs.
 - Verified the helper against the live DuckDB cache with a November 2025 smoke range, confirming
   five real trading-day windows are emitted from the local cache.
+- Rewired `walk_forward_validation()` to the Step 6 daily -> universe -> minute pipeline using
+  `load_daily_data()`, `calculate_walk_forward_windows()`, and `query_minute_data()` instead of the
+  legacy cache-loader path.
+- Added a safe fallback universe rule in `src/core/backtester.py` that ranks the top 30 tickers by
+  average daily volume whenever `select_universe()` is missing, invalid, or returns no usable
+  symbols.
+- Added minute-frame preparation inside the backtester so each queried ticker derives `returns` and
+  rolling `volatility` from minute closes before metrics are computed.
+- Aggregated per-window metrics plus cross-window per-symbol metrics directly from the minute-data
+  evaluation loop while preserving the existing YAML-like output format and `PER_SYMBOL` block.
+- Extended the RestrictedPython execution scope with guarded unpack helpers so minute-mode
+  strategies that iterate over `data.items()` continue to run inside the sandbox.
+- Added focused Step 6 coverage in `tests/unit/test_backtester_v2.py` for both the
+  `select_universe()` path and the fallback-universe path.
 
 ### Command Results
 
@@ -198,6 +212,10 @@ pytest --tb=short -q
 - `uv run pytest tests/unit/test_duckdb_connector.py -v` -> 10 passed
 - `PYTHONPATH=src uv run python -c "from data.duckdb_connector import calculate_walk_forward_windows; print('IMPORT OK', callable(calculate_walk_forward_windows))"` -> `IMPORT OK True`
 - `PYTHONPATH=src uv run python -c "from data.duckdb_connector import calculate_walk_forward_windows; windows = calculate_walk_forward_windows('2025-11-03', '2025-11-21', n_windows=5); print('count', len(windows)); print('first', windows[0]); print('last', windows[-1])"` -> `count 5`, first window `{'train_start': '2025-11-03', 'train_end': '2025-11-05', 'test_start': '2025-11-06', 'test_end': '2025-11-10'}`, last window `{'train_start': '2025-11-03', 'train_end': '2025-11-19', 'test_start': '2025-11-20', 'test_end': '2025-11-21'}`
+- `uv run pytest tests/unit/test_backtester_v2.py -q` -> `28 passed in 0.30s`
+- `uv run pytest tests/unit/test_strategy_interface.py tests/unit/test_backtester_v2.py tests/unit/test_duckdb_connector.py -q` -> `58 passed in 0.36s`
+- `uv run pytest tests/security/test_adversarial.py -q` -> `3 passed in 0.25s`
+- `PYTHONPATH=src uv run python -c "from core.backtester import *; print('IMPORT OK')"` -> `IMPORT OK`
 
 ### Blockers / Deviations
 
@@ -211,7 +229,14 @@ pytest --tb=short -q
 - The design sketch in `docs/data-pipeline-v2.md` has an off-by-one issue on the last window, so the
   helper uses `n_windows + 1` contiguous trading-day slices: one initial training slice followed by
   `n_windows` non-overlapping test slices.
+- The Step 6 fallback universe is now explicitly capped to the top 30 daily-volume names instead of
+  querying the full daily universe when `select_universe()` is absent or unusable.
+- The restricted minute-strategy path needed `_iter_unpack_sequence_` and `_unpack_sequence_`
+  guards so strategies that iterate over `dict.items()` remain executable in the sandbox.
+- The Step 6 manual small-range runtime smoke remains pending in the test plan because
+  `walk_forward_validation()` still runs the full configured backtest range; this slice closed on
+  deterministic unit and security evidence plus the import smoke.
 
 ### Follow-ups
 
-- Next execution target: Step 6 in this sprint doc (live minute-level backtester integration)
+- Next execution target: Step 7 in this sprint doc (update `active_strategy.py` dual-method example)

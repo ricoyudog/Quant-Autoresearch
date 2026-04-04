@@ -1,18 +1,29 @@
+import ast
 import os
 import sys
-import pandas as pd
+
 import numpy as np
-import ast
+import pandas as pd
 from RestrictedPython import compile_restricted, safe_builtins
-from RestrictedPython.Guards import safer_getattr
-from RestrictedPython.Eval import default_guarded_getiter, default_guarded_getitem
+from RestrictedPython.Eval import default_guarded_getitem, default_guarded_getiter
+from RestrictedPython.Guards import (
+    guarded_iter_unpack_sequence,
+    guarded_unpack_sequence,
+    safer_getattr,
+)
+
 from data.cache_connector import CacheConnector
+from data.duckdb_connector import (
+    calculate_walk_forward_windows,
+    load_daily_data,
+    query_minute_data,
+)
 
 CACHE_DIR = os.environ.get("CACHE_DIR", "data/cache")
 STRATEGY_FILE = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("STRATEGY_FILE", "src/strategies/active_strategy.py")
 
-FORBIDDEN_BUILTINS = {'exec', 'eval', 'open', 'getattr', 'setattr', 'delattr'}
-FORBIDDEN_MODULES = {'socket', 'requests', 'urllib', 'os', 'sys', 'shutil', 'subprocess'}
+FORBIDDEN_BUILTINS = {"exec", "eval", "open", "getattr", "setattr", "delattr"}
+FORBIDDEN_MODULES = {"socket", "requests", "urllib", "os", "sys", "shutil", "subprocess"}
 
 
 def find_strategy_class(sandbox_locals: dict) -> tuple[type | None, bool]:
@@ -30,6 +41,100 @@ def apply_signal_lag(signals_by_ticker: dict[str, pd.Series]) -> dict[str, pd.Se
         series = signals if isinstance(signals, pd.Series) else pd.Series(signals)
         lagged_signals[ticker] = series.shift(1).fillna(0)
     return lagged_signals
+
+
+def default_universe_from_daily_data(daily_data: pd.DataFrame, max_tickers: int = 30) -> list[str]:
+    """Select a safe fallback ticker subset from the full daily frame."""
+    if daily_data is None or daily_data.empty or "ticker" not in daily_data.columns:
+        return []
+
+    ranked = daily_data.dropna(subset=["ticker"]).copy()
+    if ranked.empty:
+        return []
+
+    if "volume" in ranked.columns:
+        ranked = ranked.dropna(subset=["volume"])
+        if not ranked.empty:
+            universe = (
+                ranked.groupby("ticker", as_index=False)["volume"]
+                .mean()
+                .sort_values(["volume", "ticker"], ascending=[False, True], kind="mergesort")
+            )
+            return universe["ticker"].astype(str).head(max_tickers).tolist()
+
+    return ranked["ticker"].astype(str).drop_duplicates().head(max_tickers).tolist()
+
+
+def normalize_universe_selection(selected_tickers, daily_data: pd.DataFrame) -> list[str]:
+    """Sanitize strategy-selected tickers and fall back to a safe ranked subset."""
+    if isinstance(selected_tickers, str):
+        selected_tickers = [selected_tickers]
+
+    if not isinstance(selected_tickers, (list, tuple, set, pd.Index, np.ndarray)):
+        return default_universe_from_daily_data(daily_data)
+
+    normalized = []
+    for ticker in selected_tickers:
+        if pd.isna(ticker):
+            continue
+        value = str(ticker).strip()
+        if value and value not in normalized:
+            normalized.append(value)
+
+    return normalized or default_universe_from_daily_data(daily_data)
+
+
+def prepare_minute_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    """Sort a minute frame and derive returns plus rolling volatility."""
+    if frame is None or frame.empty:
+        return pd.DataFrame(index=getattr(frame, "index", pd.Index([])))
+
+    prepared = frame.copy()
+    sort_columns = [column for column in ["session_date", "window_start_ns"] if column in prepared.columns]
+    if sort_columns:
+        prepared = prepared.sort_values(sort_columns).reset_index(drop=True)
+
+    if "close" not in prepared.columns:
+        return prepared
+
+    prepared["returns"] = prepared["close"].astype(float).pct_change().fillna(0.0)
+    prepared["volatility"] = (
+        prepared["returns"].rolling(window=20, min_periods=1).std().fillna(0.0)
+    )
+    return prepared
+
+
+def coerce_signal_series(signal_values, index: pd.Index) -> pd.Series:
+    """Coerce arbitrary signal output into a float Series aligned to the frame index."""
+    if isinstance(signal_values, pd.Series):
+        series = signal_values.copy()
+        if len(series) == len(index):
+            series.index = index
+        else:
+            series = series.reset_index(drop=True).reindex(range(len(index)), fill_value=0.0)
+            series.index = index
+        return series.fillna(0.0).astype(float)
+
+    series = pd.Series(signal_values).reset_index(drop=True)
+    if len(series) != len(index):
+        series = series.reindex(range(len(index)), fill_value=0.0)
+    series.index = index
+    return series.fillna(0.0).astype(float)
+
+
+def normalize_minute_signals(raw_signals, minute_data: dict[str, pd.DataFrame]) -> dict[str, pd.Series]:
+    """Normalize strategy output to one aligned Series per ticker."""
+    if isinstance(raw_signals, pd.Series) and len(minute_data) == 1:
+        ticker = next(iter(minute_data))
+        raw_signals = {ticker: raw_signals}
+    elif not isinstance(raw_signals, dict):
+        raw_signals = {}
+
+    normalized = {}
+    for ticker, frame in minute_data.items():
+        signal_values = raw_signals.get(ticker, pd.Series(0.0, index=frame.index))
+        normalized[ticker] = coerce_signal_series(signal_values, frame.index)
+    return normalized
 
 
 def calculate_metrics(combined_returns: pd.Series, trades: pd.Series) -> dict:
@@ -340,6 +445,8 @@ def walk_forward_validation():
             '_write_': lambda x: x,
             '_getiter_': default_guarded_getiter,
             '_getitem_': default_guarded_getitem,
+            '_iter_unpack_sequence_': guarded_iter_unpack_sequence,
+            '_unpack_sequence_': guarded_unpack_sequence,
             '__name__': 'sandbox',
             '__metaclass__': type,
             'pd': pd,
@@ -362,51 +469,92 @@ def walk_forward_validation():
     except Exception as e:
         print(f"STRATEGY LOAD ERROR (Restricted): {e}")
         sys.exit(1)
-        
-    data = load_data()
-    if not data:
-        print("DATA ERROR: No cached data found.")
+
+    daily_data = load_daily_data()
+    if daily_data is None or daily_data.empty:
+        print("DATA ERROR: No daily DuckDB data found.")
         sys.exit(1)
-        
-    # Determine the shortest timeframe to align windows
-    min_len = min([len(df) for df in data.values()])
-    
-    # Walk-forward: 5 windows
-    window_size = min_len // 5
+
+    if "session_date" not in daily_data.columns:
+        print("DATA ERROR: Daily DuckDB data must include session_date.")
+        sys.exit(1)
+
+    daily_dates = pd.to_datetime(daily_data["session_date"])
+    start_date = daily_dates.min().strftime("%Y-%m-%d")
+    end_date = daily_dates.max().strftime("%Y-%m-%d")
+
+    try:
+        windows = calculate_walk_forward_windows(start_date, end_date, n_windows=5)
+    except ValueError as exc:
+        print(f"DATA ERROR: {exc}")
+        sys.exit(1)
+
+    try:
+        selected_tickers = (
+            strategy_instance.select_universe(daily_data)
+            if hasattr(strategy_instance, "select_universe")
+            else None
+        )
+    except Exception:
+        selected_tickers = None
+
+    selected_tickers = normalize_universe_selection(selected_tickers, daily_data)
+    if not selected_tickers:
+        print("DATA ERROR: No tickers available for minute backtest.")
+        sys.exit(1)
+
     all_metrics = []
+    baseline_frames: dict[str, list[pd.DataFrame]] = {}
+    per_symbol_returns: dict[str, list[pd.Series]] = {}
+    per_symbol_signals: dict[str, list[pd.Series]] = {}
 
-    for i in range(5):
-        train_end = int((i + 1) * window_size * 0.7)
-        test_start = train_end
-        test_end = (i + 1) * window_size
+    for window in windows:
+        minute_data = query_minute_data(
+            selected_tickers,
+            window["test_start"],
+            window["test_end"],
+        )
+        if not minute_data:
+            continue
 
-        # Collect combined returns and trades for metrics
-        window_returns = []
-        window_trades = pd.Series(dtype=float)
-        for symbol, df in data.items():
-            history_df = df.iloc[:test_end].copy()
-            try:
-                full_signals = strategy_instance.generate_signals(history_df)
-                if not isinstance(full_signals, pd.Series):
-                    full_signals = pd.Series(full_signals, index=history_df.index)
-                full_signals = full_signals.fillna(0)
-                signals = full_signals.shift(1).fillna(0).iloc[test_start:test_end]
-            except Exception:
+        prepared_minute_data = {}
+        for ticker, frame in minute_data.items():
+            prepared = prepare_minute_frame(frame)
+            if prepared.empty or "returns" not in prepared.columns:
                 continue
+            prepared_minute_data[ticker] = prepared
+            baseline_frames.setdefault(ticker, []).append(prepared)
 
-            test_returns = df.iloc[test_start:test_end]["returns"]
-            daily_returns = test_returns * signals
-            trades = signals.diff().abs().fillna(0)
-            vol = df.iloc[test_start:test_end]["volatility"]
-            slippage = vol * 0.1
+        if not prepared_minute_data:
+            continue
+
+        try:
+            raw_signals = strategy_instance.generate_signals(prepared_minute_data)
+        except Exception as exc:
+            print(f"WINDOW ERROR ({window['test_start']}..{window['test_end']}): {exc}", file=sys.stderr)
+            continue
+
+        normalized_signals = normalize_minute_signals(raw_signals, prepared_minute_data)
+        lagged_signals = apply_signal_lag(normalized_signals)
+
+        window_returns = []
+        window_positions = []
+        for ticker, frame in prepared_minute_data.items():
+            signals = coerce_signal_series(lagged_signals.get(ticker), frame.index)
+            minute_returns = frame["returns"].fillna(0.0)
+            trades = signals.diff().abs().fillna(0.0)
+            slippage = frame["volatility"].fillna(0.0) * 0.1
             costs = trades * (0.0005 + slippage)
-            net_returns = daily_returns - costs
-            window_returns.append(net_returns)
-            window_trades = pd.concat([window_trades, signals])
+            net_returns = (minute_returns * signals) - costs
+
+            window_returns.append(net_returns.rename(ticker))
+            window_positions.append(signals.rename(ticker))
+            per_symbol_returns.setdefault(ticker, []).append(net_returns)
+            per_symbol_signals.setdefault(ticker, []).append(signals)
 
         if window_returns:
             combined = pd.concat(window_returns, axis=1).mean(axis=1)
-            metrics = calculate_metrics(combined, window_trades)
+            metrics = calculate_metrics(combined, pd.concat(window_positions, axis=0))
             all_metrics.append(metrics)
 
     if not all_metrics:
@@ -418,13 +566,25 @@ def walk_forward_validation():
     for key in all_metrics[0]:
         avg_metrics[key] = float(np.mean([m[key] for m in all_metrics]))
 
-    # Baseline Sharpe
-    baseline_sharpe = calculate_baseline_sharpe(data)
+    baseline_data = {
+        ticker: pd.concat(frames, ignore_index=True)
+        for ticker, frames in baseline_frames.items()
+    }
+    baseline_sharpe = calculate_baseline_sharpe(baseline_data)
 
-    # Per-symbol analysis (on last window)
-    last_test_start = int(5 * window_size * 0.7)
-    last_test_end = 5 * window_size
-    per_symbol = run_per_symbol_analysis(strategy_instance, data, last_test_start, last_test_end)
+    per_symbol = {}
+    for ticker in sorted(per_symbol_returns):
+        symbol_returns = pd.concat(per_symbol_returns[ticker], ignore_index=True)
+        symbol_signals = pd.concat(per_symbol_signals[ticker], ignore_index=True)
+        metrics = calculate_metrics(symbol_returns, symbol_signals)
+        per_symbol[ticker] = {
+            "sharpe": metrics["sharpe"],
+            "sortino": metrics["sortino"],
+            "dd": metrics["drawdown"],
+            "pf": metrics["profit_factor"],
+            "trades": metrics["trades"],
+            "wr": metrics["win_rate"],
+        }
 
     # Output YAML-like format
     print("---")

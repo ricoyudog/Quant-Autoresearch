@@ -10,7 +10,9 @@ Tests cover the new functions added to the backtester:
 import pytest
 import pandas as pd
 import numpy as np
+from pathlib import Path
 
+import core.backtester as backtester
 from core.backtester import (
     apply_signal_lag,
     find_strategy_class,
@@ -36,6 +38,64 @@ class NonStrategyClass:
     """Class without generate_signals method."""
     def some_method(self):
         pass
+
+
+def build_daily_universe_frame() -> pd.DataFrame:
+    """Build a daily-bar frame spanning six trading sessions and three tickers."""
+    sessions = pd.to_datetime(
+        [
+            "2025-11-03",
+            "2025-11-04",
+            "2025-11-05",
+            "2025-11-06",
+            "2025-11-07",
+            "2025-11-10",
+            "2025-11-11",
+        ]
+    )
+    rows = []
+    volumes = {"AAA": 5_000_000, "BBB": 3_000_000, "CCC": 500_000}
+    closes = {"AAA": 100.0, "BBB": 50.0, "CCC": 20.0}
+    for session in sessions:
+        for ticker in ["AAA", "BBB", "CCC"]:
+            close = closes[ticker]
+            rows.append(
+                {
+                    "ticker": ticker,
+                    "session_date": session,
+                    "open": close - 0.5,
+                    "high": close + 0.5,
+                    "low": close - 1.0,
+                    "close": close,
+                    "volume": volumes[ticker],
+                    "transactions": 100,
+                    "vwap": close - 0.1,
+                }
+            )
+            closes[ticker] = close + 0.25
+    return pd.DataFrame(rows)
+
+
+def build_window_minute_data(symbols: list[str], session_date: str) -> dict[str, pd.DataFrame]:
+    """Build a small per-window minute dataset keyed by ticker."""
+    minute_data = {}
+    for offset, ticker in enumerate(symbols):
+        base = 100.0 + offset * 5.0
+        closes = np.array([base, base + 1.0, base + 2.0], dtype=float)
+        minute_data[ticker] = pd.DataFrame(
+            {
+                "ticker": [ticker] * 3,
+                "session_date": pd.to_datetime([session_date] * 3),
+                "window_start_ns": [1, 2, 3],
+                "open": closes - 0.1,
+                "high": closes + 0.2,
+                "low": closes - 0.2,
+                "close": closes,
+                "volume": [1_000, 1_050, 1_100],
+                "transactions": [10, 12, 11],
+            }
+        )
+    return minute_data
 
 
 # =============================================================================
@@ -116,6 +176,209 @@ class TestApplySignalLag:
         assert shifted["MSFT"].index.equals(raw_signals["MSFT"].index)
         assert shifted["AAPL"].tolist() == [0, 1, 0]
         assert shifted["MSFT"].tolist() == [0, -1]
+
+
+class TestWalkForwardValidationMinutePipeline:
+    """Tests for the Sprint 2 Step 6 minute-data walk-forward integration."""
+
+    def test_walk_forward_validation_uses_daily_universe_and_minute_windows(self, monkeypatch, tmp_path, capsys):
+        """walk_forward_validation should use the DuckDB daily->universe->minute flow."""
+        strategy_path = tmp_path / "strategy.py"
+        strategy_path.write_text(
+            """
+class MinuteStrategy:
+    def select_universe(self, daily_data):
+        return ["AAA", "BBB"]
+
+    def generate_signals(self, data):
+        signals = {}
+        for ticker, frame in data.items():
+            signals[ticker] = pd.Series([1.0, 0.0, -1.0], index=frame.index)
+        return signals
+""".strip()
+        )
+
+        query_calls = []
+        lag_inputs = []
+        metric_inputs = []
+        daily_data = build_daily_universe_frame()
+        windows = [
+            {
+                "train_start": "2025-11-03",
+                "train_end": "2025-11-05",
+                "test_start": "2025-11-06",
+                "test_end": "2025-11-07",
+            },
+            {
+                "train_start": "2025-11-03",
+                "train_end": "2025-11-07",
+                "test_start": "2025-11-10",
+                "test_end": "2025-11-11",
+            },
+        ]
+
+        monkeypatch.setattr(backtester, "STRATEGY_FILE", str(strategy_path))
+        monkeypatch.setattr(backtester, "security_check", lambda: (True, ""))
+        monkeypatch.setattr(backtester, "load_data", lambda: pytest.fail("legacy load_data should not be used"))
+        monkeypatch.setattr(
+            backtester,
+            "load_daily_data",
+            lambda start_date=None, end_date=None: daily_data.copy(),
+            raising=False,
+        )
+        monkeypatch.setattr(
+            backtester,
+            "calculate_walk_forward_windows",
+            lambda start_date, end_date, n_windows=5: list(windows),
+            raising=False,
+        )
+
+        def fake_query_minute_data(symbols, start_date, end_date):
+            query_calls.append((list(symbols), start_date, end_date))
+            return build_window_minute_data(list(symbols), start_date)
+
+        monkeypatch.setattr(backtester, "query_minute_data", fake_query_minute_data, raising=False)
+
+        original_apply_signal_lag = backtester.apply_signal_lag
+
+        def recording_apply_signal_lag(signals_by_ticker):
+            lag_inputs.append({ticker: series.tolist() for ticker, series in signals_by_ticker.items()})
+            return original_apply_signal_lag(signals_by_ticker)
+
+        monkeypatch.setattr(backtester, "apply_signal_lag", recording_apply_signal_lag)
+
+        def fake_calculate_metrics(combined_returns, trades):
+            metric_inputs.append(
+                {
+                    "combined_returns": combined_returns.tolist(),
+                    "trades": trades.tolist(),
+                }
+            )
+            return {
+                "sharpe": 1.5,
+                "sortino": 2.0,
+                "calmar": 1.2,
+                "drawdown": -0.1,
+                "max_dd_days": 3,
+                "trades": 4,
+                "win_rate": 0.6,
+                "profit_factor": 1.4,
+                "avg_win": 0.02,
+                "avg_loss": -0.01,
+            }
+
+        monkeypatch.setattr(backtester, "calculate_metrics", fake_calculate_metrics)
+        monkeypatch.setattr(backtester, "calculate_baseline_sharpe", lambda data: 0.75)
+
+        backtester.walk_forward_validation()
+        output = capsys.readouterr().out
+
+        assert query_calls == [
+            (["AAA", "BBB"], "2025-11-06", "2025-11-07"),
+            (["AAA", "BBB"], "2025-11-10", "2025-11-11"),
+        ]
+        assert lag_inputs == [
+            {"AAA": [1.0, 0.0, -1.0], "BBB": [1.0, 0.0, -1.0]},
+            {"AAA": [1.0, 0.0, -1.0], "BBB": [1.0, 0.0, -1.0]},
+        ]
+        assert len(metric_inputs) == 4
+        assert "SCORE: 1.5000" in output
+        assert "BASELINE_SHARPE: 0.7500" in output
+        assert "PER_SYMBOL:" in output
+        assert "AAA:" in output
+        assert "BBB:" in output
+
+    def test_walk_forward_validation_falls_back_to_ranked_daily_universe(self, monkeypatch, tmp_path, capsys):
+        """Without select_universe, walk_forward_validation should use a safe ranked fallback universe."""
+        strategy_path = tmp_path / "strategy.py"
+        strategy_path.write_text(
+            """
+class MinuteStrategy:
+    def generate_signals(self, data):
+        signals = {}
+        for ticker, frame in data.items():
+            signals[ticker] = pd.Series([1.0, 0.0, -1.0], index=frame.index)
+        return signals
+""".strip()
+        )
+
+        query_calls = []
+        rows = []
+        session_dates = pd.to_datetime(
+            [
+                "2025-11-03",
+                "2025-11-04",
+                "2025-11-05",
+                "2025-11-06",
+                "2025-11-07",
+                "2025-11-10",
+            ]
+        )
+        tickers = [f"T{idx:02d}" for idx in range(31)]
+        for session in session_dates:
+            for idx, ticker in enumerate(tickers):
+                rows.append(
+                    {
+                        "ticker": ticker,
+                        "session_date": session,
+                        "open": 100 + idx,
+                        "high": 101 + idx,
+                        "low": 99 + idx,
+                        "close": 100.5 + idx,
+                        "volume": 10_000 - idx * 100,
+                        "transactions": 50 + idx,
+                        "vwap": 100.2 + idx,
+                    }
+                )
+        daily_data = pd.DataFrame(rows)
+
+        monkeypatch.setattr(backtester, "STRATEGY_FILE", str(strategy_path))
+        monkeypatch.setattr(backtester, "security_check", lambda: (True, ""))
+        monkeypatch.setattr(backtester, "load_daily_data", lambda start_date=None, end_date=None: daily_data.copy())
+        monkeypatch.setattr(
+            backtester,
+            "calculate_walk_forward_windows",
+            lambda start_date, end_date, n_windows=5: [
+                {
+                    "train_start": "2025-11-03",
+                    "train_end": "2025-11-05",
+                    "test_start": "2025-11-06",
+                    "test_end": "2025-11-07",
+                }
+            ],
+        )
+
+        def fake_query_minute_data(symbols, start_date, end_date):
+            query_calls.append((list(symbols), start_date, end_date))
+            return build_window_minute_data(list(symbols)[:2], start_date)
+
+        monkeypatch.setattr(backtester, "query_minute_data", fake_query_minute_data)
+        monkeypatch.setattr(
+            backtester,
+            "calculate_metrics",
+            lambda combined_returns, trades: {
+                "sharpe": 1.0,
+                "sortino": 1.1,
+                "calmar": 0.9,
+                "drawdown": -0.05,
+                "max_dd_days": 2,
+                "trades": 3,
+                "win_rate": 0.5,
+                "profit_factor": 1.2,
+                "avg_win": 0.01,
+                "avg_loss": -0.01,
+            },
+        )
+        monkeypatch.setattr(backtester, "calculate_baseline_sharpe", lambda data: 0.55)
+
+        backtester.walk_forward_validation()
+        output = capsys.readouterr().out
+
+        assert len(query_calls) == 1
+        assert len(query_calls[0][0]) == 30
+        assert query_calls[0][0][:3] == ["T00", "T01", "T02"]
+        assert "T30" not in query_calls[0][0]
+        assert "BASELINE_SHARPE: 0.5500" in output
 
 
 # =============================================================================
