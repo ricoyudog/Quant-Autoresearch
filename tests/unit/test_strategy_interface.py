@@ -21,6 +21,24 @@ from core.backtester import find_strategy_class
 import strategies.active_strategy
 
 
+def build_minute_frame(ticker: str, closes: list[float]) -> pd.DataFrame:
+    """Build a minute-bar frame matching the Sprint 2 schema."""
+    row_count = len(closes)
+    return pd.DataFrame(
+        {
+            "ticker": [ticker] * row_count,
+            "session_date": pd.to_datetime(["2025-11-03"] * row_count),
+            "window_start_ns": np.arange(row_count, dtype=np.int64) * 60_000_000_000,
+            "open": np.array(closes, dtype=float) - 0.1,
+            "high": np.array(closes, dtype=float) + 0.2,
+            "low": np.array(closes, dtype=float) - 0.2,
+            "close": np.array(closes, dtype=float),
+            "volume": np.linspace(1_000, 2_000, row_count),
+            "transactions": np.arange(1, row_count + 1),
+        }
+    )
+
+
 # =============================================================================
 # Dynamic loading tests
 # =============================================================================
@@ -239,46 +257,54 @@ class TestStrategyFile:
         except Exception as e:
             pytest.fail(f"active_strategy.py failed to compile in RestrictedPython: {e}")
 
-    def test_strategy_returns_series(self, strategy_file_path):
-        """generate_signals returns pd.Series for sample data."""
-        # Import the actual strategy
+    def test_strategy_returns_signal_dict(self, strategy_file_path):
+        """generate_signals returns one signal Series per ticker."""
         from strategies.active_strategy import TradingStrategy
 
-        # Create sample data
-        dates = pd.date_range('2023-01-01', periods=100)
-        data = pd.DataFrame({
-            'Close': np.linspace(100, 110, 100),
-            'returns': [0.001] * 100,
-            'volatility': [0.01] * 100,
-            'atr': [1.0] * 100,
-        }, index=dates)
+        minute_data = {
+            "AAPL": build_minute_frame("AAPL", np.linspace(100, 110, 80).tolist()),
+            "MSFT": build_minute_frame("MSFT", np.linspace(210, 195, 60).tolist()),
+        }
 
         strategy = TradingStrategy()
-        signals = strategy.generate_signals(data)
+        signals = strategy.generate_signals(minute_data)
 
-        assert isinstance(signals, pd.Series)
-        assert len(signals) == len(data)
+        assert isinstance(signals, dict)
+        assert set(signals.keys()) == {"AAPL", "MSFT"}
+        assert all(isinstance(series, pd.Series) for series in signals.values())
+
+    def test_strategy_signal_indexes_align_with_minute_frames(self, strategy_file_path):
+        """Each returned Series stays aligned with its ticker frame index."""
+        from strategies.active_strategy import TradingStrategy
+
+        minute_data = {
+            "AAPL": build_minute_frame("AAPL", np.linspace(100, 110, 80).tolist()),
+            "MSFT": build_minute_frame("MSFT", np.linspace(210, 195, 60).tolist()),
+        }
+
+        strategy = TradingStrategy()
+        signals = strategy.generate_signals(minute_data)
+
+        for ticker, frame in minute_data.items():
+            assert signals[ticker].index.equals(frame.index)
+            assert len(signals[ticker]) == len(frame)
 
     def test_strategy_signal_range(self, strategy_file_path):
-        """Signals in {-1, 0, 1}."""
+        """Minute-mode signals stay in {-1, 0, 1}."""
         from strategies.active_strategy import TradingStrategy
 
-        # Create sample data
-        dates = pd.date_range('2023-01-01', periods=100)
-        data = pd.DataFrame({
-            'Close': np.linspace(100, 110, 100),
-            'returns': [0.001] * 100,
-            'volatility': [0.01] * 100,
-            'atr': [1.0] * 100,
-        }, index=dates)
+        minute_data = {
+            "AAPL": build_minute_frame("AAPL", np.linspace(100, 110, 80).tolist()),
+            "MSFT": build_minute_frame("MSFT", np.linspace(210, 195, 60).tolist()),
+        }
 
         strategy = TradingStrategy()
-        signals = strategy.generate_signals(data)
+        signals = strategy.generate_signals(minute_data)
 
-        # Check unique values are in expected range
-        unique_values = set(signals.dropna().unique())
-        for val in unique_values:
-            assert val in {-1.0, 0.0, 1.0}, f"Unexpected signal value: {val}"
+        for ticker_signals in signals.values():
+            unique_values = set(ticker_signals.dropna().unique())
+            for val in unique_values:
+                assert val in {-1.0, 0.0, 1.0}, f"Unexpected signal value: {val}"
 
     def test_select_universe_returns_ranked_ticker_list(self, strategy_file_path):
         """select_universe returns ticker strings ranked by average daily volume."""

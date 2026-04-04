@@ -58,11 +58,11 @@ Extend the strategy interface with `select_universe(daily_data)` for strategy-dr
 - [x] Verify: test with a class that has both methods, one method, and no methods
 
 ### Step 4 -- Update generate_signals for minute data (STRAT-04)
-- [ ] Update `generate_signals()` signature in strategy to accept `dict[str, pd.DataFrame]`
-- [ ] Each key = ticker, each value = minute DataFrame with OHLCV
-- [ ] Return `dict[str, pd.Series]` with signal values in {-1, 0, 1}
-- [ ] Update signal lag enforcement: `shift(1)` applied per ticker
-- [ ] Verify: signals index aligns with minute data index
+- [x] Update `generate_signals()` signature in strategy to accept `dict[str, pd.DataFrame]`
+- [x] Each key = ticker, each value = minute DataFrame with OHLCV
+- [x] Return `dict[str, pd.Series]` with signal values in {-1, 0, 1}
+- [x] Update signal lag enforcement: `shift(1)` applied per ticker
+- [x] Verify: signals index aligns with minute data index
 
 ### Step 5 -- Implement minute-level walk-forward (STRAT-05)
 - [ ] Implement `calculate_walk_forward_windows(start_date, end_date, n_windows=5)`:
@@ -169,15 +169,25 @@ pytest --tb=short -q
 - Extended both `tests/unit/test_strategy_interface.py` and `tests/unit/test_backtester_v2.py` to
   cover the three required Step 3 cases: both methods present, `generate_signals` only, and no valid
   strategy class.
+- Replaced the example `TradingStrategy.generate_signals()` path with the Sprint 2 Step 4 contract:
+  `dict[str, pd.DataFrame] -> dict[str, pd.Series]` keyed by ticker and aligned to each minute frame.
+- Kept a temporary single-DataFrame fallback in `active_strategy.py` so the pre-Step-6 backtester
+  flow does not break before the full minute pipeline lands.
+- Added `apply_signal_lag()` in `src/core/backtester.py` to centralize the enforced `shift(1)`
+  behavior per ticker ahead of the Step 6 integration work.
+- Expanded `tests/unit/test_strategy_interface.py` with minute-mode shape, index-alignment, and
+  signal-range cases, and added per-ticker lag coverage in `tests/unit/test_backtester_v2.py`.
 
 ### Command Results
 
-- `uv run pytest tests/unit/test_strategy_interface.py -v` -> 19 passed
+- `uv run pytest tests/unit/test_strategy_interface.py -v` -> 20 passed
 - `uv run python -c "from src.strategies.active_strategy import *; print('IMPORT OK')"` -> `IMPORT OK`
 - `uv run pytest tests/unit/test_duckdb_connector.py -v` -> 6 passed
 - `uv run python -c "from src.data.duckdb_connector import query_minute_data; result = query_minute_data(['AAPL'], '2025-11-03', '2025-11-07'); frame = result.get('AAPL'); print('tickers=', sorted(result.keys())); print('rows=', 0 if frame is None else len(frame)); print('columns=', [] if frame is None else list(frame.columns)); print('first_session=', None if frame is None or frame.empty else frame['session_date'].min()); print('last_session=', None if frame is None or frame.empty else frame['session_date'].max()); print('first_close=', None if frame is None or frame.empty else frame.iloc[0]['close'])"` -> `tickers=['AAPL']`, `rows=3612`, schema `['ticker', 'session_date', 'window_start_ns', 'open', 'high', 'low', 'close', 'volume', 'transactions']`, date range `2025-11-03` to `2025-11-07`
 - `PYTHONPATH=src uv run python -c "from core.backtester import find_strategy_class; print('IMPORT OK', find_strategy_class({}))"` -> `IMPORT OK (None, False)`
-- `PYTHONPATH=src uv run pytest tests/unit/test_strategy_interface.py tests/unit/test_backtester_v2.py -q` -> `44 passed in 0.31s`
+- `PYTHONPATH=src uv run python -c "from strategies.active_strategy import TradingStrategy; import pandas as pd; frame = pd.DataFrame({'ticker':['AAPL','AAPL'],'session_date':pd.to_datetime(['2025-11-03','2025-11-03']),'window_start_ns':[1,2],'open':[1.0,1.1],'high':[1.1,1.2],'low':[0.9,1.0],'close':[1.0,1.2],'volume':[100,120],'transactions':[10,12]}); result = TradingStrategy().generate_signals({'AAPL': frame}); print(type(result).__name__, sorted(result.keys()), result['AAPL'].index.equals(frame.index), sorted(set(result['AAPL'].tolist())))"` -> `dict ['AAPL'] True [0.0]`
+- `PYTHONPATH=src uv run python -c "from core.backtester import apply_signal_lag; import pandas as pd; print(apply_signal_lag({'AAPL': pd.Series([1, -1, 0])})['AAPL'].tolist())"` -> `[0.0, 1.0, -1.0]`
+- `uv run pytest tests/unit/test_strategy_interface.py tests/unit/test_backtester_v2.py -v` -> 46 passed
 
 ### Blockers / Deviations
 
@@ -186,7 +196,9 @@ pytest --tb=short -q
   rather than a new code-change step.
 - Deferred the more opinionated `20-day average volume` example to Step 7, where the sprint plan
   explicitly calls for the dual-method example strategy.
+- Preserved a compatibility path where `TradingStrategy.generate_signals(pd.DataFrame)` still returns
+  a single `pd.Series` until Step 6 rewires the live backtester to the minute-data dict contract.
 
 ### Follow-ups
 
-- Next execution target: Step 4 in this sprint doc (`generate_signals()` minute-data contract)
+- Next execution target: Step 5 in this sprint doc (`calculate_walk_forward_windows()`)

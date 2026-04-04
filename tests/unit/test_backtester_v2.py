@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 
 from core.backtester import (
+    apply_signal_lag,
     find_strategy_class,
     calculate_metrics,
     calculate_baseline_sharpe,
@@ -92,6 +93,29 @@ class TestFindStrategyClass:
         strategy_class, has_universe = find_strategy_class(sandbox_locals)
         assert strategy_class is None
         assert has_universe is False
+
+
+# =============================================================================
+# apply_signal_lag tests
+# =============================================================================
+
+class TestApplySignalLag:
+    """Tests for per-ticker signal lag handling."""
+
+    def test_apply_signal_lag_shifts_each_ticker_independently(self):
+        """Each ticker series is shifted by one bar without changing keys or indexes."""
+        raw_signals = {
+            "AAPL": pd.Series([1, 0, -1], index=pd.Index([10, 11, 12])),
+            "MSFT": pd.Series([-1, 1], index=pd.Index([20, 21])),
+        }
+
+        shifted = apply_signal_lag(raw_signals)
+
+        assert set(shifted.keys()) == {"AAPL", "MSFT"}
+        assert shifted["AAPL"].index.equals(raw_signals["AAPL"].index)
+        assert shifted["MSFT"].index.equals(raw_signals["MSFT"].index)
+        assert shifted["AAPL"].tolist() == [0, 1, 0]
+        assert shifted["MSFT"].tolist() == [0, -1]
 
 
 # =============================================================================

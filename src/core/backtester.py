@@ -23,6 +23,15 @@ def find_strategy_class(sandbox_locals: dict) -> tuple[type | None, bool]:
     return None, False
 
 
+def apply_signal_lag(signals_by_ticker: dict[str, pd.Series]) -> dict[str, pd.Series]:
+    """Apply the enforced one-bar lag independently to each ticker signal series."""
+    lagged_signals = {}
+    for ticker, signals in signals_by_ticker.items():
+        series = signals if isinstance(signals, pd.Series) else pd.Series(signals)
+        lagged_signals[ticker] = series.shift(1).fillna(0)
+    return lagged_signals
+
+
 def calculate_metrics(combined_returns: pd.Series, trades: pd.Series) -> dict:
     """Calculate 10 performance metrics from combined returns and trade signals."""
     mean_ret = combined_returns.mean()
