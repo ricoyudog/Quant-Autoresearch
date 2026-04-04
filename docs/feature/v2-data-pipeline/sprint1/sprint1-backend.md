@@ -40,9 +40,9 @@ Add DuckDB as a project dependency and create `src/data/duckdb_connector.py` to 
 ## 3) Step-by-Step Plan
 
 ### Step 1 -- Create feature branch + baseline (DUCK-01)
-- [ ] `git checkout -b feature/v2-data-pipeline main`
-- [ ] Run `pytest --tb=short -q` and record test count as baseline
-- [ ] Record baseline: `__ tests collected, __ pass, __ fail`
+- [x] `git checkout -b feature/v2-data-pipeline main`
+- [x] Run `pytest --tb=short -q` and record test count as baseline
+- [x] Record baseline: `92 pass, 0 fail`
 
 ### Step 2 -- Add DuckDB dependency (DUCK-02)
 - [ ] Edit `pyproject.toml`: add `duckdb>=1.0.0` to dependencies
@@ -134,16 +134,43 @@ pytest --tb=short -q
 
 ### Completed Work
 
-(To be filled during implementation)
+- Confirmed the execution surface is the dedicated worktree at
+  `/private/tmp/quant-worktrees/feature/v2-data-pipeline` on branch
+  `feature/v2-data-pipeline`, so the branch-creation intent of Step 1 is already satisfied.
+- Ran the Sprint 1 baseline test command via `uv run pytest --tb=short -q` because `pytest` is not
+  available on the shell `PATH` in this environment.
+- Resolved the baseline collection blocker in `src/utils/logger.py` by creating the parent log
+  directory before instantiating `RotatingFileHandler`.
+- Added `tests/unit/test_logger.py` as a regression test to prove `utils.logger` can be imported
+  when `experiments/logs/` does not exist yet.
+- Re-ran the baseline after the logger fix and got a clean result.
 
 ### Command Results
 
-(To be filled during implementation)
+- Worktree / branch verification:
+  - `pwd` -> `/private/tmp/quant-worktrees/feature/v2-data-pipeline`
+  - `git branch --show-current` -> `feature/v2-data-pipeline`
+  - `git status --short` -> clean before the baseline fix work started
+- Initial baseline attempt:
+  - `pytest --tb=short -q` -> `command not found`
+  - equivalent repo command: `uv run pytest --tb=short -q`
+  - first `uv run pytest --tb=short -q` result: interrupted during collection with 9 errors
+  - shared root cause: missing `experiments/logs/run.log` parent directory during `utils.logger`
+    import
+- Regression TDD cycle for the blocker:
+  - RED: `uv run pytest tests/unit/test_logger.py -q` -> `1 failed`
+  - GREEN: `uv run pytest tests/unit/test_logger.py -q` -> `1 passed`
+- Final baseline:
+  - `uv run pytest --tb=short -q` -> `92 passed in 2.59s`
 
 ### Blockers / Deviations
 
-(To be filled during implementation)
+- The environment does not expose a global `pytest` binary on `PATH`; `uv run pytest` is the
+  working repo-equivalent baseline command here.
+- The baseline was initially blocked by logger setup assuming `experiments/logs/` already existed.
+  That blocker is now resolved.
 
 ### Follow-ups
 
 - Sprint 2: strategy interface (`select_universe`), backtester minute-level integration
+- Proceed to Sprint 1 Step 2 with TDD discipline before changing DuckDB-related production code.

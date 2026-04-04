@@ -1,6 +1,7 @@
 import logging
 import os
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 def setup_logging(name="quant_autoresearch", log_file="experiments/logs/run.log", level=logging.INFO):
     """Setup central logging with rotating file handler and console output"""
@@ -14,6 +15,7 @@ def setup_logging(name="quant_autoresearch", log_file="experiments/logs/run.log"
         console_formatter = logging.Formatter('%(levelname)s: %(message)s')
         
         # File handler (10MB per file, max 5 backups)
+        Path(log_file).parent.mkdir(parents=True, exist_ok=True)
         file_handler = RotatingFileHandler(log_file, maxBytes=10*1024*1024, backupCount=5)
         file_handler.setFormatter(file_formatter)
         logger.addHandler(file_handler)
