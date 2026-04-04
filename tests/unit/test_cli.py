@@ -184,9 +184,9 @@ class TestSetupDataCommandBehavior:
 class TestFetchCommandBehavior:
     """Tests for fetch command behavior with mocked dependencies."""
 
-    @patch("cli.DataConnector")
+    @patch("cli.CacheConnector")
     def test_fetch_creates_connector(self, mock_connector_class):
-        """Verify fetch command instantiates DataConnector and calls fetch_and_cache."""
+        """Verify fetch command instantiates CacheConnector and calls fetch_and_cache."""
         # Setup mock
         mock_connector = MagicMock()
         mock_connector.fetch_and_cache.return_value = True
@@ -198,7 +198,7 @@ class TestFetchCommandBehavior:
         mock_connector_class.assert_called_once()
         mock_connector.fetch_and_cache.assert_called_once_with("AAPL", "2020-01-01")
 
-    @patch("cli.DataConnector")
+    @patch("cli.CacheConnector")
     def test_fetch_with_custom_start_date(self, mock_connector_class):
         """Verify fetch command passes custom start date to connector."""
         mock_connector = MagicMock()
@@ -211,7 +211,7 @@ class TestFetchCommandBehavior:
         assert result.exit_code == 0
         mock_connector.fetch_and_cache.assert_called_once_with("AAPL", "2021-06-01")
 
-    @patch("cli.DataConnector")
+    @patch("cli.CacheConnector")
     def test_fetch_handles_failure(self, mock_connector_class):
         """Verify fetch command handles connector failure."""
         mock_connector = MagicMock()

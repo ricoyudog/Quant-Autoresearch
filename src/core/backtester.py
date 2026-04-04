@@ -6,7 +6,7 @@ import ast
 from RestrictedPython import compile_restricted, safe_builtins
 from RestrictedPython.Guards import safer_getattr
 from RestrictedPython.Eval import default_guarded_getiter, default_guarded_getitem
-from data.connector import DataConnector
+from data.cache_connector import CacheConnector
 
 CACHE_DIR = os.environ.get("CACHE_DIR", "data/cache")
 STRATEGY_FILE = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("STRATEGY_FILE", "src/strategies/active_strategy.py")
@@ -228,7 +228,7 @@ def is_negative_val(node):
     return False
 
 def load_data():
-    connector = DataConnector(CACHE_DIR)
+    connector = CacheConnector(CACHE_DIR)
     return connector.load_all_cached()
 
 def run_backtest(strategy_instance, data, start_idx, end_idx):

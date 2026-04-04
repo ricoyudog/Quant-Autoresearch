@@ -12,7 +12,7 @@ import typer
 # Add src to path
 sys.path.append(str(Path(__file__).parent / "src"))
 
-from data.connector import DataConnector
+from data.cache_connector import CacheConnector
 from data.duckdb_connector import DEFAULT_CACHE_PATH, build_daily_cache
 
 app = typer.Typer(help="Quant Autoresearch")
@@ -27,7 +27,7 @@ def _echo_build_progress(start_date: str, end_date: str) -> None:
 def fetch(symbol: str, start: str = "2020-01-01"):
     """Fetch market data for a specific symbol"""
     typer.echo(f"Fetching data for {symbol} starting from {start}...")
-    connector = DataConnector()
+    connector = CacheConnector()
     if connector.fetch_and_cache(symbol, start):
         typer.echo(f"Successfully cached {symbol}")
     else:
