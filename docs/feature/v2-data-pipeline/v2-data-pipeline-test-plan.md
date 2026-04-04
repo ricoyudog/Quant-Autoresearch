@@ -129,13 +129,13 @@ explained or resolved.
 
 - [ ] Baseline test result recorded before feature work
 - [x] `tests/unit/test_duckdb_connector.py` passes
-- [ ] `tests/unit/test_strategy_interface.py` passes with the dual-method contract
+- [x] `tests/unit/test_strategy_interface.py` passes with the dual-method contract
 - [ ] `tests/integration/test_minute_backtest.py` passes or is replaced by an explicitly documented
       guarded smoke path
 - [ ] `tests/conftest.py` contains DuckDB and minute-data fixtures
 - [ ] Legacy connector/preprocessor expectations are removed or rewritten
-- [ ] No surviving test imports reference removed data-loader modules
-- [ ] `pytest --tb=short -v` passes
+- [x] No surviving test imports reference removed data-loader modules
+- [x] `pytest --tb=short -q` passes
 - [x] `uv run python cli.py setup-data` works end to end
 - [ ] `uv run python cli.py backtest` works end to end
 - [ ] `uv run python cli.py update_data` works without duplicate-row regressions
