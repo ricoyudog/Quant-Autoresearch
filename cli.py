@@ -92,7 +92,7 @@ def backtest(
     # Load data to verify availability
     data = load_data()
     if not data:
-        typer.echo("No cached data found. Run 'setup_data' or 'fetch' first.")
+        typer.echo("No cached data found. Run 'setup-data' or 'fetch' first.")
         raise typer.Exit(code=1)
 
     # Filter symbols if specified

@@ -123,6 +123,29 @@ class TestBacktestCommandBehavior:
         finally:
             Path(strategy_path).unlink(missing_ok=True)
 
+    @patch("core.backtester.load_data")
+    @patch("core.backtester.security_check")
+    def test_backtest_missing_cache_reports_setup_data_hint(
+        self, mock_security_check, mock_load_data
+    ):
+        """Verify the no-cache hint uses the actual setup-data command name."""
+        mock_security_check.return_value = (True, "Safe")
+        mock_load_data.return_value = {}
+
+        import tempfile
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".py", delete=False
+        ) as f:
+            f.write("pass")
+            strategy_path = f.name
+
+        try:
+            result = runner.invoke(app, ["backtest", "-s", strategy_path])
+            assert result.exit_code == 1
+            assert "setup-data" in result.stdout
+        finally:
+            Path(strategy_path).unlink(missing_ok=True)
+
 
 class TestSetupDataCommandBehavior:
     """Tests for setup_data command behavior with the DuckDB cache."""

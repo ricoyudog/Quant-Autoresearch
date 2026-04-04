@@ -4,7 +4,7 @@
 > Umbrella issue: #11
 > Canonical root: `docs/feature/v2-data-pipeline/`
 > Last updated: 2026-04-04
-> Planning status: Phase 0 complete; execution pending dependency clearance
+> Planning status: Sprint 1 complete; Sprint 2 execution pending
 
 ## 1. Context
 
@@ -76,7 +76,7 @@ repo's existing V2 naming convention instead of introducing an issue-number-only
 | --- | --- | --- |
 | `src/core/backtester.py` | Backend | Daily-cache loading, universe selection, trading-day windows, minute-level walk-forward |
 | `src/strategies/active_strategy.py` | Backend | `select_universe(daily_data)` and minute-data `generate_signals()` example |
-| `cli.py` | Backend | `setup_data`, `fetch`, `backtest`, and `update_data` runtime changes |
+| `cli.py` | Backend | `setup-data`, `fetch`, `backtest`, and `update_data` runtime changes |
 | `pyproject.toml` | Backend | Add `duckdb` dependency |
 | `program.md` | Planning | Update runtime docs to the DuckDB/minute-data model |
 | `CLAUDE.md` | Planning | Update repo architecture notes after Sprint 3 lands |
@@ -89,14 +89,14 @@ repo's existing V2 naming convention instead of introducing an issue-number-only
 | File | Lane | Reason |
 | --- | --- | --- |
 | `src/data/connector.py` | Backend | Replaced by `duckdb_connector.py` and the new cache/query flow |
-| `src/data/preprocessor.py` | Backend | Replaced by `setup_data` DuckDB cache build logic |
+| `src/data/preprocessor.py` | Backend | Replaced by `setup-data` DuckDB cache build logic |
 
 ## 7. Phase Plan
 
 | Phase | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
 | Phase 0 -- Spec Alignment + Baseline | Confirm docs root, branch convention, dependency gate, and umbrella references | rewritten issue card, updated workspace index, lane docs, verification baseline | completed | start Sprint 1 once issue #8 closes |
-| Sprint 1 -- DuckDB + Daily Cache | Add DuckDB, create the daily cache, and replace the old data-loader entrypoint | `duckdb_connector.py`, updated `setup_data`, clean import graph, unit coverage | pending | validate dataset path and create/switch feature branch |
+| Sprint 1 -- DuckDB + Daily Cache | Add DuckDB, create the daily cache, and replace the old data-loader entrypoint | `duckdb_connector.py`, updated `setup-data`, clean import graph, unit coverage | completed | begin Sprint 2 backend execution |
 | Sprint 2 -- Strategy + Backtester | Add the dual-method strategy interface and minute-level walk-forward pipeline | updated `backtester.py`, updated `active_strategy.py`, trading-day windows | pending | begin after Sprint 1 verification |
 | Sprint 3 -- CLI + Docs + Tests | Finish CLI behavior, integration coverage, and runtime docs | updated `cli.py`, integration tests, updated `program.md` and `CLAUDE.md` | pending | begin after Sprint 2 verification |
 | Phase 4 -- Verification + Closeout | Run the full gate and prepare review-ready evidence | green dependency sync, green test suite, smoke commands, issue evidence update | pending | execute after Sprint 3 |
@@ -116,11 +116,11 @@ repo's existing V2 naming convention instead of introducing an issue-number-only
 
 | Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
 | --- | --- | --- | --- | --- | --- | --- |
-| INFRA-01 | Validate dataset root, CLI binary, DuckDB output path, and temp-file budget | Infra | Phase 0 complete | 0.1d | pending | commands prove that paths, disk targets, and binary invocation are usable |
-| DUCK-01 | Create or switch to `feature/v2-data-pipeline` and capture the pre-change baseline | Backend | Phase 0 complete, issue #8 complete | 0.1d | pending | branch is active and baseline `pytest --tb=short` evidence is recorded |
-| DUCK-02 | Add `duckdb` dependency and implement `src/data/duckdb_connector.py` | Backend | DUCK-01, INFRA-01 | 0.6d | pending | daily-cache build/load helpers and minute-query bridge import cleanly |
-| DUCK-03 | Replace `cli.py setup_data`, remove legacy data modules, and clean imports | Backend | DUCK-02 | 0.4d | pending | `setup_data` builds the DuckDB cache and no surviving imports reference removed modules |
-| QA-01 | Add unit coverage for DuckDB helpers and capture the first data-path smoke result | QA | DUCK-02, DUCK-03 | 0.3d | pending | dedicated unit tests pass and smoke evidence is logged |
+| INFRA-01 | Validate dataset root, CLI binary, DuckDB output path, and temp-file budget | Infra | Phase 0 complete | 0.1d | completed | commands prove that paths, disk targets, and binary invocation are usable |
+| DUCK-01 | Create or switch to `feature/v2-data-pipeline` and capture the pre-change baseline | Backend | Phase 0 complete, issue #8 complete | 0.1d | completed | branch is active and baseline `pytest --tb=short` evidence is recorded |
+| DUCK-02 | Add `duckdb` dependency and implement `src/data/duckdb_connector.py` | Backend | DUCK-01, INFRA-01 | 0.6d | completed | daily-cache build/load helpers and minute-query bridge import cleanly |
+| DUCK-03 | Replace `cli.py setup-data`, remove legacy data modules, and clean imports | Backend | DUCK-02 | 0.4d | completed | `setup-data` builds the DuckDB cache and no surviving imports reference removed modules |
+| QA-01 | Add unit coverage for DuckDB helpers and capture the first data-path smoke result | QA | DUCK-02, DUCK-03 | 0.3d | completed | dedicated unit tests pass and smoke evidence is logged |
 
 ### Sprint 2 -- Strategy + Backtester
 
@@ -169,9 +169,9 @@ expected before a sprint can be considered complete.
 - [x] The workspace has a local index, a main development plan, backend lane doc, infra lane doc,
       test plan, and sprint execution docs
 - [x] Issue #11 is defined as the umbrella index rather than the execution queue
-- [ ] `duckdb` is added to `pyproject.toml` and `uv sync` succeeds
-- [ ] `src/data/duckdb_connector.py` is created with daily-cache build/load helpers
-- [ ] `src/data/connector.py` and `src/data/preprocessor.py` are removed with no stale imports
+- [x] `duckdb` is added to `pyproject.toml` and `uv sync` succeeds
+- [x] `src/data/duckdb_connector.py` is created with daily-cache build/load helpers
+- [x] `src/data/connector.py` and `src/data/preprocessor.py` are removed with no stale imports
 - [ ] The strategy interface supports `select_universe(daily_data)` plus minute-data
       `generate_signals()`
 - [ ] The backtester supports minute-level walk-forward via CLI minute-data queries
@@ -189,17 +189,18 @@ uv sync --all-extras --dev
 pytest --tb=short
 
 # Data-path / cache build
-uv run python cli.py setup_data
+uv run python cli.py setup-data
 python -c "
 import duckdb
 con = duckdb.connect('data/daily_cache.duckdb', read_only=True)
-print(con.execute('SELECT COUNT(*) FROM daily_bars').fetchone())
-print(con.execute('SELECT MIN(session_date), MAX(session_date) FROM daily_bars').fetchone())
+r = con.execute('SELECT COUNT(*), COUNT(DISTINCT ticker), MIN(session_date), MAX(session_date) FROM daily_bars').fetchone()
+print(f'Rows: {r[0]}, Tickers: {r[1]}, Range: {r[2]} to {r[3]}')
 con.close()
 "
 
 # Import cleanliness
-grep -rn "from src.data.connector\|from src.data.preprocessor\|DataConnector\|Preprocessor" src/ tests/ cli.py || echo "CLEAN"
+find src -type d -name '__pycache__' -prune -o -type f -name '*.py' -print0 | \
+xargs -0 grep -n "data.connector\|data.preprocessor\|DataConnector\|prepare_data\|Preprocessor" || echo "CLEAN"
 
 # Feature-specific tests
 pytest tests/unit/test_duckdb_connector.py -v

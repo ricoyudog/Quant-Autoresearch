@@ -41,7 +41,7 @@ system works outside unit tests.
 uv sync --all-extras --dev
 
 # Validate DuckDB artifact path after Sprint 1
-uv run python cli.py setup_data
+uv run python cli.py setup-data
 test -f data/daily_cache.duckdb
 
 # Validate CLI runtime after Sprint 3

@@ -16,7 +16,7 @@
 
 Confirm that the local runtime environment is ready for the DuckDB cache build before backend coding
 depends on it. This sprint owns the dataset path, CLI binary, temp-file strategy, DuckDB artifact
-path, and the first smoke evidence for `setup_data`.
+path, and the first smoke evidence for `setup-data`.
 
 ## 2) Scope / Out Of Scope
 
@@ -24,7 +24,7 @@ path, and the first smoke evidence for `setup_data`.
 - Validate the `massive-minute-aggs` dataset path and CLI binary
 - Confirm the intended DuckDB output path and temp-file workflow
 - Define batching, timeout, cleanup, and progress-reporting expectations for cache build
-- Run or prepare the first `setup_data` smoke checks once the backend step lands
+- Run or prepare the first `setup-data` smoke checks once the backend step lands
 
 **Out of Scope**
 - Implementing DuckDB helpers in Python
@@ -46,23 +46,24 @@ path, and the first smoke evidence for `setup_data`.
 - [x] Define timeout and progress-reporting expectations for long-running monthly aggregation
 
 ### Step 3 -- Prepare and run the Sprint 1 smoke gate
-- [ ] Confirm `uv run python cli.py setup_data --help` exposes the intended cache-build command
-- [ ] After backend implementation lands, run `uv run python cli.py setup_data`
+- [x] Confirm `uv run python cli.py setup-data --help` exposes the intended cache-build command
+- [x] After backend implementation lands, run `uv run python cli.py setup-data`
 - [ ] Confirm `data/daily_cache.duckdb` exists after the run
-- [ ] Inspect row count and date range in DuckDB and record the result
+- [x] Confirm `data/daily_cache.duckdb` exists after the run
+- [x] Inspect row count, distinct tickers, and date range in DuckDB and record the result
 
 ### Step 4 -- Feed evidence back into the workspace
-- [ ] Record command outcomes in the update area below
-- [ ] Record any runtime blockers or deviations for Sprint 1 follow-up
-- [ ] Link relevant evidence back to the umbrella issue or PR summary
+- [x] Record command outcomes in the update area below
+- [x] Record any runtime blockers or deviations for Sprint 1 follow-up
+- [x] Link relevant evidence back to the umbrella issue or PR summary
 
 ## 4) Test Plan
 
 - [x] `minute-aggs stats` runs successfully
 - [x] `minute-aggs schema` matches the expected minute-bar columns
-- [ ] `uv run python cli.py setup_data --help` works before the cache build smoke run
-- [ ] `uv run python cli.py setup_data` creates `data/daily_cache.duckdb`
-- [ ] DuckDB inspection confirms a plausible row count and session-date range
+- [x] `uv run python cli.py setup-data --help` works before the cache build smoke run
+- [x] `uv run python cli.py setup-data` creates `data/daily_cache.duckdb`
+- [x] DuckDB inspection confirms a plausible row count, ticker count, and session-date range
 
 ## 5) Verification Commands
 
@@ -70,14 +71,14 @@ path, and the first smoke evidence for `setup_data`.
 /Users/chunsingyu/softwares/massive-minute-aggs-parquet/.venv/bin/minute-aggs stats
 /Users/chunsingyu/softwares/massive-minute-aggs-parquet/.venv/bin/minute-aggs schema
 
-uv run python cli.py setup_data --help
-uv run python cli.py setup_data
+uv run python cli.py setup-data --help
+uv run python cli.py setup-data
 
 python -c "
 import duckdb
 con = duckdb.connect('data/daily_cache.duckdb', read_only=True)
-print(con.execute('SELECT COUNT(*) FROM daily_bars').fetchone())
-print(con.execute('SELECT MIN(session_date), MAX(session_date) FROM daily_bars').fetchone())
+r = con.execute('SELECT COUNT(*), COUNT(DISTINCT ticker), MIN(session_date), MAX(session_date) FROM daily_bars').fetchone()
+print(f'Rows: {r[0]}, Tickers: {r[1]}, Range: {r[2]} to {r[3]}')
 con.close()
 "
 ```
@@ -102,6 +103,18 @@ con.close()
   - use a 300-second timeout per CLI batch
   - emit visible per-month progress output during cache build
 - Added `*.duckdb` to `.gitignore` so the planned cache artifact does not pollute git status.
+- Confirmed the canonical Typer command name is `setup-data` and aligned the Sprint 1 infra
+  verification docs to use the hyphenated runtime form.
+- Ran the Sprint 1 smoke gate with `uv run python cli.py setup-data --help` and
+  `uv run python cli.py setup-data`.
+- Verified the cache artifact exists at `data/daily_cache.duckdb` and recorded the DuckDB row
+  count, ticker count, and session-date range after the build completed.
+- Re-ran the targeted Sprint 1 verification commands:
+  - `uv run pytest tests/unit/test_duckdb_connector.py -v`
+  - `uv run pytest tests/unit/test_cli.py -v`
+  - runtime-module stale-import scan under `src/`
+- Linked the merge-ready smoke evidence back to issue #11:
+  `https://github.com/ricoyudog/Quant-Autoresearch/issues/11#issuecomment-4186599914`
 
 ### Command Results
 
@@ -140,6 +153,15 @@ con.close()
 - Repo hygiene:
   - before the fix: `DUCKDB_NOT_IGNORED`
   - after the fix, `.gitignore` now includes `*.duckdb`
+- Sprint 1 smoke gate:
+  - `uv run python cli.py setup-data --help` -> success; help shows `--force`
+  - `uv run python cli.py setup-data` -> success; processed month batches from `2021-03`
+    through `2026-04` and finished with `Daily cache ready at data/daily_cache.duckdb`
+  - `ls -lh data/daily_cache.duckdb` -> `342M`
+  - DuckDB inspection -> `Rows: 13273623, Tickers: 19928, Range: 2021-03-30 to 2026-03-30`
+  - `uv run pytest tests/unit/test_duckdb_connector.py -v` -> `6 passed in 0.06s`
+  - `uv run pytest tests/unit/test_cli.py -v` -> `16 passed in 0.37s`
+  - runtime-module stale-import scan -> `CLEAN`
 
 ### Blockers / Deviations
 
@@ -149,9 +171,16 @@ con.close()
   Step 1 but should remain ignored unless downstream cache logic explicitly needs them.
 - The planned cache artifact path was not originally ignored by git because `.gitignore` covered
   `*.db` but not `*.duckdb`; this was fixed during Step 2.
+- The original Sprint 1 infra and QA docs used `setup_data`, but the Typer runtime exposes the
+  command as `setup-data`; the directly affected docs were normalized during Step 4 evidence
+  closeout instead of widening the CLI surface with a second alias.
+- The broad stale-import grep from the test plan can match `__pycache__` artifacts or literal test
+  strings, so the recorded closeout evidence uses a runtime-module scan limited to Python files
+  under `src/`.
 
 ### Follow-Ups
 
-- Proceed to Step 3 in this infra doc after the Sprint 1 backend implementation lands.
-- Hand off the confirmed cache path, `/tmp` behavior, 300-second timeout target, and progress
-  requirement to Sprint 1 backend work.
+- Sprint 1 infra is complete; hand off the verified cache path, `/tmp` behavior, 300-second timeout
+  target, and progress requirements to Sprint 2 backend work.
+- Reuse the issue evidence comment above when Sprint 3 / Phase 4 closeout needs the Sprint 1 smoke
+  provenance.

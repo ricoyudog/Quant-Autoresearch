@@ -23,7 +23,7 @@ commands that expose the runtime model.
 | Phase | Lane | Surface | Commands / Evidence | Exit Criteria |
 | --- | --- | --- | --- | --- |
 | Phase 0 | QA | Repo baseline | `uv sync --all-extras --dev`, `pytest --tb=short` | Baseline result recorded before branch work starts |
-| Sprint 1 | QA + Infra | DuckDB cache build, helper imports, legacy-import cleanup | `pytest tests/unit/test_duckdb_connector.py -v`, `uv run python cli.py setup_data`, grep scan | Cache builds, helper tests pass, no stale data-loader imports |
+| Sprint 1 | QA + Infra | DuckDB cache build, helper imports, legacy-import cleanup | `pytest tests/unit/test_duckdb_connector.py -v`, `uv run python cli.py setup-data`, runtime-module scan | Cache builds, helper tests pass, no stale data-loader imports |
 | Sprint 2 | QA | Strategy contract and backtester behavior | `pytest tests/unit/test_strategy_interface.py -v`, targeted backtester import or behavior checks | Dual-method contract and trading-day windows verified |
 | Sprint 3 | QA | CLI surface, integration path, runtime docs | `pytest tests/integration/test_minute_backtest.py -v`, CLI smoke commands | End-to-end pipeline and CLI behavior verified |
 | Phase 4 | QA + Infra | Full regression and merge gate | `pytest --tb=short -v`, full CLI smoke set, issue evidence update | Review-ready evidence exists with no unresolved regressions |
@@ -74,7 +74,7 @@ Record total tests, pass/fail count, and any existing skips before feature work 
 ```bash
 pytest tests/unit/test_duckdb_connector.py -v
 
-uv run python cli.py setup_data
+uv run python cli.py setup-data
 python -c "
 import duckdb
 con = duckdb.connect('data/daily_cache.duckdb', read_only=True)
@@ -83,7 +83,8 @@ print(f'Rows: {r[0]}, Tickers: {r[1]}, Range: {r[2]} to {r[3]}')
 con.close()
 "
 
-grep -rn "from src.data.connector\|from src.data.preprocessor\|DataConnector\|Preprocessor" src/ tests/ cli.py || echo "CLEAN"
+find src -type d -name '__pycache__' -prune -o -type f -name '*.py' -print0 | \
+xargs -0 grep -n "data.connector\|data.preprocessor\|DataConnector\|prepare_data\|Preprocessor" || echo "CLEAN"
 ```
 
 ### Sprint 2 -- Strategy + Backtester
@@ -127,7 +128,7 @@ explained or resolved.
 ## Merge Gate Checklist
 
 - [ ] Baseline test result recorded before feature work
-- [ ] `tests/unit/test_duckdb_connector.py` passes
+- [x] `tests/unit/test_duckdb_connector.py` passes
 - [ ] `tests/unit/test_strategy_interface.py` passes with the dual-method contract
 - [ ] `tests/integration/test_minute_backtest.py` passes or is replaced by an explicitly documented
       guarded smoke path
@@ -135,6 +136,6 @@ explained or resolved.
 - [ ] Legacy connector/preprocessor expectations are removed or rewritten
 - [ ] No surviving test imports reference removed data-loader modules
 - [ ] `pytest --tb=short -v` passes
-- [ ] `uv run python cli.py setup_data` works end to end
+- [x] `uv run python cli.py setup-data` works end to end
 - [ ] `uv run python cli.py backtest` works end to end
 - [ ] `uv run python cli.py update_data` works without duplicate-row regressions

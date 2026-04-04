@@ -12,7 +12,7 @@ To set up a new experiment:
    - `src/core/backtester.py` — fixed evaluation harness. Do NOT modify.
    - `src/strategies/active_strategy.py` — the file you modify.
 4. **Verify data exists**: Check `data/cache/` has Parquet files.
-   If not, tell the human to run `uv run python cli.py setup_data`.
+   If not, tell the human to run `uv run python cli.py setup-data`.
 5. **Initialize files**:
    - Create `results.tsv` with header row.
    - Create `experiments/notes/` directory.

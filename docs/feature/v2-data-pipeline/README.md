@@ -10,8 +10,9 @@ walk-forward backtesting.
 ## Planning Status
 
 - Planning-layer alignment completed on 2026-04-04
-- Sprint execution remains blocked on
-  [#8](https://github.com/ricoyudog/Quant-Autoresearch/issues/8) being functionally complete
+- Dependency gate on [#8](https://github.com/ricoyudog/Quant-Autoresearch/issues/8) is closed
+- Sprint 1 backend and infra execution completed on 2026-04-04
+- Next execution target is `sprint2/sprint2-backend.md`
 - The issue-level phase table is the umbrella summary only; implementation belongs in the
   referenced `sprintN/` docs
 
@@ -26,10 +27,11 @@ walk-forward backtesting.
 
 ## Dependency Gate
 
-- [#8](https://github.com/ricoyudog/Quant-Autoresearch/issues/8) must be complete before Sprint 1
-  starts
-- `src/data/connector.py` and `src/data/preprocessor.py` stay in place until Sprint 1 replaces
-  them
+- [#8](https://github.com/ricoyudog/Quant-Autoresearch/issues/8) was the required dependency gate
+  for Sprint 1 and is now complete
+- `src/data/connector.py` and `src/data/preprocessor.py` were removed during Sprint 1 closeout
+- DuckDB cache smoke evidence is recorded on issue #11:
+  <https://github.com/ricoyudog/Quant-Autoresearch/issues/11#issuecomment-4186599914>
 - Runtime-facing documentation updates in `program.md` and `CLAUDE.md` land in Sprint 3, after the
   implementation contracts stabilize
 
