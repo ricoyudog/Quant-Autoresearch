@@ -50,28 +50,28 @@ Add DuckDB as a project dependency and create `src/data/duckdb_connector.py` to 
 - [x] Verify: `python -c "import duckdb; print(duckdb.__version__)"`
 
 ### Step 3 -- Create duckdb_connector.py (DUCK-03, DUCK-04, DUCK-05)
-- [ ] Create `src/data/duckdb_connector.py`
-- [ ] Implement `build_daily_cache(output_path)`:
+- [x] Create `src/data/duckdb_connector.py`
+- [x] Implement `build_daily_cache(output_path)`:
   - Connect to DuckDB at `output_path` (default: `data/daily_cache.duckdb`)
   - Create `daily_bars` table with schema from spec
   - Loop year/month from 2021-03 to current date
   - For each month: call `minute-aggs sql` with aggregation query, output to CSV, load CSV into DuckDB
   - Clean up temp CSVs
   - Create PRIMARY KEY index on (ticker, session_date)
-- [ ] Implement `load_daily_data(start_date, end_date)`:
+- [x] Implement `load_daily_data(start_date, end_date)`:
   - Open DuckDB read-only
   - Query with optional date range filter
   - Return pd.DataFrame
-- [ ] Implement `get_trading_days(start_date, end_date)`:
+- [x] Implement `get_trading_days(start_date, end_date)`:
   - Query DISTINCT session_date from daily_bars
   - Return ordered list of date strings
-- [ ] Implement `query_minute_data(tickers, start_date, end_date)`:
+- [x] Implement `query_minute_data(tickers, start_date, end_date)`:
   - Build CLI subprocess command: `minute-aggs bars --symbols ... --start ... --end ... --output /tmp/...`
   - Run subprocess with 300s timeout
   - Parse CSV output, group by ticker
   - Return dict[str, pd.DataFrame]
   - Handle errors: CLI failure, missing output, timeout
-- [ ] Verify: `python -c "from src.data.duckdb_connector import build_daily_cache, load_daily_data, get_trading_days, query_minute_data; print('IMPORT OK')"`
+- [x] Verify: `python -c "from src.data.duckdb_connector import build_daily_cache, load_daily_data, get_trading_days, query_minute_data; print('IMPORT OK')"`
 
 ### Step 4 -- Update cli.py setup_data (DUCK-06)
 - [ ] Update `cli.py setup_data` command to call `build_daily_cache()`
@@ -102,12 +102,12 @@ Add DuckDB as a project dependency and create `src/data/duckdb_connector.py` to 
 
 ## 4) Test Plan
 
-- [ ] After Step 2: `uv sync` succeeds, `import duckdb` works
-- [ ] After Step 3: `from src.data.duckdb_connector import *` works
+- [x] After Step 2: `uv sync` succeeds, `import duckdb` works
+- [x] After Step 3: `from src.data.duckdb_connector import *` works
 - [ ] After Step 4: `uv run python cli.py setup_data --help` shows new flags
 - [ ] After Step 5: no imports of old connector/preprocessor in surviving files
 - [ ] After Step 6: all new unit tests pass
-- [ ] Verify surviving tests still pass: `pytest --tb=short -q`
+- [x] Verify surviving tests still pass: `pytest --tb=short -q`
 
 ## 5) Verification Commands
 
@@ -147,6 +147,16 @@ pytest --tb=short -q
 - Added `duckdb>=1.0.0` to `pyproject.toml` under `[project].dependencies`.
 - Ran `uv sync`, which installed `duckdb==1.5.1`.
 - Verified `duckdb` imports successfully from the repo environment.
+- Added `src/data/duckdb_connector.py` with additive-only Step 3 behavior so existing CLI and
+  backtester imports were left untouched for Step 4 / Step 5.
+- Implemented `build_daily_cache()`, `load_daily_data()`, `get_trading_days()`, and
+  `query_minute_data()` in the new module.
+- Used month-by-month range generation from `2021-03` through the current month with actual
+  month-end boundaries instead of the spec sample's fixed day-28 shortcut.
+- Added `tests/unit/test_duckdb_connector.py` as Step 3 TDD coverage for schema creation, date
+  filtering, trading-day ordering, minute-query splitting, and timeout handling.
+- Verified the new module imports cleanly from `src.data.duckdb_connector`.
+- Re-ran the full repo baseline after the additive connector landed and got a clean result.
 
 ### Command Results
 
@@ -168,6 +178,14 @@ pytest --tb=short -q
 - DuckDB dependency step:
   - `uv sync` -> success; installed `duckdb==1.5.1`
   - `uv run python -c "import duckdb; print(duckdb.__version__)"` -> `1.5.1`
+- Step 3 TDD cycle:
+  - RED: `uv run pytest tests/unit/test_duckdb_connector.py -q` -> `5 failed`
+  - GREEN: `uv run pytest tests/unit/test_duckdb_connector.py -q` -> `5 passed in 0.05s`
+- Step 3 import verification:
+  - `uv run python -c "from src.data.duckdb_connector import build_daily_cache, load_daily_data,
+    get_trading_days, query_minute_data; print('IMPORT OK')"` -> `IMPORT OK`
+- Post-Step 3 regression:
+  - `uv run pytest --tb=short -q` -> `97 passed in 1.15s`
 
 ### Blockers / Deviations
 
@@ -176,8 +194,16 @@ pytest --tb=short -q
 - The baseline was initially blocked by logger setup assuming `experiments/logs/` already existed.
   That blocker is now resolved.
 - No blocking issues found while adding the DuckDB dependency.
+- The planned Step 5 grep command currently searches `src.data.connector` /
+  `src.data.preprocessor`, but the live repo imports use `data.connector` / `data.preprocessor`.
+  Update that cleanup scan before Step 5 starts so it does not report a false clean state.
+- Step 3 stayed additive by design; `cli.py`, `src/core/backtester.py`, and the legacy tests still
+  target the old `DataConnector` path until Step 4 / Step 5 migrate them.
 
 ### Follow-ups
 
-- Sprint 2: strategy interface (`select_universe`), backtester minute-level integration
-- Proceed to Sprint 1 Step 3 with TDD discipline before changing DuckDB-related production code.
+- Proceed to Sprint 1 Step 4: wire `cli.py setup_data` to `build_daily_cache()` and add the
+  rebuild/progress surface without removing the legacy fetch path yet.
+- Keep Step 5 scoped to legacy-module removal and import cleanup only after the CLI wiring lands.
+- Sprint 2 remains unchanged: strategy interface (`select_universe`) and minute-level backtester
+  integration stay out of scope until Sprint 1 is complete.
