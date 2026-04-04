@@ -17,7 +17,7 @@ from RestrictedPython import compile_restricted
 from RestrictedPython.Guards import safer_getattr, full_write_guard
 from RestrictedPython.Eval import default_guarded_getiter, default_guarded_getitem
 
-from core.backtester import find_strategy_class
+from core.backtester import find_strategy_class, security_check
 import strategies.active_strategy
 
 
@@ -256,6 +256,13 @@ class TestStrategyFile:
             exec(byte_code, safe_globals, sandbox_locals)
         except Exception as e:
             pytest.fail(f"active_strategy.py failed to compile in RestrictedPython: {e}")
+
+    def test_active_strategy_passes_security_check(self, strategy_file_path):
+        """The default strategy file should pass the AST security guard."""
+        is_safe, msg = security_check(str(strategy_file_path))
+
+        assert is_safe
+        assert msg == ""
 
     def test_active_strategy_discovery_reports_universe_support(self, strategy_file_path):
         """The real TradingStrategy example is discoverable and reports select_universe support."""

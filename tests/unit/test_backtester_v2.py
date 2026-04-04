@@ -181,6 +181,174 @@ class TestApplySignalLag:
 class TestWalkForwardValidationMinutePipeline:
     """Tests for the Sprint 2 Step 6 minute-data walk-forward integration."""
 
+    def test_walk_forward_validation_uses_environment_date_range(self, monkeypatch, tmp_path, capsys):
+        """Runtime date overrides should be forwarded to load_daily_data()."""
+        strategy_path = tmp_path / "strategy.py"
+        strategy_path.write_text(
+            """
+class MinuteStrategy:
+    def select_universe(self, daily_data):
+        return ["AAA"]
+
+    def generate_signals(self, data):
+        return {"AAA": pd.Series([1.0, 0.0, -1.0], index=data["AAA"].index)}
+""".strip()
+        )
+
+        load_calls = []
+        daily_data = build_daily_universe_frame()
+
+        monkeypatch.setenv("STRATEGY_FILE", str(strategy_path))
+        monkeypatch.setattr(backtester, "security_check", lambda file_path=None: (True, ""))
+        monkeypatch.setenv("BACKTEST_START_DATE", "2025-11-04")
+        monkeypatch.setenv("BACKTEST_END_DATE", "2025-11-10")
+        monkeypatch.delenv("BACKTEST_UNIVERSE_SIZE", raising=False)
+
+        def fake_load_daily_data(start_date=None, end_date=None):
+            load_calls.append((start_date, end_date))
+            return daily_data.copy()
+
+        monkeypatch.setattr(backtester, "load_daily_data", fake_load_daily_data)
+        monkeypatch.setattr(
+            backtester,
+            "calculate_walk_forward_windows",
+            lambda start_date, end_date, n_windows=5: [
+                {
+                    "train_start": "2025-11-04",
+                    "train_end": "2025-11-06",
+                    "test_start": "2025-11-07",
+                    "test_end": "2025-11-10",
+                }
+            ],
+        )
+        monkeypatch.setattr(
+            backtester,
+            "query_minute_data",
+            lambda symbols, start_date, end_date: build_window_minute_data(list(symbols), start_date),
+        )
+        monkeypatch.setattr(
+            backtester,
+            "calculate_metrics",
+            lambda combined_returns, trades: {
+                "sharpe": 1.0,
+                "sortino": 1.0,
+                "calmar": 1.0,
+                "drawdown": -0.1,
+                "max_dd_days": 1,
+                "trades": 2,
+                "win_rate": 0.5,
+                "profit_factor": 1.1,
+                "avg_win": 0.01,
+                "avg_loss": -0.01,
+            },
+        )
+        monkeypatch.setattr(backtester, "calculate_baseline_sharpe", lambda data: 0.5)
+
+        backtester.walk_forward_validation()
+        output = capsys.readouterr().out
+
+        assert load_calls == [("2025-11-04", "2025-11-10")]
+        assert "SCORE:" in output
+
+    def test_walk_forward_validation_caps_universe_from_environment(self, monkeypatch, tmp_path, capsys):
+        """BACKTEST_UNIVERSE_SIZE should cap the normalized ticker universe."""
+        strategy_path = tmp_path / "strategy.py"
+        strategy_path.write_text(
+            """
+class MinuteStrategy:
+    def select_universe(self, daily_data):
+        return ["AAA", "BBB", "CCC"]
+
+    def generate_signals(self, data):
+        signals = {}
+        for ticker, frame in data.items():
+            signals[ticker] = pd.Series([1.0, 0.0, -1.0], index=frame.index)
+        return signals
+""".strip()
+        )
+
+        query_calls = []
+        daily_data = build_daily_universe_frame()
+
+        monkeypatch.setenv("STRATEGY_FILE", str(strategy_path))
+        monkeypatch.setattr(backtester, "security_check", lambda file_path=None: (True, ""))
+        monkeypatch.delenv("BACKTEST_START_DATE", raising=False)
+        monkeypatch.delenv("BACKTEST_END_DATE", raising=False)
+        monkeypatch.setenv("BACKTEST_UNIVERSE_SIZE", "2")
+        monkeypatch.setattr(backtester, "load_daily_data", lambda start_date=None, end_date=None: daily_data.copy())
+        monkeypatch.setattr(
+            backtester,
+            "calculate_walk_forward_windows",
+            lambda start_date, end_date, n_windows=5: [
+                {
+                    "train_start": "2025-11-03",
+                    "train_end": "2025-11-05",
+                    "test_start": "2025-11-06",
+                    "test_end": "2025-11-07",
+                }
+            ],
+        )
+
+        def fake_query_minute_data(symbols, start_date, end_date):
+            query_calls.append(list(symbols))
+            return build_window_minute_data(list(symbols), start_date)
+
+        monkeypatch.setattr(backtester, "query_minute_data", fake_query_minute_data)
+        monkeypatch.setattr(
+            backtester,
+            "calculate_metrics",
+            lambda combined_returns, trades: {
+                "sharpe": 1.0,
+                "sortino": 1.0,
+                "calmar": 1.0,
+                "drawdown": -0.1,
+                "max_dd_days": 1,
+                "trades": 2,
+                "win_rate": 0.5,
+                "profit_factor": 1.1,
+                "avg_win": 0.01,
+                "avg_loss": -0.01,
+            },
+        )
+        monkeypatch.setattr(backtester, "calculate_baseline_sharpe", lambda data: 0.5)
+
+        backtester.walk_forward_validation()
+        output = capsys.readouterr().out
+
+        assert query_calls == [["AAA", "BBB"]]
+        assert "PER_SYMBOL:" in output
+
+    def test_walk_forward_validation_rejects_invalid_environment_configuration(self, monkeypatch, tmp_path, capsys):
+        """Invalid environment overrides should fail deterministically."""
+        strategy_path = tmp_path / "strategy.py"
+        strategy_path.write_text(
+            """
+class MinuteStrategy:
+    def generate_signals(self, data):
+        return {}
+""".strip()
+        )
+
+        monkeypatch.setenv("STRATEGY_FILE", str(strategy_path))
+        monkeypatch.setattr(backtester, "security_check", lambda file_path=None: (True, ""))
+        monkeypatch.setenv("BACKTEST_START_DATE", "2025-11-04")
+        monkeypatch.delenv("BACKTEST_END_DATE", raising=False)
+        monkeypatch.setenv("BACKTEST_UNIVERSE_SIZE", "0")
+        monkeypatch.setattr(
+            backtester,
+            "load_daily_data",
+            lambda start_date=None, end_date=None: pytest.fail(
+                "invalid configuration should exit before loading daily data"
+            ),
+        )
+
+        with pytest.raises(SystemExit) as excinfo:
+            backtester.walk_forward_validation()
+
+        output = capsys.readouterr().out
+        assert excinfo.value.code == 1
+        assert "DATA ERROR:" in output
+
     def test_walk_forward_validation_uses_daily_universe_and_minute_windows(self, monkeypatch, tmp_path, capsys):
         """walk_forward_validation should use the DuckDB daily->universe->minute flow."""
         strategy_path = tmp_path / "strategy.py"
@@ -217,8 +385,8 @@ class MinuteStrategy:
             },
         ]
 
-        monkeypatch.setattr(backtester, "STRATEGY_FILE", str(strategy_path))
-        monkeypatch.setattr(backtester, "security_check", lambda: (True, ""))
+        monkeypatch.setenv("STRATEGY_FILE", str(strategy_path))
+        monkeypatch.setattr(backtester, "security_check", lambda file_path=None: (True, ""))
         monkeypatch.setattr(backtester, "load_data", lambda: pytest.fail("legacy load_data should not be used"))
         monkeypatch.setattr(
             backtester,
@@ -332,8 +500,8 @@ class MinuteStrategy:
                 )
         daily_data = pd.DataFrame(rows)
 
-        monkeypatch.setattr(backtester, "STRATEGY_FILE", str(strategy_path))
-        monkeypatch.setattr(backtester, "security_check", lambda: (True, ""))
+        monkeypatch.setenv("STRATEGY_FILE", str(strategy_path))
+        monkeypatch.setattr(backtester, "security_check", lambda file_path=None: (True, ""))
         monkeypatch.setattr(backtester, "load_daily_data", lambda start_date=None, end_date=None: daily_data.copy())
         monkeypatch.setattr(
             backtester,
@@ -398,8 +566,8 @@ class MinuteStrategy:
         )
 
         daily_data = build_daily_universe_frame()
-        monkeypatch.setattr(backtester, "STRATEGY_FILE", str(strategy_path))
-        monkeypatch.setattr(backtester, "security_check", lambda: (True, ""))
+        monkeypatch.setenv("STRATEGY_FILE", str(strategy_path))
+        monkeypatch.setattr(backtester, "security_check", lambda file_path=None: (True, ""))
         monkeypatch.setattr(backtester, "load_daily_data", lambda start_date=None, end_date=None: daily_data.copy())
         monkeypatch.setattr(
             backtester,
@@ -426,6 +594,58 @@ class MinuteStrategy:
         assert "PER_SYMBOL:" in output
         assert "AAA:" in output
         assert "BBB:" in output
+
+    def test_walk_forward_validation_runs_default_active_strategy_in_sandbox(self, monkeypatch, capsys):
+        """The default strategy should execute in the restricted runtime with dict minute input."""
+        strategy_path = Path(__file__).resolve().parents[2] / "src" / "strategies" / "active_strategy.py"
+        daily_data = build_daily_universe_frame()
+
+        monkeypatch.setenv("STRATEGY_FILE", str(strategy_path))
+        monkeypatch.delenv("BACKTEST_START_DATE", raising=False)
+        monkeypatch.delenv("BACKTEST_END_DATE", raising=False)
+        monkeypatch.setenv("BACKTEST_UNIVERSE_SIZE", "2")
+        monkeypatch.setattr(backtester, "security_check", lambda file_path=None: (True, ""))
+        monkeypatch.setattr(backtester, "load_daily_data", lambda start_date=None, end_date=None: daily_data.copy())
+        monkeypatch.setattr(
+            backtester,
+            "calculate_walk_forward_windows",
+            lambda start_date, end_date, n_windows=5: [
+                {
+                    "train_start": "2025-11-03",
+                    "train_end": "2025-11-05",
+                    "test_start": "2025-11-06",
+                    "test_end": "2025-11-07",
+                }
+            ],
+        )
+        monkeypatch.setattr(
+            backtester,
+            "query_minute_data",
+            lambda symbols, start_date, end_date: build_window_minute_data(list(symbols), start_date),
+        )
+        monkeypatch.setattr(
+            backtester,
+            "calculate_metrics",
+            lambda combined_returns, trades: {
+                "sharpe": 1.0,
+                "sortino": 1.0,
+                "calmar": 1.0,
+                "drawdown": -0.1,
+                "max_dd_days": 1,
+                "trades": 2,
+                "win_rate": 0.5,
+                "profit_factor": 1.1,
+                "avg_win": 0.01,
+                "avg_loss": -0.01,
+            },
+        )
+        monkeypatch.setattr(backtester, "calculate_baseline_sharpe", lambda data: 0.5)
+
+        backtester.walk_forward_validation()
+        output = capsys.readouterr().out
+
+        assert "SCORE:" in output
+        assert "PER_SYMBOL:" in output
 
 
 class TestPrepareMinuteFrame:

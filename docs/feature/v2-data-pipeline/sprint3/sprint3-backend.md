@@ -38,22 +38,26 @@ Update CLI commands for the new data pipeline (`fetch` for minute queries, `back
 ## 3) Step-by-Step Plan
 
 ### Step 1 -- Update CLI fetch (CLI-01)
-- [ ] Update `cli.py fetch <symbol>` command:
+- [x] Update `cli.py fetch <symbol>` command:
   - Accept `--start` and `--end` date arguments
   - Call `query_minute_data([symbol], start, end)`
   - Output results to stdout or `--output` file
   - Default: last 5 trading days if no dates specified
-- [ ] Verify: `uv run python cli.py fetch AAPL --start 2025-11-03 --end 2025-11-05`
-- [ ] Verify: output contains minute-level OHLCV data
+- [x] Verify: `uv run python cli.py fetch AAPL --start 2025-11-03 --end 2025-11-05`
+- [x] Verify: output contains minute-level OHLCV data
+
+*Next execution target: Step 2 -- Update `cli.py backtest` (CLI-02).* 
 
 ### Step 2 -- Update CLI backtest (CLI-02)
-- [ ] Update `cli.py backtest` command:
+- [x] Update `cli.py backtest` command:
   - Accept `--start` and `--end` for backtest period
   - Accept `--universe-size` to limit ticker count
   - Call backtester walk_forward_validation with minute mode
   - Output standard metrics format (SCORE, SORTINO, etc.)
-- [ ] Verify: `uv run python cli.py backtest --start 2024-01-01 --end 2024-12-31`
-- [ ] Verify: output includes all expected metrics + PER_SYMBOL section
+- [x] Verify: `uv run python cli.py backtest --start 2024-01-01 --end 2024-12-31`
+- [x] Verify: output includes all expected metrics + PER_SYMBOL section
+
+*Next execution target: Step 3 -- Add `cli.py update_data` (CLI-03).*
 
 ### Step 3 -- Add CLI update_data (CLI-03)
 - [ ] Add `cli.py update_data` command:
@@ -173,17 +177,41 @@ grep -rn "from src.data.connector\|from src.data.preprocessor\|DataConnector\|Pr
 
 ### Completed Work
 
-(To be filled during implementation)
+- Closed out Sprint 3 backend Step 1 in `cli.py`
+- Replaced the legacy `CacheConnector.fetch_and_cache()` path with the DuckDB/minute-data flow via `query_minute_data([symbol], start, end)`
+- Added `--start`, `--end`, and `--output` to `fetch`
+- Defaulted date resolution to the last 5 trading days from the daily cache when no dates are provided
+- Rejected one-sided date overrides so `fetch` now requires both `--start` and `--end` together, or neither
+- Wrapped trading-day lookup and minute-query helper failures in stable CLI error messages
+- Added focused fetch-command coverage in `tests/unit/test_cli.py` for explicit ranges, default ranges, file output, missing-cache hints, empty-result handling, one-sided ranges, and helper failures
+- Closed out Sprint 3 backend Step 2 in `cli.py` and `src/core/backtester.py`
+- Replaced the legacy `backtest` CLI path so it now accepts `--start`, `--end`, and `--universe-size` and invokes the V2 minute-mode runtime without the old `load_data()` / `--symbols` flow
+- Added runtime config parsing in `src/core/backtester.py` so `STRATEGY_FILE`, `BACKTEST_START_DATE`, `BACKTEST_END_DATE`, and `BACKTEST_UNIVERSE_SIZE` are resolved at call time instead of import time
+- Added focused Step 2 coverage in `tests/unit/test_cli.py` and `tests/unit/test_backtester_v2.py` for CLI argument validation, runtime env handoff, date-range scoping, universe capping, and invalid env rejection
+- Added a restricted-runtime regression in `tests/unit/test_backtester_v2.py` and a security-check regression in `tests/unit/test_strategy_interface.py`
+- Removed the forbidden `getattr(...)` use from `src/strategies/active_strategy.py` and exposed safe container names in the restricted runtime so the default strategy can run minute-mode backtests under the AST guard
 
 ### Command Results
 
-(To be filled during implementation)
+- `uv run pytest tests/unit/test_cli.py -k fetch -v` -> `5 passed`
+- `uv run pytest tests/unit/test_cli.py -v` -> `21 passed`
+- `uv run python cli.py fetch AAPL --start 2025-11-03 --end 2025-11-05` -> succeeded and printed minute-level OHLCV rows with CSV header
+- `uv run python cli.py fetch AAPL` -> succeeded and used the latest 5 trading days from the DuckDB cache
+- `uv run python cli.py fetch AAPL --start 2025-11-03 --end 2025-11-05 --output /tmp/quant-aapl-fetch-step1.csv` -> succeeded and wrote CSV output to the requested file path
+- `uv run pytest tests/unit/test_cli.py -k backtest -v` -> `5 passed`
+- `uv run pytest tests/unit/test_backtester_v2.py -k "environment or universe" -v` -> `5 passed`
+- `uv run pytest tests/unit/test_strategy_interface.py -q` -> `24 passed in 0.28s`
+- `uv run pytest tests/unit/test_cli.py tests/unit/test_backtester_v2.py tests/unit/test_strategy_interface.py -q` -> `81 passed in 0.45s`
+- `uv run python cli.py backtest --help` -> succeeded and exposed `--start`, `--end`, and `--universe-size`
+- `uv run python cli.py backtest --start 2024-01-01 --end 2024-12-31` -> succeeded and printed the standard metrics block plus `PER_SYMBOL`
 
 ### Blockers / Deviations
 
-(To be filled during implementation)
+- Default `fetch` date selection depends on `get_trading_days()` from the DuckDB daily cache; when the cache is missing or empty, the command exits with a `setup-data` hint instead of guessing dates
+- Single-sided date overrides are rejected explicitly instead of being silently coerced into same-day queries
+- Step 2 smoke initially failed because the default strategy used a forbidden `getattr(...)` helper and the restricted runtime lacked `dict`; both compatibility issues were fixed inside this slice so the documented `backtest` smoke command now runs successfully
 
 ### Follow-ups
 
-- All sprints complete -- issue ready for review
+- Next execution target: Step 3 -- add `cli.py update_data` to the DuckDB/minute-data runtime
 - Future: overfit defense design, Monte Carlo minute-level tuning, parallel CLI queries

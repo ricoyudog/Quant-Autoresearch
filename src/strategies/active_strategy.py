@@ -54,8 +54,11 @@ class TradingStrategy:
 
     def generate_signal_series(self, frame: "pd.DataFrame") -> "pd.Series":
         """Generate raw long/flat/short signals aligned to one ticker frame."""
-        if frame is None or frame.empty:
-            return pd.Series(index=getattr(frame, "index", pd.Index([])), dtype=float)
+        if frame is None:
+            return pd.Series(index=pd.Index([]), dtype=float)
+
+        if frame.empty:
+            return pd.Series(index=frame.index, dtype=float)
 
         close_col = (
             "close" if "close" in frame.columns

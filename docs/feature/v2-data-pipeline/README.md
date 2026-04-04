@@ -13,7 +13,8 @@ walk-forward backtesting.
 - Dependency gate on [#8](https://github.com/ricoyudog/Quant-Autoresearch/issues/8) is closed
 - Sprint 1 backend and infra execution completed on 2026-04-04
 - Sprint 2 backend execution completed on 2026-04-04; Step 1 through Step 9 are closed out
-- Next execution target is Sprint 3 backend + infra execution
+- Sprint 3 backend execution is in progress; Step 1 (`cli.py fetch`) and Step 2 (`cli.py backtest`) completed on 2026-04-04
+- Next execution target is Sprint 3 backend Step 3 (`cli.py update_data`)
 - The issue-level phase table is the umbrella summary only; implementation belongs in the
   referenced `sprintN/` docs
 

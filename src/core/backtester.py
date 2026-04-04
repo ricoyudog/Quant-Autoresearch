@@ -26,6 +26,33 @@ FORBIDDEN_BUILTINS = {"exec", "eval", "open", "getattr", "setattr", "delattr"}
 FORBIDDEN_MODULES = {"socket", "requests", "urllib", "os", "sys", "shutil", "subprocess"}
 
 
+def get_strategy_file() -> str:
+    """Resolve the strategy file at call time so CLI env overrides are honored."""
+    return os.environ.get("STRATEGY_FILE", STRATEGY_FILE)
+
+
+def get_backtest_runtime_config() -> tuple[str | None, str | None, int | None]:
+    """Read and validate optional CLI overrides for the minute-mode backtest."""
+    start_date = os.environ.get("BACKTEST_START_DATE")
+    end_date = os.environ.get("BACKTEST_END_DATE")
+    if bool(start_date) != bool(end_date):
+        raise ValueError("Provide both BACKTEST_START_DATE and BACKTEST_END_DATE together.")
+
+    universe_raw = os.environ.get("BACKTEST_UNIVERSE_SIZE")
+    if universe_raw is None:
+        return start_date, end_date, None
+
+    try:
+        universe_size = int(universe_raw)
+    except ValueError as exc:
+        raise ValueError("BACKTEST_UNIVERSE_SIZE must be a positive integer.") from exc
+
+    if universe_size <= 0:
+        raise ValueError("BACKTEST_UNIVERSE_SIZE must be a positive integer.")
+
+    return start_date, end_date, universe_size
+
+
 def find_strategy_class(sandbox_locals: dict) -> tuple[type | None, bool]:
     """Find the first strategy class and whether it exposes select_universe."""
     for obj in sandbox_locals.values():
@@ -301,7 +328,7 @@ def security_check(file_path: str = None):
     """
     Performs security analysis on a strategy file using AST to find forbidden patterns.
     """
-    target = file_path or STRATEGY_FILE
+    target = file_path or get_strategy_file()
     if not os.path.exists(target):
         return False, f"Strategy file not found: {target}"
     
@@ -432,14 +459,22 @@ def run_backtest(strategy_instance, data, start_idx, end_idx):
     return sharpe, max_drawdown, total_trades
 
 def walk_forward_validation():
-    is_safe, msg = security_check()
+    try:
+        start_date_override, end_date_override, universe_size_override = get_backtest_runtime_config()
+    except ValueError as exc:
+        print(f"DATA ERROR: {exc}")
+        sys.exit(1)
+
+    strategy_file = get_strategy_file()
+
+    is_safe, msg = security_check(strategy_file)
     if not is_safe:
         print(f"SECURITY ERROR: {msg}")
         sys.exit(1)
         
     # Load Strategy via RestrictedPython Sandbox
     try:
-        with open(STRATEGY_FILE, "r") as f:
+        with open(strategy_file, "r") as f:
             strategy_lines = f.readlines()
         
         # Strip import statements for restricted execution
@@ -460,6 +495,9 @@ def walk_forward_validation():
             '_unpack_sequence_': guarded_unpack_sequence,
             '__name__': 'sandbox',
             '__metaclass__': type,
+            'dict': dict,
+            'list': list,
+            'set': set,
             'pd': pd,
             'np': np,
         }
@@ -481,7 +519,7 @@ def walk_forward_validation():
         print(f"STRATEGY LOAD ERROR (Restricted): {e}")
         sys.exit(1)
 
-    daily_data = load_daily_data()
+    daily_data = load_daily_data(start_date=start_date_override, end_date=end_date_override)
     if daily_data is None or daily_data.empty:
         print("DATA ERROR: No daily DuckDB data found.")
         sys.exit(1)
@@ -510,6 +548,8 @@ def walk_forward_validation():
         selected_tickers = None
 
     selected_tickers = normalize_universe_selection(selected_tickers, daily_data)
+    if universe_size_override is not None:
+        selected_tickers = selected_tickers[:universe_size_override]
     if not selected_tickers:
         print("DATA ERROR: No tickers available for minute backtest.")
         sys.exit(1)
