@@ -17,6 +17,7 @@ root_dir = Path(__file__).parent.parent
 sys.path.append(str(root_dir))
 sys.path.append(str(root_dir / "src"))
 
+import cli
 from cli import app
 
 runner = CliRunner()
@@ -121,6 +122,63 @@ class TestBacktestCommandBehavior:
             mock_walk_forward.assert_called_once()
         finally:
             Path(strategy_path).unlink(missing_ok=True)
+
+
+class TestSetupDataCommandBehavior:
+    """Tests for setup_data command behavior with the DuckDB cache."""
+
+    @patch("cli.build_daily_cache")
+    def test_setup_data_builds_daily_cache_when_missing(self, mock_build_daily_cache, monkeypatch, tmp_path):
+        cache_path = tmp_path / "daily_cache.duckdb"
+        monkeypatch.setattr(cli, "DEFAULT_CACHE_PATH", cache_path)
+
+        def fake_build_daily_cache(*, output_path=None, progress_callback=None):
+            assert output_path == cache_path
+            assert progress_callback is not None
+            progress_callback("2025-11-01", "2025-11-30")
+
+        mock_build_daily_cache.side_effect = fake_build_daily_cache
+
+        result = runner.invoke(app, ["setup-data"])
+
+        assert result.exit_code == 0
+        mock_build_daily_cache.assert_called_once()
+        assert "Building daily cache" in result.stdout
+        assert "Processing 2025-11" in result.stdout
+
+    @patch("cli.build_daily_cache")
+    def test_setup_data_skips_existing_cache_without_force(self, mock_build_daily_cache, monkeypatch, tmp_path):
+        cache_path = tmp_path / "daily_cache.duckdb"
+        cache_path.touch()
+        monkeypatch.setattr(cli, "DEFAULT_CACHE_PATH", cache_path)
+
+        result = runner.invoke(app, ["setup-data"])
+
+        assert result.exit_code == 0
+        mock_build_daily_cache.assert_not_called()
+        assert "already exists" in result.stdout
+        assert "--force" in result.stdout
+
+    @patch("cli.build_daily_cache")
+    def test_setup_data_force_rebuilds_existing_cache(self, mock_build_daily_cache, monkeypatch, tmp_path):
+        cache_path = tmp_path / "daily_cache.duckdb"
+        cache_path.touch()
+        monkeypatch.setattr(cli, "DEFAULT_CACHE_PATH", cache_path)
+
+        def fake_build_daily_cache(*, output_path=None, progress_callback=None):
+            assert output_path == cache_path
+            assert not cache_path.exists()
+            assert progress_callback is not None
+            progress_callback("2025-11-01", "2025-11-30")
+
+        mock_build_daily_cache.side_effect = fake_build_daily_cache
+
+        result = runner.invoke(app, ["setup-data", "--force"])
+
+        assert result.exit_code == 0
+        mock_build_daily_cache.assert_called_once()
+        assert "Rebuilding daily cache" in result.stdout
+        assert "Processing 2025-11" in result.stdout
 
 
 class TestFetchCommandBehavior:

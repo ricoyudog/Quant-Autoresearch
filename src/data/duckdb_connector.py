@@ -4,7 +4,7 @@ import tempfile
 from calendar import monthrange
 from datetime import date
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 import duckdb
 import pandas as pd
@@ -116,7 +116,10 @@ def _read_daily_cache_frame(db_path: Path, start_date: Optional[str], end_date: 
         connection.close()
 
 
-def build_daily_cache(output_path: Optional[os.PathLike | str] = None) -> None:
+def build_daily_cache(
+    output_path: Optional[os.PathLike | str] = None,
+    progress_callback: Optional[Callable[[str, str], None]] = None,
+) -> None:
     """Build the local DuckDB daily-bar cache from the minute-aggs dataset."""
     cache_path = _resolve_cache_path(output_path)
     cache_path.parent.mkdir(parents=True, exist_ok=True)
@@ -127,6 +130,9 @@ def build_daily_cache(output_path: Optional[os.PathLike | str] = None) -> None:
         connection.execute(DAILY_BARS_TABLE_SQL)
 
         for start_date, end_date in _iter_month_ranges(DAILY_CACHE_START, date.today()):
+            if progress_callback is not None:
+                progress_callback(start_date, end_date)
+
             with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as handle:
                 csv_path = Path(handle.name)
 

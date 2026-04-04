@@ -13,9 +13,14 @@ import typer
 sys.path.append(str(Path(__file__).parent / "src"))
 
 from data.connector import DataConnector
-from data.preprocessor import prepare_data as prepare_all_data
+from data.duckdb_connector import DEFAULT_CACHE_PATH, build_daily_cache
 
 app = typer.Typer(help="Quant Autoresearch")
+
+
+def _echo_build_progress(start_date: str, end_date: str) -> None:
+    del end_date
+    typer.echo(f"Processing {start_date[:7]}...")
 
 
 @app.command()
@@ -30,10 +35,22 @@ def fetch(symbol: str, start: str = "2020-01-01"):
 
 
 @app.command()
-def setup_data():
-    """Download default market data symbols (SPY, BTC, etc.)"""
-    typer.echo("Preparing default research dataset...")
-    prepare_all_data()
+def setup_data(force: bool = typer.Option(False, "--force", help="Rebuild the daily DuckDB cache from scratch")):
+    """Build the DuckDB daily cache used by the V2 data pipeline."""
+    cache_path = DEFAULT_CACHE_PATH
+
+    if cache_path.exists():
+        if not force:
+            typer.echo(f"Daily cache already exists at {cache_path}. Use --force to rebuild.")
+            return
+
+        typer.echo(f"Rebuilding daily cache at {cache_path}...")
+        cache_path.unlink()
+    else:
+        typer.echo(f"Building daily cache at {cache_path}...")
+
+    build_daily_cache(output_path=cache_path, progress_callback=_echo_build_progress)
+    typer.echo(f"Daily cache ready at {cache_path}")
 
 
 @app.command()

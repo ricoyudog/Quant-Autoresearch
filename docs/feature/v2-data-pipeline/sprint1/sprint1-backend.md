@@ -74,10 +74,10 @@ Add DuckDB as a project dependency and create `src/data/duckdb_connector.py` to 
 - [x] Verify: `python -c "from src.data.duckdb_connector import build_daily_cache, load_daily_data, get_trading_days, query_minute_data; print('IMPORT OK')"`
 
 ### Step 4 -- Update cli.py setup_data (DUCK-06)
-- [ ] Update `cli.py setup_data` command to call `build_daily_cache()`
-- [ ] Add progress output (year/month being processed)
-- [ ] Add `--force` flag to rebuild from scratch
-- [ ] Verify: `uv run python cli.py setup_data` (dry-run or short test)
+- [x] Update `cli.py setup_data` command to call `build_daily_cache()`
+- [x] Add progress output (year/month being processed)
+- [x] Add `--force` flag to rebuild from scratch
+- [x] Verify: `uv run python cli.py setup-data` (dry-run or short test)
 
 ### Step 5 -- Remove old data modules
 - [ ] `git rm src/data/connector.py`
@@ -104,7 +104,7 @@ Add DuckDB as a project dependency and create `src/data/duckdb_connector.py` to 
 
 - [x] After Step 2: `uv sync` succeeds, `import duckdb` works
 - [x] After Step 3: `from src.data.duckdb_connector import *` works
-- [ ] After Step 4: `uv run python cli.py setup_data --help` shows new flags
+- [x] After Step 4: `uv run python cli.py setup-data --help` shows new flags
 - [ ] After Step 5: no imports of old connector/preprocessor in surviving files
 - [ ] After Step 6: all new unit tests pass
 - [x] Verify surviving tests still pass: `pytest --tb=short -q`
@@ -157,6 +157,14 @@ pytest --tb=short -q
   filtering, trading-day ordering, minute-query splitting, and timeout handling.
 - Verified the new module imports cleanly from `src.data.duckdb_connector`.
 - Re-ran the full repo baseline after the additive connector landed and got a clean result.
+- Updated `cli.py setup_data` to call `build_daily_cache()` from `data.duckdb_connector` while
+  keeping the legacy `DataConnector` fetch path intact for the remaining Sprint 1 steps.
+- Added per-month progress output to the CLI through a `build_daily_cache()` progress callback.
+- Added a `--force` flag so `setup-data` skips an existing cache by default and only rebuilds when
+  explicitly requested.
+- Added CLI unit coverage for the `setup-data` missing-cache, skip, and forced-rebuild paths.
+- Verified the Step 4 CLI surface through `setup-data --help`, a skip-path dry-run, and a fresh
+  full-suite regression run.
 
 ### Command Results
 
@@ -186,6 +194,18 @@ pytest --tb=short -q
     get_trading_days, query_minute_data; print('IMPORT OK')"` -> `IMPORT OK`
 - Post-Step 3 regression:
   - `uv run pytest --tb=short -q` -> `97 passed in 1.15s`
+- Step 4 TDD cycle:
+  - RED: `uv run pytest tests/unit/test_duckdb_connector.py tests/unit/test_cli.py -q` ->
+    `4 failed`
+  - GREEN: `uv run pytest tests/unit/test_duckdb_connector.py tests/unit/test_cli.py -q` ->
+    `21 passed in 0.41s`
+- Step 4 CLI verification:
+  - `uv run python cli.py setup-data --help` -> shows `--force`
+  - dry-run path: `uv run python cli.py setup-data` with a temporary existing
+    `data/daily_cache.duckdb` -> `Daily cache already exists at data/daily_cache.duckdb. Use
+    --force to rebuild.`
+- Post-Step 4 regression:
+  - `uv run pytest --tb=short -q` -> `101 passed in 1.16s`
 
 ### Blockers / Deviations
 
@@ -199,11 +219,16 @@ pytest --tb=short -q
   Update that cleanup scan before Step 5 starts so it does not report a false clean state.
 - Step 3 stayed additive by design; `cli.py`, `src/core/backtester.py`, and the legacy tests still
   target the old `DataConnector` path until Step 4 / Step 5 migrate them.
+- Typer exposes the CLI command as `setup-data`, not `setup_data`. Use the hyphenated form in
+  verification commands and docs.
+- This environment still does not provide bare `python` / `pytest` on `PATH`; repo-equivalent
+  commands remain `uv run python ...` and `uv run pytest ...`.
 
 ### Follow-ups
 
-- Proceed to Sprint 1 Step 4: wire `cli.py setup_data` to `build_daily_cache()` and add the
-  rebuild/progress surface without removing the legacy fetch path yet.
-- Keep Step 5 scoped to legacy-module removal and import cleanup only after the CLI wiring lands.
+- Proceed to Sprint 1 Step 5: remove the old data modules only after updating the cleanup scan to
+  search for `data.connector` / `data.preprocessor` references instead of `src.data.*`.
+- Keep Step 5 scoped to legacy-module removal and import cleanup only; the new CLI wiring is now
+  complete.
 - Sprint 2 remains unchanged: strategy interface (`select_universe`) and minute-level backtester
   integration stay out of scope until Sprint 1 is complete.

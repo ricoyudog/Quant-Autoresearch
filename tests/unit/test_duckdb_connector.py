@@ -70,6 +70,33 @@ def test_build_daily_cache_creates_daily_bars_table(tmp_path, monkeypatch):
     assert primary_key_columns == ["ticker", "session_date"]
 
 
+def test_build_daily_cache_reports_month_progress(tmp_path, monkeypatch):
+    from data import duckdb_connector
+
+    output_path = tmp_path / "daily_cache.duckdb"
+    month_ranges = [("2025-11-01", "2025-11-30")]
+    progress_updates = []
+    monkeypatch.setattr(duckdb_connector, "_iter_month_ranges", lambda start, end: month_ranges)
+
+    def fake_run(cmd, check, capture_output, text, timeout):
+        output_arg = Path(cmd[cmd.index("--output") + 1])
+        output_arg.write_text(
+            "ticker,session_date,open,high,low,close,volume,transactions,vwap\n"
+            "AAPL,2025-11-03,270.0,271.0,269.5,270.5,1000.0,100,270.2\n",
+            encoding="utf-8",
+        )
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(duckdb_connector.subprocess, "run", fake_run)
+
+    duckdb_connector.build_daily_cache(
+        output_path,
+        progress_callback=lambda start_date, end_date: progress_updates.append((start_date, end_date)),
+    )
+
+    assert progress_updates == [("2025-11-01", "2025-11-30")]
+
+
 def test_load_daily_data_filters_by_date_range(tmp_path, monkeypatch):
     from data import duckdb_connector
 
