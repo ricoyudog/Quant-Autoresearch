@@ -18,6 +18,7 @@ from data.duckdb_connector import (
     build_daily_cache,
     get_trading_days,
     query_minute_data,
+    refresh_daily_cache,
 )
 
 app = typer.Typer(help="Quant Autoresearch")
@@ -173,6 +174,33 @@ def backtest(
     except Exception as e:
         typer.echo(f"Backtest failed: {e}")
         raise typer.Exit(code=1)
+
+
+@app.command()
+def update_data():
+    """Refresh the DuckDB daily cache with newly available sessions."""
+    cache_path = DEFAULT_CACHE_PATH
+    if cache_path.exists():
+        typer.echo(f"Updating daily cache at {cache_path}...")
+    else:
+        typer.echo(f"Daily cache missing at {cache_path}. Building from scratch...")
+
+    try:
+        result = refresh_daily_cache(output_path=cache_path, progress_callback=_echo_build_progress)
+    except Exception as exc:
+        typer.echo(f"Update failed: {exc}")
+        raise typer.Exit(code=1) from exc
+
+    latest_session_date = result.get("latest_session_date")
+    if result["mode"] == "up_to_date":
+        typer.echo(f"Daily cache already up to date at {cache_path} (latest session date: {latest_session_date}).")
+        return
+
+    if result["mode"] == "rebuilt":
+        typer.echo(f"Daily cache rebuilt at {cache_path} (latest session date: {latest_session_date}).")
+        return
+
+    typer.echo(f"Daily cache updated at {cache_path} (latest session date: {latest_session_date}).")
 
 
 if __name__ == "__main__":

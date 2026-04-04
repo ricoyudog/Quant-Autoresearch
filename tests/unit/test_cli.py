@@ -42,6 +42,15 @@ class TestCommandRegistration:
         assert "--end" in result.stdout
         assert "--output" in result.stdout
 
+    def test_update_data_command_exists(self):
+        """Verify update_data is registered as a CLI command."""
+        result = runner.invoke(app, ["--help"])
+        assert result.exit_code == 0
+        assert "update-data" in result.stdout
+
+        result = runner.invoke(app, ["update-data", "--help"])
+        assert result.exit_code == 0
+
     def test_backtest_command_exists(self):
         """Verify backtest is registered."""
         result = runner.invoke(app, ["--help"])
@@ -265,6 +274,55 @@ class TestSetupDataCommandBehavior:
         mock_build_daily_cache.assert_called_once()
         assert "Rebuilding daily cache" in result.stdout
         assert "Processing 2025-11" in result.stdout
+
+
+class TestUpdateDataCommandBehavior:
+    """Tests for update_data command behavior with the DuckDB cache."""
+
+    def test_update_data_refreshes_daily_cache(self, monkeypatch, tmp_path):
+        """Verify update_data delegates to the incremental refresh helper."""
+        cache_path = tmp_path / "daily_cache.duckdb"
+        cache_path.touch()
+        monkeypatch.setattr(cli, "DEFAULT_CACHE_PATH", cache_path)
+
+        calls = []
+
+        def fake_refresh_daily_cache(*, output_path=None, progress_callback=None):
+            calls.append(output_path)
+            assert progress_callback is not None
+            progress_callback("2025-11-01", "2025-11-30")
+            return {
+                "mode": "refreshed",
+                "start_date": "2025-11-05",
+                "end_date": "2025-11-30",
+                "latest_session_date": "2025-11-30",
+            }
+
+        monkeypatch.setattr(cli, "refresh_daily_cache", fake_refresh_daily_cache, raising=False)
+
+        result = runner.invoke(app, ["update-data"])
+
+        assert result.exit_code == 0
+        assert calls == [cache_path]
+        assert "Updating daily cache" in result.stdout
+        assert "Processing 2025-11" in result.stdout
+        assert "2025-11-30" in result.stdout
+
+    def test_update_data_reports_refresh_failure(self, monkeypatch, tmp_path):
+        """Verify update_data converts refresh failures into a stable CLI message."""
+        cache_path = tmp_path / "daily_cache.duckdb"
+        monkeypatch.setattr(cli, "DEFAULT_CACHE_PATH", cache_path)
+
+        def fail_refresh_daily_cache(*, output_path=None, progress_callback=None):
+            raise RuntimeError("refresh failed")
+
+        monkeypatch.setattr(cli, "refresh_daily_cache", fail_refresh_daily_cache, raising=False)
+
+        result = runner.invoke(app, ["update-data"])
+
+        assert result.exit_code == 1
+        assert "Update failed" in result.stdout
+        assert "refresh failed" in result.stdout
 
 
 class TestFetchCommandBehavior:

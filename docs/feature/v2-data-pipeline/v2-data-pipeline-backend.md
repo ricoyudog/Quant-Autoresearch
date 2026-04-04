@@ -19,7 +19,7 @@ the CLI.
 | `src/data/duckdb_connector.py` | Sprint 1 | build/load DuckDB daily cache, expose trading days, bridge minute-data queries |
 | `src/core/backtester.py` | Sprint 2 | load daily data, run universe selection, compute trading-day windows, evaluate minute-data signals |
 | `src/strategies/active_strategy.py` | Sprint 2 | expose `select_universe(daily_data)` and minute-data `generate_signals()` example |
-| `cli.py` | Sprint 1 + Sprint 3 | build cache, fetch minute bars, backtest minute mode, refresh cache incrementally |
+| `cli.py` | Sprint 1 + Sprint 3 | build cache, fetch minute bars, backtest minute mode, refresh the cache incrementally via `update-data` |
 | `program.md` / `CLAUDE.md` | Sprint 3 | document the final backend/runtime contracts once implementation settles |
 
 ## Cross-Sprint Contract Decisions
@@ -37,11 +37,11 @@ the CLI.
 | Task ID | Deliverable | Sprint | Dependency | Acceptance |
 | --- | --- | --- | --- | --- |
 | DUCK-02 | Add `duckdb` dependency and implement DuckDB helper module | Sprint 1 | INFRA-01, DUCK-01 | cache build/load helpers import cleanly and match the planned schema |
-| DUCK-03 | Replace `setup_data` and retire the old data-loader modules | Sprint 1 | DUCK-02 | `setup_data` builds DuckDB cache and legacy modules are no longer referenced |
+| DUCK-03 | Replace `setup-data` and retire the old data-loader modules | Sprint 1 | DUCK-02 | `setup-data` builds DuckDB cache and legacy modules are no longer referenced |
 | STRAT-01 | Extend the strategy contract | Sprint 2 | Sprint 1 complete | `select_universe(daily_data)` and minute-data `generate_signals()` are callable |
 | STRAT-02 | Update backtester discovery and trading-day window logic | Sprint 2 | STRAT-01 | backtester detects the optional universe step and computes valid windows |
 | STRAT-03 | Integrate daily -> universe -> minute -> signals flow | Sprint 2 | STRAT-02 | minute-level walk-forward runs through full evaluation |
-| CLI-01 | Update `fetch`, `backtest`, and `update_data` | Sprint 3 | Sprint 2 complete | CLI behavior matches the DuckDB/minute-data runtime model |
+| CLI-01 | Update `fetch`, `backtest`, and `update-data` | Sprint 3 | Sprint 2 complete | CLI behavior matches the DuckDB/minute-data runtime model |
 | DOC-01 | Update runtime docs after implementation stabilizes | Sprint 3 | CLI-01 | `program.md` and `CLAUDE.md` describe the new backend flow accurately |
 
 ## Execution Handoff

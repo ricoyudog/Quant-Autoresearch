@@ -102,6 +102,23 @@ def test_build_daily_cache_reports_month_progress(tmp_path, monkeypatch):
     assert progress_updates == [("2025-11-01", "2025-11-30")]
 
 
+def test_refresh_daily_cache_rebuilds_when_cache_is_missing(tmp_path, monkeypatch):
+    from data import duckdb_connector
+
+    output_path = tmp_path / "daily_cache.duckdb"
+    calls = []
+
+    def fake_build_daily_cache(output_path=None, progress_callback=None):
+        calls.append(output_path)
+
+    monkeypatch.setattr(duckdb_connector, "build_daily_cache", fake_build_daily_cache)
+
+    result = duckdb_connector.refresh_daily_cache(output_path)
+
+    assert calls == [output_path]
+    assert result["mode"] == "rebuilt"
+
+
 def test_load_daily_data_filters_by_date_range(tmp_path, monkeypatch):
     from data import duckdb_connector
 
@@ -125,6 +142,75 @@ def test_get_trading_days_returns_ordered_date_strings(tmp_path, monkeypatch):
     result = duckdb_connector.get_trading_days(start_date="2025-11-03", end_date="2025-11-04")
 
     assert result == ["2025-11-03", "2025-11-04"]
+
+
+def test_refresh_daily_cache_appends_only_new_rows(tmp_path, monkeypatch):
+    from data import duckdb_connector
+
+    db_path = tmp_path / "daily_cache.duckdb"
+    _seed_daily_cache(db_path)
+    range_args = []
+
+    def fake_iter_month_ranges(start, end):
+        range_args.append((start.isoformat(), end.isoformat()))
+        return [("2025-11-05", "2025-11-30")]
+
+    def fake_run(cmd, check, capture_output, text, timeout):
+        output_arg = Path(cmd[cmd.index("--output") + 1])
+        output_arg.write_text(
+            "ticker,session_date,open,high,low,close,volume,transactions,vwap\n"
+            "AAPL,2025-11-04,271.0,272.5,270.5,272.0,1100.0,105,271.6\n"
+            "MSFT,2025-11-05,506.0,507.0,505.0,506.5,2100.0,151,506.2\n",
+            encoding="utf-8",
+        )
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(duckdb_connector, "_iter_month_ranges", fake_iter_month_ranges)
+    monkeypatch.setattr(duckdb_connector.subprocess, "run", fake_run)
+
+    result = duckdb_connector.refresh_daily_cache(db_path)
+
+    connection = duckdb.connect(str(db_path), read_only=True)
+    row_count = connection.execute("SELECT COUNT(*) FROM daily_bars").fetchone()[0]
+    duplicate_count = connection.execute(
+        "SELECT COUNT(*) - COUNT(DISTINCT ticker || ':' || CAST(session_date AS VARCHAR)) FROM daily_bars"
+    ).fetchone()[0]
+    latest_session_date = connection.execute("SELECT MAX(session_date) FROM daily_bars").fetchone()[0]
+    connection.close()
+
+    assert range_args[0][0] == "2025-11-05"
+    assert row_count == 4
+    assert duplicate_count == 0
+    assert latest_session_date.isoformat() == "2025-11-05"
+    assert result["mode"] == "refreshed"
+    assert result["start_date"] == "2025-11-05"
+    assert result["latest_session_date"] == "2025-11-05"
+
+
+def test_refresh_daily_cache_returns_up_to_date_when_cache_is_current(tmp_path):
+    from data import duckdb_connector
+
+    db_path = tmp_path / "daily_cache.duckdb"
+    today = duckdb_connector.date.today().isoformat()
+    connection = duckdb.connect(str(db_path))
+    connection.execute(duckdb_connector.DAILY_BARS_TABLE_SQL)
+    connection.execute(
+        """
+        INSERT INTO daily_bars VALUES
+            ('AAPL', ?, 270.0, 271.0, 269.5, 270.5, 1000.0, 100, 270.2)
+        """,
+        [today],
+    )
+    connection.close()
+
+    result = duckdb_connector.refresh_daily_cache(db_path)
+
+    assert result == {
+        "mode": "up_to_date",
+        "start_date": None,
+        "end_date": None,
+        "latest_session_date": today,
+    }
 
 
 def test_calculate_walk_forward_windows_returns_five_expanding_windows(monkeypatch):

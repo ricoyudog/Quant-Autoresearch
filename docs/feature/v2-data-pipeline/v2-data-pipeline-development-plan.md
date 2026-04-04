@@ -3,8 +3,8 @@
 > Feature branch: `feature/v2-data-pipeline`
 > Umbrella issue: #11
 > Canonical root: `docs/feature/v2-data-pipeline/`
-> Last updated: 2026-04-04
-> Planning status: Sprint 2 execution completed; Sprint 3 backend Step 1 completed and Sprint 3 is in progress
+> Last updated: 2026-04-05
+> Planning status: Sprint 3 execution and verification completed; issue #11 is ready for review
 
 ## 1. Context
 
@@ -76,7 +76,7 @@ repo's existing V2 naming convention instead of introducing an issue-number-only
 | --- | --- | --- |
 | `src/core/backtester.py` | Backend | Daily-cache loading, universe selection, trading-day windows, minute-level walk-forward |
 | `src/strategies/active_strategy.py` | Backend | `select_universe(daily_data)` and minute-data `generate_signals()` example |
-| `cli.py` | Backend | `setup-data`, `fetch`, `backtest`, and `update_data` runtime changes |
+| `cli.py` | Backend | `setup-data`, `fetch`, `backtest`, and `update-data` runtime changes |
 | `pyproject.toml` | Backend | Add `duckdb` dependency |
 | `program.md` | Planning | Update runtime docs to the DuckDB/minute-data model |
 | `CLAUDE.md` | Planning | Update repo architecture notes after Sprint 3 lands |
@@ -98,8 +98,8 @@ repo's existing V2 naming convention instead of introducing an issue-number-only
 | Phase 0 -- Spec Alignment + Baseline | Confirm docs root, branch convention, dependency gate, and umbrella references | rewritten issue card, updated workspace index, lane docs, verification baseline | completed | start Sprint 1 once issue #8 closes |
 | Sprint 1 -- DuckDB + Daily Cache | Add DuckDB, create the daily cache, and replace the old data-loader entrypoint | `duckdb_connector.py`, updated `setup-data`, clean import graph, unit coverage | completed | begin Sprint 2 backend execution |
 | Sprint 2 -- Strategy + Backtester | Add the dual-method strategy interface and minute-level walk-forward pipeline | updated `backtester.py`, updated `active_strategy.py`, trading-day windows | completed | begin Sprint 3 backend + infra execution |
-| Sprint 3 -- CLI + Docs + Tests | Finish CLI behavior, integration coverage, and runtime docs | updated `cli.py`, integration tests, updated `program.md` and `CLAUDE.md` | in progress | execute Sprint 3 backend Step 3 |
-| Phase 4 -- Verification + Closeout | Run the full gate and prepare review-ready evidence | green dependency sync, green test suite, smoke commands, issue evidence update | pending | execute after Sprint 3 |
+| Sprint 3 -- CLI + Docs + Tests | Finish CLI behavior, integration coverage, and runtime docs | updated `cli.py`, integration tests, updated `program.md` and `CLAUDE.md` | completed | move to Phase 4 verification and review sync |
+| Phase 4 -- Verification + Closeout | Run the full gate and prepare review-ready evidence | green dependency sync, green test suite, smoke commands, issue evidence update | completed | move issue #11 to `workflow::review` |
 
 ## 8. Task Tables
 
@@ -135,17 +135,17 @@ repo's existing V2 naming convention instead of introducing an issue-number-only
 
 | Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
 | --- | --- | --- | --- | --- | --- | --- |
-| CLI-01 | Update `fetch`, `backtest`, and `update_data` CLI flows to the DuckDB/minute-data model | Backend | Sprint 2 complete | 0.6d | in progress | the CLI exposes the intended runtime behavior with stable arguments |
-| QA-03 | Add DuckDB/minute fixtures and `tests/integration/test_minute_backtest.py` | QA | CLI-01 | 0.4d | pending | the end-to-end pipeline has either fixture-backed tests or guarded smoke coverage |
-| DOC-01 | Update `program.md`, `CLAUDE.md`, and feature docs to the final runtime contracts | Planning | CLI-01, QA-03 | 0.2d | pending | docs match the implemented behavior and verification commands |
+| CLI-01 | Update `fetch`, `backtest`, and `update-data` CLI flows to the DuckDB/minute-data model | Backend | Sprint 2 complete | 0.6d | completed | the CLI exposes the intended runtime behavior with stable arguments |
+| QA-03 | Add DuckDB/minute fixtures and `tests/integration/test_minute_backtest.py` | QA | CLI-01 | 0.4d | completed | the end-to-end pipeline has fixture-backed integration coverage |
+| DOC-01 | Update `program.md`, `CLAUDE.md`, and feature docs to the final runtime contracts | Planning | CLI-01, QA-03 | 0.2d | completed | docs match the implemented behavior and verification commands |
 
 ### Phase 4 -- Verification + Closeout
 
 | Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
 | --- | --- | --- | --- | --- | --- | --- |
-| VER-01 | Run `uv sync --all-extras --dev`, targeted suites, and the full `pytest` gate | QA | Sprint 3 complete | 0.2d | pending | dependency sync and tests pass without unresolved skips or failures |
-| VER-02 | Run CLI smoke tests for `setup_data`, `fetch`, `backtest`, and `update_data` | Infra | VER-01 | 0.2d | pending | smoke commands succeed and the outputs are captured as review evidence |
-| VER-03 | Update the umbrella issue or PR with evidence, remaining risks, and review notes | Planning | VER-01, VER-02 | 0.1d | pending | review-ready summary links to docs, commands, and residual risks |
+| VER-01 | Run `uv sync --all-extras --dev`, targeted suites, and the full `pytest` gate | QA | Sprint 3 complete | 0.2d | completed | dependency sync and tests pass without unresolved skips or failures |
+| VER-02 | Run CLI smoke tests for `setup-data`, `fetch`, `backtest`, and `update-data` | Infra | VER-01 | 0.2d | completed | smoke commands succeed and the outputs are captured as review evidence |
+| VER-03 | Update the umbrella issue or PR with evidence, remaining risks, and review notes | Planning | VER-01, VER-02 | 0.1d | completed | review-ready summary links to docs, commands, and residual risks |
 
 ## 9. Execution Handoff
 
@@ -175,8 +175,8 @@ expected before a sprint can be considered complete.
 - [x] The strategy interface supports `select_universe(daily_data)` plus minute-data
       `generate_signals()`
 - [x] The backtester supports minute-level walk-forward via CLI minute-data queries
-- [ ] `fetch`, `backtest`, and `update_data` expose the new runtime model
-- [ ] Unit, integration, and full regression gates pass with recorded evidence
+- [x] `fetch`, `backtest`, and `update-data` expose the new runtime model
+- [x] Unit, integration, and full regression gates pass with recorded evidence
 
 ## 11. Verification And Evidence Expectations
 

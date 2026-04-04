@@ -1,50 +1,97 @@
-# Quant Autoresearch
+# Quant Autoresearch Program
 
-Autonomous quantitative strategy discovery.
+Autonomous quantitative strategy discovery on the V2 local-first data pipeline.
 
-## Setup
+## Data Pipeline V2
 
-To set up a new experiment:
-1. **Agree on a run tag** with the user (e.g. `apr1`).
-   The branch `quant-research/<tag>` must not already exist.
-2. **Create the branch**: `git checkout -b quant-research/<tag>` from main.
-3. **Read the in-scope files**:
-   - `src/core/backtester.py` — fixed evaluation harness. Do NOT modify.
-   - `src/strategies/active_strategy.py` — the file you modify.
-4. **Verify data exists**: Check `data/cache/` has Parquet files.
-   If not, tell the human to run `uv run python cli.py setup-data`.
-5. **Initialize files**:
-   - Create `results.tsv` with header row.
-   - Create `experiments/notes/` directory.
-6. **Run baseline** — always run the unmodified strategy first.
-7. **Confirm and go**.
+The project now uses the local `massive-minute-aggs` US equities dataset as the primary data source.
+Daily bars are materialized into DuckDB at `data/daily_cache.duckdb`, and minute bars are queried on
+demand through the external `minute-aggs` CLI.
 
-## Experimentation
+Key runtime surfaces:
 
-Each experiment:
+- Dataset root: `~/Library/Mobile Documents/com~apple~CloudDocs/massive data/us_stocks_sip/minute_aggs_parquet_v1`
+- Minute query CLI: `/Users/chunsingyu/softwares/massive-minute-aggs-parquet/.venv/bin/minute-aggs`
+- Daily cache: `data/daily_cache.duckdb`
+
+If the daily cache is missing, build it first:
+
 ```bash
-uv run python src/core/backtester.py > run.log 2>&1
+uv run python cli.py setup-data
 ```
 
-**What you CAN do:**
-- Modify `src/strategies/active_strategy.py` — the ENTIRE file is fair game.
-  Change class names, add methods, change hyperparameters, redesign signal logic.
-  The only requirement: the file must define at least one class with a
-  `generate_signals(self, data)` method that returns a Series of signals.
+Refresh it later without rebuilding from scratch:
 
-**What you CANNOT do:**
-- Modify `src/core/backtester.py`. It is read-only.
-- Install new packages. The sandbox only provides `pd` and `np`.
-- Use `for` loops. Vectorized Pandas/NumPy only.
-- Use `.shift(-N)` (look-ahead bias).
-
-## The goal
-
-Get the highest **SCORE** (Average Walk-Forward OOS Sharpe Ratio).
-
-## Output format
-
+```bash
+uv run python cli.py update-data
 ```
+
+## CLI Reference
+
+```bash
+# Build the DuckDB daily cache
+uv run python cli.py setup-data
+
+# Incrementally refresh the cache
+uv run python cli.py update-data
+
+# Query minute bars for one symbol
+uv run python cli.py fetch AAPL --start 2025-11-03 --end 2025-11-05
+
+# Run a minute-mode walk-forward backtest
+uv run python cli.py backtest --start 2024-01-01 --end 2024-12-31
+uv run python cli.py backtest --strategy src/strategies/active_strategy.py --universe-size 20
+```
+
+Notes:
+
+- `fetch` requires both `--start` and `--end`, or neither.
+- `backtest` accepts `--strategy`, `--start`, `--end`, and `--universe-size`.
+- `setup-data` and `update-data` are the live Typer command names; underscored spellings are not valid CLI commands.
+
+## Strategy Interface
+
+The V2 backtester uses a dual-method contract.
+
+```python
+class TradingStrategy:
+    def select_universe(self, daily_data: pd.DataFrame) -> list[str]:
+        ...
+
+    def generate_signals(self, minute_data: dict[str, pd.DataFrame]) -> dict[str, pd.Series]:
+        ...
+```
+
+Contract details:
+
+- `select_universe(daily_data)` is optional and receives the full DuckDB `daily_bars` frame.
+- `generate_signals(minute_data)` receives a dictionary keyed by ticker.
+- Each signal series must align to the source minute-frame index for that ticker.
+- The backtester applies the enforced 1-bar lag. Strategies should emit raw signals and not self-lag.
+
+The default example strategy in `src/strategies/active_strategy.py` currently:
+
+- ranks the top 30 tickers by latest 20-session average volume
+- computes a simple 20-bar momentum signal per ticker
+- returns minute-mode signals as `dict[str, pd.Series]`
+
+## Backtest Data Flow
+
+The minute-mode walk-forward runtime is:
+
+1. Phase A: load daily bars from `data/daily_cache.duckdb`
+2. Phase B: run `select_universe(daily_data)` or fall back to the safe ranked universe
+3. Phase C: query minute bars for the selected tickers and current test window through `minute-aggs`
+4. Phase D: run `generate_signals(minute_data)`
+5. Phase E: apply the enforced 1-bar lag and evaluate walk-forward metrics
+
+The backtester builds 5 trading-day-aware walk-forward windows from the cached daily sessions.
+
+## Output Format
+
+Minute-mode backtests print the standard metrics block plus `PER_SYMBOL`:
+
+```text
 ---
 SCORE: 0.5432
 SORTINO: 0.8100
@@ -52,7 +99,7 @@ CALMAR: 1.2300
 DRAWDOWN: -0.1200
 MAX_DD_DAYS: 45
 TRADES: 120
-P_VALUE: 0.0300
+P_VALUE: 0.0000
 WIN_RATE: 0.5500
 PROFIT_FACTOR: 1.8500
 AVG_WIN: 0.0120
@@ -60,121 +107,12 @@ AVG_LOSS: -0.0080
 BASELINE_SHARPE: 0.4500
 ---
 PER_SYMBOL:
-  SPY: sharpe=0.62 sortino=0.90 dd=-0.10 pf=2.10 trades=35 wr=0.57
-  ...
+  AAA: sharpe=0.62 sortino=0.90 dd=-0.10 pf=2.10 trades=35 wr=0.57
 ```
 
-Extract:
-```bash
-grep "^SCORE:\|^DRAWDOWN:\|^P_VALUE:\|^BASELINE_SHARPE:\|^PROFIT_FACTOR:" run.log
-```
+## Operational Notes
 
-## Decision rules
-
-**KEEP if:**
-- SCORE > previous best AND
-- P_VALUE <= 0.05 AND
-- SCORE > BASELINE_SHARPE
-
-**DISCARD if:**
-- SCORE <= previous best OR
-- P_VALUE > 0.05 (not statistically significant) OR
-- SCORE <= BASELINE_SHARPE (can't beat Buy&Hold)
-
-**Simplicity criterion**:
-All else being equal, simpler is better.
-- Removing code and getting equal or better results -> great outcome.
-- A 0.01 Sharpe improvement that adds 20 lines of hacky complexity -> probably not worth it.
-- A 0.01 Sharpe improvement from deleting code -> definitely keep.
-
-## Logging results
-
-Log to `results.tsv` (tab-separated, do NOT commit):
-```
-commit  sharpe  sortino  calmar  drawdown  max_dd_days  trades  win_rate  profit_factor  p_value  baseline_sharpe  status  description
-```
-
-## Obsidian experiment notes
-
-After each experiment, write a note to `experiments/notes/<NNN>-<slug>.md`.
-
-### Note format
-
-Each note MUST follow this structure:
-
-````markdown
----
-id: 003
-commit: f6g7h8i
-date: 2026-04-01T14:30:00
-status: keep
-tags: [momentum, regime-filter, combination]
----
-
-# Experiment 003: Combine momentum + regime filter
-
-## Hypothesis
-Combining the ROC momentum signal with the ATR regime filter should reduce
-false signals during high-volatility periods while maintaining trend capture.
-
-## Changes
-- Modified signal logic in `generate_signals()`:
-  - Added ROC(14) as primary momentum indicator
-  - Used ATR EMA regime filter as gate
-  - Only go long/short when regime is low-vol AND momentum confirms
-
-## Results
-| Metric | Value | vs Baseline |
-|--------|-------|-------------|
-| Sharpe | 0.6500 | +0.1068 |
-| Sortino | 0.9800 | +0.1700 |
-| Profit Factor | 2.3000 | +0.4500 |
-| Win Rate | 60% | +5% |
-| P-Value | 0.008 | Significant |
-
-## Per-Symbol
-- SPY: 0.62 (strong in low-vol regime)
-- QQQ: 0.58 (good trend capture)
-- IWM: 0.43 (weaker, needs investigation)
-- BTC: 0.54 (decent, crypto regime detection works)
-
-## Observations
-- IWM underperforms — likely because small-cap regime behavior differs
-- Consider symbol-specific regime thresholds in next experiment
-- Profit Factor improvement suggests the filter is cutting bad trades effectively
-
-## Next Ideas
-- [ ] Try symbol-specific ATR thresholds
-- [ ] Add a momentum acceleration indicator
-- [ ] Test with longer lookback (20 → 30)
-````
-
-## The experiment loop
-
-LOOP FOREVER:
-1. Check git state: current branch/commit
-2. Read `results.tsv` for history
-3. Propose hypothesis -> modify `src/strategies/active_strategy.py`
-4. `git add src/strategies/active_strategy.py && git commit -m "<description>"`
-5. `uv run python src/core/backtester.py > run.log 2>&1`
-6. `grep "^SCORE:\|^P-VALUE:\|^BASELINE_SHARPE:" run.log`
-7. If grep empty -> crash. `tail -n 50 run.log`. Fix or skip.
-8. Check hard constraints (p_value, baseline_sharpe)
-9. Record in results.tsv
-10. Write Obsidian note
-11. If KEEP -> keep commit, advance branch
-12. If DISCARD -> `git reset --hard HEAD~1`
-13. Repeat
-
-**NEVER STOP.** Do NOT ask the human if you should continue.
-They might be asleep. Run indefinitely until manually stopped.
-
-**Time awareness**: This session has approximately X hours.
-Pace yourself for meaningful experiments, not random changes.
-
-**Stuck?**
-- Re-read strategy code for new angles
-- Read results.tsv for patterns
-- Try combining previous near-misses
-- Try more radical architectural changes
-- Review your Obsidian notes for forgotten ideas
+- The daily cache build is month-batched and can take significant time on the full dataset.
+- `update-data` is append-oriented by default and skips duplicate `(ticker, session_date)` rows.
+- Minute queries are window-scoped to keep memory use bounded.
+- The security gate still blocks dangerous imports, forbidden builtins, and look-ahead patterns such as `.shift(-1)`.

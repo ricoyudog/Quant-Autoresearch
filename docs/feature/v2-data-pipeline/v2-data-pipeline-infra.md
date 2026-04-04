@@ -27,8 +27,8 @@ system works outside unit tests.
 | --- | --- | --- | --- |
 | INFRA-01 | Validate dataset root, CLI binary, DuckDB output path, and temp-file budget before coding starts | Phase 0 complete | commands confirm all paths exist and are writable/readable as expected |
 | INFRA-02 | Define cache-build batching, timeout, and progress-reporting expectations | INFRA-01 | Sprint 1 has explicit operational behavior for long-running cache builds |
-| INFRA-03 | Define refresh semantics for `update_data` to avoid duplicate rows or full rebuilds by default | Sprint 2 complete | Sprint 3 CLI design includes clear append or rebuild rules |
-| INFRA-04 | Capture smoke evidence for `setup_data`, `fetch`, `backtest`, and `update_data` | Phase 4 | issue or PR links prove the runtime path works beyond unit tests |
+| INFRA-03 | Define refresh semantics for `update-data` to avoid duplicate rows or full rebuilds by default | Sprint 2 complete | Sprint 3 CLI design includes clear append or rebuild rules |
+| INFRA-04 | Capture smoke evidence for `setup-data`, `fetch`, `backtest`, and `update-data` | Phase 4 | issue or PR links prove the runtime path works beyond unit tests |
 
 ## Operational Checks
 
@@ -47,7 +47,7 @@ test -f data/daily_cache.duckdb
 # Validate CLI runtime after Sprint 3
 uv run python cli.py fetch AAPL --start 2025-11-03 --end 2025-11-05
 uv run python cli.py backtest --start 2024-01-01 --end 2024-12-31
-uv run python cli.py update_data
+uv run python cli.py update-data
 ```
 
 ## Runtime Notes
@@ -64,4 +64,4 @@ uv run python cli.py update_data
 | --- | --- |
 | Dataset path or binary path drifts on the local machine | Validate paths in INFRA-01 and update docs before writing the consuming code |
 | Temp CSV workflow leaves partial files or fills disk | Batch by month, clean up after each import, and add visible progress or failure reporting |
-| Incremental refresh duplicates rows in DuckDB | Make primary-key semantics explicit and test `update_data` before closeout |
+| Incremental refresh duplicates rows in DuckDB | Make primary-key semantics explicit and test `update-data` before closeout |

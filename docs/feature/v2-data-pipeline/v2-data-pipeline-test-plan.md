@@ -2,8 +2,8 @@
 
 > Feature branch: `feature/v2-data-pipeline`
 > Umbrella issue: #11
-> Last updated: 2026-04-04
-> Planning status: verification design complete; execution evidence pending
+> Last updated: 2026-04-05
+> Planning status: Sprint 3 and full-regression evidence recorded; merge gate complete
 
 ## Objective
 
@@ -113,7 +113,7 @@ pytest tests/integration/test_minute_backtest.py -v
 
 uv run python cli.py fetch AAPL --start 2025-11-03 --end 2025-11-05
 uv run python cli.py backtest --start 2024-01-01 --end 2024-12-31
-uv run python cli.py update_data
+uv run python cli.py update-data
 ```
 
 ### Phase 4 -- Full Regression
@@ -127,15 +127,14 @@ explained or resolved.
 
 ## Merge Gate Checklist
 
-- [ ] Baseline test result recorded before feature work
+- [x] Baseline test result recorded before feature work
 - [x] `tests/unit/test_duckdb_connector.py` passes
 - [x] `tests/unit/test_strategy_interface.py` passes with the dual-method contract
-- [ ] `tests/integration/test_minute_backtest.py` passes or is replaced by an explicitly documented
-      guarded smoke path
-- [ ] `tests/conftest.py` contains DuckDB and minute-data fixtures
-- [ ] Legacy connector/preprocessor expectations are removed or rewritten
+- [x] `tests/integration/test_minute_backtest.py` passes
+- [x] `tests/conftest.py` contains DuckDB and minute-data fixtures
+- [x] Legacy connector/preprocessor expectations are removed or rewritten
 - [x] No surviving test imports reference removed data-loader modules
 - [x] `pytest --tb=short -q` passes
 - [x] `uv run python cli.py setup-data` works end to end
-- [ ] `uv run python cli.py backtest` works end to end
-- [ ] `uv run python cli.py update_data` works without duplicate-row regressions
+- [x] `uv run python cli.py backtest` works end to end
+- [x] `uv run python cli.py update-data` works without duplicate-row regressions

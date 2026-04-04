@@ -13,8 +13,9 @@ walk-forward backtesting.
 - Dependency gate on [#8](https://github.com/ricoyudog/Quant-Autoresearch/issues/8) is closed
 - Sprint 1 backend and infra execution completed on 2026-04-04
 - Sprint 2 backend execution completed on 2026-04-04; Step 1 through Step 9 are closed out
-- Sprint 3 backend execution is in progress; Step 1 (`cli.py fetch`) and Step 2 (`cli.py backtest`) completed on 2026-04-04
-- Next execution target is Sprint 3 backend Step 3 (`cli.py update_data`)
+- Sprint 3 backend and infra execution completed on 2026-04-05
+- Full regression plus CLI smoke evidence was captured on 2026-04-05
+- Next execution target is the issue-level review handoff for #11
 - The issue-level phase table is the umbrella summary only; implementation belongs in the
   referenced `sprintN/` docs
 
@@ -34,8 +35,8 @@ walk-forward backtesting.
 - `src/data/connector.py` and `src/data/preprocessor.py` were removed during Sprint 1 closeout
 - DuckDB cache smoke evidence is recorded on issue #11:
   <https://github.com/ricoyudog/Quant-Autoresearch/issues/11#issuecomment-4186599914>
-- Runtime-facing documentation updates in `program.md` and `CLAUDE.md` land in Sprint 3, after the
-  implementation contracts stabilize
+- Runtime-facing documentation updates in `program.md` and `CLAUDE.md` landed during Sprint 3
+  closeout and now match the live DuckDB/minute-data runtime
 
 ## Docs Workspace
 
