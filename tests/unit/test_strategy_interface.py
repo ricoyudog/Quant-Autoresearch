@@ -173,6 +173,19 @@ class TestStrategyFile:
 
         pytest.fail("TradingStrategy class not found")
 
+    def test_trading_strategy_has_select_universe(self, strategy_file_path):
+        """TradingStrategy class exposes select_universe."""
+        content = strategy_file_path.read_text()
+        tree = ast.parse(content)
+
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef) and node.name == 'TradingStrategy':
+                methods = [n.name for n in node.body if isinstance(n, ast.FunctionDef)]
+                assert 'select_universe' in methods
+                return
+
+        pytest.fail("TradingStrategy class not found")
+
     def test_strategy_has_imports(self, strategy_file_path):
         """File has pandas and numpy imports."""
         content = strategy_file_path.read_text()
@@ -258,6 +271,32 @@ class TestStrategyFile:
         unique_values = set(signals.dropna().unique())
         for val in unique_values:
             assert val in {-1.0, 0.0, 1.0}, f"Unexpected signal value: {val}"
+
+    def test_select_universe_returns_ranked_ticker_list(self, strategy_file_path):
+        """select_universe returns ticker strings ranked by average daily volume."""
+        from strategies.active_strategy import TradingStrategy
+
+        daily_data = pd.DataFrame(
+            {
+                'ticker': ['AAPL', 'MSFT', 'TSLA', 'AAPL', 'MSFT', 'TSLA'],
+                'session_date': pd.to_datetime(
+                    ['2024-01-02', '2024-01-02', '2024-01-02', '2024-01-03', '2024-01-03', '2024-01-03']
+                ),
+                'open': [100, 200, 300, 101, 201, 301],
+                'high': [101, 201, 301, 102, 202, 302],
+                'low': [99, 199, 299, 100, 200, 300],
+                'close': [100.5, 200.5, 300.5, 101.5, 201.5, 301.5],
+                'volume': [1000, 1100, 900, 2500, 4000, 1800],
+                'transactions': [10, 11, 9, 25, 40, 18],
+                'vwap': [100.2, 200.2, 300.2, 101.2, 201.2, 301.2],
+            }
+        )
+
+        strategy = TradingStrategy()
+        universe = strategy.select_universe(daily_data)
+
+        assert universe[:3] == ['MSFT', 'AAPL', 'TSLA']
+        assert all(isinstance(ticker, str) for ticker in universe)
 
     def test_strategy_class_init(self, strategy_file_path):
         """TradingStrategy can be instantiated."""

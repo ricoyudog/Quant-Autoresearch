@@ -35,20 +35,20 @@ Extend the strategy interface with `select_universe(daily_data)` for strategy-dr
 ## 3) Step-by-Step Plan
 
 ### Step 1 -- Add select_universe to strategy interface (STRAT-01)
-- [ ] Define `select_universe(self, daily_data: pd.DataFrame) -> list[str]` in strategy docs/interface
-- [ ] Update `src/strategies/active_strategy.py`:
+- [x] Define `select_universe(self, daily_data: pd.DataFrame) -> list[str]` in strategy docs/interface
+- [x] Update `src/strategies/active_strategy.py`:
   - Add `select_universe()` method (with default: return top volume tickers)
   - Document that it receives full daily_data DataFrame from DuckDB
   - Document return format: list of ticker strings
-- [ ] Verify: `python -c "from src.strategies.active_strategy import *; print('IMPORT OK')"`
+- [x] Verify: `python -c "from src.strategies.active_strategy import *; print('IMPORT OK')"`
 
 ### Step 2 -- Create query_minute_data function (STRAT-02)
-- [ ] Verify `query_minute_data()` in `duckdb_connector.py` works (from Sprint 1)
-- [ ] If not yet implemented, implement CLI subprocess call:
+- [x] Verify `query_minute_data()` in `duckdb_connector.py` works (from Sprint 1)
+- [x] If not yet implemented, implement CLI subprocess call:
   - `minute-aggs bars --symbols <tickers> --start <date> --end <date> --output <csv>`
   - Parse CSV, group by ticker, return dict[str, pd.DataFrame]
-- [ ] Test with a small query: AAPL for 1 week
-- [ ] Verify: returns correct schema and data
+- [x] Test with a small query: AAPL for 1 week
+- [x] Verify: returns correct schema and data
 
 ### Step 3 -- Update find_strategy_methods (STRAT-03)
 - [ ] Locate `find_strategy_methods()` or `find_strategy_class()` in `src/core/backtester.py`
@@ -114,7 +114,7 @@ Extend the strategy interface with `select_universe(daily_data)` for strategy-dr
 
 ## 4) Test Plan
 
-- [ ] After Step 1: `from src.strategies.active_strategy import *` works
+- [x] After Step 1: `from src.strategies.active_strategy import *` works
 - [ ] After Step 3: `find_strategy_methods()` correctly detects both methods
 - [ ] After Step 5: walk-forward windows have correct trading-day boundaries
 - [ ] After Step 6: backtester pipeline runs end-to-end (manual test with small date range)
@@ -154,15 +154,29 @@ pytest --tb=short -q
 
 ### Completed Work
 
-(To be filled during implementation)
+- Added `select_universe()` to `TradingStrategy` with a safe default that ranks the top 30 ticker
+  symbols by average daily volume across the provided daily-data frame.
+- Documented the DuckDB daily-data contract directly in `active_strategy.py` without changing the
+  existing `generate_signals()` path yet.
+- Extended `tests/unit/test_strategy_interface.py` to cover the new `select_universe` interface and
+  its ranked ticker output.
+- Re-verified `query_minute_data()` from Sprint 1 against both the unit suite and the live
+  `minute-aggs bars` runtime path, so Sprint 2 can depend on the bridge without adding new code.
 
 ### Command Results
 
-(To be filled during implementation)
+- `uv run pytest tests/unit/test_strategy_interface.py -v` -> 19 passed
+- `uv run python -c "from src.strategies.active_strategy import *; print('IMPORT OK')"` -> `IMPORT OK`
+- `uv run pytest tests/unit/test_duckdb_connector.py -v` -> 6 passed
+- `uv run python -c "from src.data.duckdb_connector import query_minute_data; result = query_minute_data(['AAPL'], '2025-11-03', '2025-11-07'); frame = result.get('AAPL'); print('tickers=', sorted(result.keys())); print('rows=', 0 if frame is None else len(frame)); print('columns=', [] if frame is None else list(frame.columns)); print('first_session=', None if frame is None or frame.empty else frame['session_date'].min()); print('last_session=', None if frame is None or frame.empty else frame['session_date'].max()); print('first_close=', None if frame is None or frame.empty else frame.iloc[0]['close'])"` -> `tickers=['AAPL']`, `rows=3612`, schema `['ticker', 'session_date', 'window_start_ns', 'open', 'high', 'low', 'close', 'volume', 'transactions']`, date range `2025-11-03` to `2025-11-07`
 
 ### Blockers / Deviations
 
-(To be filled during implementation)
+- Kept the Step 1 default universe rule tied to average daily volume across the provided frame.
+- `query_minute_data()` was already implemented in Sprint 1, so Step 2 closed as a verification gate
+  rather than a new code-change step.
+- Deferred the more opinionated `20-day average volume` example to Step 7, where the sprint plan
+  explicitly calls for the dual-method example strategy.
 
 ### Follow-ups
 

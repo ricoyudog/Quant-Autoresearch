@@ -12,7 +12,8 @@ walk-forward backtesting.
 - Planning-layer alignment completed on 2026-04-04
 - Dependency gate on [#8](https://github.com/ricoyudog/Quant-Autoresearch/issues/8) is closed
 - Sprint 1 backend and infra execution completed on 2026-04-04
-- Next execution target is `sprint2/sprint2-backend.md`
+- Sprint 2 backend execution started on 2026-04-04; Step 1 and Step 2 are complete
+- Next execution target is Step 3 in `sprint2/sprint2-backend.md`
 - The issue-level phase table is the umbrella summary only; implementation belongs in the
   referenced `sprintN/` docs
 

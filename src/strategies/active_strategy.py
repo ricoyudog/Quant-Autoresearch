@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 class TradingStrategy:
     def __init__(self, fast_ma=20, slow_ma=50):
@@ -9,6 +9,39 @@ class TradingStrategy:
         """
         self.fast_ma = fast_ma
         self.slow_ma = slow_ma
+
+    def select_universe(self, daily_data: "pd.DataFrame") -> "list[str]":
+        """
+        Select tickers from the full daily-data frame loaded from DuckDB.
+
+        The input frame is expected to include ticker-level daily bars with
+        columns such as ticker, session_date, open, high, low, close, volume,
+        transactions, and vwap. The default rule keeps the top 30 tickers by
+        average daily volume across the provided frame.
+        """
+        if daily_data is None or daily_data.empty:
+            return []
+
+        if "ticker" not in daily_data.columns:
+            return []
+
+        ranked = daily_data.dropna(subset=["ticker"]).copy()
+        if ranked.empty:
+            return []
+
+        if "volume" not in ranked.columns:
+            return ranked["ticker"].astype(str).drop_duplicates().head(30).tolist()
+
+        ranked = ranked.dropna(subset=["volume"])
+        if ranked.empty:
+            return []
+
+        universe = (
+            ranked.groupby("ticker", as_index=False)["volume"]
+            .mean()
+            .sort_values(["volume", "ticker"], ascending=[False, True], kind="mergesort")
+        )
+        return universe["ticker"].astype(str).head(30).tolist()
 
     def generate_signals(self, data):
         """
