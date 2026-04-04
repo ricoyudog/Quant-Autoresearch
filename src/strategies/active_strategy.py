@@ -17,7 +17,7 @@ class TradingStrategy:
         The input frame is expected to include ticker-level daily bars with
         columns such as ticker, session_date, open, high, low, close, volume,
         transactions, and vwap. The default rule keeps the top 30 tickers by
-        average daily volume across the provided frame.
+        latest 20-session average volume.
         """
         if daily_data is None or daily_data.empty:
             return []
@@ -32,12 +32,21 @@ class TradingStrategy:
         if "volume" not in ranked.columns:
             return ranked["ticker"].astype(str).drop_duplicates().head(30).tolist()
 
-        ranked = ranked.dropna(subset=["volume"])
+        ranked = ranked.dropna(subset=["volume"]).copy()
         if ranked.empty:
             return []
 
+        if "session_date" in ranked.columns:
+            ranked = ranked.sort_values(["ticker", "session_date"], kind="mergesort")
+        else:
+            ranked = ranked.sort_values(["ticker"], kind="mergesort")
+
+        latest_20_sessions = ranked.groupby("ticker", group_keys=False).tail(20)
+        if latest_20_sessions.empty:
+            return []
+
         universe = (
-            ranked.groupby("ticker", as_index=False)["volume"]
+            latest_20_sessions.groupby("ticker", as_index=False)["volume"]
             .mean()
             .sort_values(["volume", "ticker"], ascending=[False, True], kind="mergesort")
         )
@@ -57,12 +66,11 @@ class TradingStrategy:
             return pd.Series(0.0, index=frame.index)
 
         close = frame[close_col].astype(float)
-        fast_ma = close.rolling(window=self.fast_ma, min_periods=self.fast_ma).mean()
-        slow_ma = close.rolling(window=self.slow_ma, min_periods=self.slow_ma).mean()
+        momentum = close - close.shift(20)
 
         signals = pd.Series(0.0, index=frame.index)
-        signals[fast_ma > slow_ma] = 1.0
-        signals[fast_ma < slow_ma] = -1.0
+        signals[momentum > 0] = 1.0
+        signals[momentum < 0] = -1.0
         return signals
 
     def generate_signals(self, data):

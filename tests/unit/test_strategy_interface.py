@@ -257,6 +257,43 @@ class TestStrategyFile:
         except Exception as e:
             pytest.fail(f"active_strategy.py failed to compile in RestrictedPython: {e}")
 
+    def test_active_strategy_discovery_reports_universe_support(self, strategy_file_path):
+        """The real TradingStrategy example is discoverable and reports select_universe support."""
+        content = strategy_file_path.read_text()
+
+        sanitized_lines = []
+        for line in content.split('\n'):
+            if not (line.strip().startswith("import ") or line.strip().startswith("from ")):
+                sanitized_lines.append(line)
+        sanitized_code = '\n'.join(sanitized_lines)
+
+        safe_builtins = {
+            '__build_class__': __builtins__['__build_class__'],
+            '_write_': lambda x: x,
+            '_getattr_': safer_getattr,
+        }
+        safe_globals = {
+            '__builtins__': safe_builtins,
+            '_getattr_': safer_getattr,
+            '_write_': lambda x: x,
+            '_getiter_': default_guarded_getiter,
+            '_getitem_': default_guarded_getitem,
+            '__name__': 'sandbox',
+            '__metaclass__': type,
+            'pd': pd,
+            'np': np,
+        }
+
+        byte_code = compile_restricted(sanitized_code, filename='active_strategy.py', mode='exec')
+        sandbox_locals = {}
+        exec(byte_code, safe_globals, sandbox_locals)
+
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
+
+        assert strategy_class is not None
+        assert strategy_class.__name__ == 'TradingStrategy'
+        assert has_universe is True
+
     def test_strategy_returns_signal_dict(self, strategy_file_path):
         """generate_signals returns one signal Series per ticker."""
         from strategies.active_strategy import TradingStrategy
@@ -331,6 +368,73 @@ class TestStrategyFile:
 
         assert universe[:3] == ['MSFT', 'AAPL', 'TSLA']
         assert all(isinstance(ticker, str) for ticker in universe)
+
+    def test_select_universe_uses_20_day_average_volume(self, strategy_file_path):
+        """The example strategy ranks tickers by the latest 20-session average volume."""
+        from strategies.active_strategy import TradingStrategy
+
+        session_dates = pd.date_range("2024-01-01", periods=21, freq="B")
+        rows = []
+        for idx, session_date in enumerate(session_dates):
+            rows.extend(
+                [
+                    {
+                        "ticker": "AAA",
+                        "session_date": session_date,
+                        "open": 10.0,
+                        "high": 10.5,
+                        "low": 9.5,
+                        "close": 10.2,
+                        "volume": 10_000 if idx == 0 else 1,
+                        "transactions": 10,
+                        "vwap": 10.1,
+                    },
+                    {
+                        "ticker": "BBB",
+                        "session_date": session_date,
+                        "open": 20.0,
+                        "high": 20.5,
+                        "low": 19.5,
+                        "close": 20.2,
+                        "volume": 200,
+                        "transactions": 20,
+                        "vwap": 20.1,
+                    },
+                    {
+                        "ticker": "CCC",
+                        "session_date": session_date,
+                        "open": 30.0,
+                        "high": 30.5,
+                        "low": 29.5,
+                        "close": 30.2,
+                        "volume": 0 if idx == 0 else 300,
+                        "transactions": 30,
+                        "vwap": 30.1,
+                    },
+                ]
+            )
+
+        strategy = TradingStrategy()
+        universe = strategy.select_universe(pd.DataFrame(rows))
+
+        assert universe[:3] == ["CCC", "BBB", "AAA"]
+
+    def test_generate_signals_uses_20_bar_momentum(self, strategy_file_path):
+        """The example strategy uses 20-bar price momentum in minute mode."""
+        from strategies.active_strategy import TradingStrategy
+
+        minute_data = {
+            "AAPL": build_minute_frame("AAPL", list(range(100, 125))),
+            "MSFT": build_minute_frame("MSFT", list(range(200, 175, -1))),
+        }
+
+        strategy = TradingStrategy()
+        signals = strategy.generate_signals(minute_data)
+
+        assert signals["AAPL"].iloc[19] == 0.0
+        assert signals["MSFT"].iloc[19] == 0.0
+        assert signals["AAPL"].iloc[20] == 1.0
+        assert signals["MSFT"].iloc[20] == -1.0
 
     def test_strategy_class_init(self, strategy_file_path):
         """TradingStrategy can be instantiated."""

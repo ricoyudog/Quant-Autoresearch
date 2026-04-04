@@ -4,7 +4,7 @@
 > Umbrella issue: #11
 > Canonical root: `docs/feature/v2-data-pipeline/`
 > Last updated: 2026-04-04
-> Planning status: Sprint 2 execution in progress; Sprint 2 Steps 1-6 closed out
+> Planning status: Sprint 2 execution in progress; Sprint 2 Steps 1-7 closed out
 
 ## 1. Context
 
@@ -97,7 +97,7 @@ repo's existing V2 naming convention instead of introducing an issue-number-only
 | --- | --- | --- | --- | --- |
 | Phase 0 -- Spec Alignment + Baseline | Confirm docs root, branch convention, dependency gate, and umbrella references | rewritten issue card, updated workspace index, lane docs, verification baseline | completed | start Sprint 1 once issue #8 closes |
 | Sprint 1 -- DuckDB + Daily Cache | Add DuckDB, create the daily cache, and replace the old data-loader entrypoint | `duckdb_connector.py`, updated `setup-data`, clean import graph, unit coverage | completed | begin Sprint 2 backend execution |
-| Sprint 2 -- Strategy + Backtester | Add the dual-method strategy interface and minute-level walk-forward pipeline | updated `backtester.py`, updated `active_strategy.py`, trading-day windows | in progress | continue Step 7 in `sprint2/sprint2-backend.md` |
+| Sprint 2 -- Strategy + Backtester | Add the dual-method strategy interface and minute-level walk-forward pipeline | updated `backtester.py`, updated `active_strategy.py`, trading-day windows | in progress | continue Step 8 in `sprint2/sprint2-backend.md` |
 | Sprint 3 -- CLI + Docs + Tests | Finish CLI behavior, integration coverage, and runtime docs | updated `cli.py`, integration tests, updated `program.md` and `CLAUDE.md` | pending | begin after Sprint 2 verification |
 | Phase 4 -- Verification + Closeout | Run the full gate and prepare review-ready evidence | green dependency sync, green test suite, smoke commands, issue evidence update | pending | execute after Sprint 3 |
 

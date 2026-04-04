@@ -92,11 +92,11 @@ Extend the strategy interface with `select_universe(daily_data)` for strategy-dr
 - [x] Verify: `python -c "from src.core.backtester import *; print('IMPORT OK')"`
 
 ### Step 7 -- Update active_strategy.py example (STRAT-07)
-- [ ] Write a working dual-method strategy example:
+- [x] Write a working dual-method strategy example:
   - `select_universe()`: top 30 by 20-day average volume
   - `generate_signals()`: simple 20-bar momentum on minute data
-- [ ] Verify: strategy loads and methods are callable
-- [ ] Verify: `find_strategy_methods()` returns `(class, True)`
+- [x] Verify: strategy loads and methods are callable
+- [x] Verify: `find_strategy_methods()` returns `(class, True)`
 
 ### Step 8 -- Write strategy interface tests (STRAT-01..04 tests)
 - [ ] Create `tests/unit/test_strategy_interface.py`
@@ -205,6 +205,13 @@ pytest --tb=short -q
   `session_date` boundary and do not auto-connect overnight gaps across trading sessions.
 - Added regression coverage for the real multi-ticker metrics path and the no-overnight-gap return
   rule in `tests/unit/test_backtester_v2.py`.
+- Updated the `TradingStrategy` example in `src/strategies/active_strategy.py` to rank tickers by
+  the latest 20-session average volume instead of the full-frame mean.
+- Replaced the old moving-average crossover example with a simple 20-bar momentum signal in
+  `generate_signal_series()` while preserving the dict-based minute contract and the temporary
+  single-DataFrame compatibility path.
+- Added focused Step 7 strategy-interface coverage for the 20-day average-volume rule, the 20-bar
+  momentum signal behavior, and the real-example discovery path that returns `(TradingStrategy, True)`.
 
 ### Command Results
 
@@ -223,14 +230,17 @@ pytest --tb=short -q
 - `uv run pytest tests/unit/test_strategy_interface.py tests/unit/test_backtester_v2.py tests/unit/test_duckdb_connector.py -q` -> `60 passed in 0.44s`
 - `uv run pytest tests/security/test_adversarial.py -q` -> `3 passed in 0.32s`
 - `PYTHONPATH=src uv run python -c "from core.backtester import *; print('IMPORT OK')"` -> `IMPORT OK`
+- `uv run pytest tests/unit/test_strategy_interface.py -q` -> `23 passed in 0.28s`
+- `uv run pytest tests/unit/test_strategy_interface.py tests/unit/test_backtester_v2.py tests/unit/test_duckdb_connector.py -q` -> `63 passed in 0.37s`
+- `PYTHONPATH=src uv run python -c "from strategies.active_strategy import *; print('IMPORT OK')"` -> `IMPORT OK`
+- `PYTHONPATH=src uv run python -c "from core.backtester import find_strategy_class; from strategies.active_strategy import TradingStrategy; print(find_strategy_class({'TradingStrategy': TradingStrategy}))"` -> `(<class 'strategies.active_strategy.TradingStrategy'>, True)`
 
 ### Blockers / Deviations
 
-- Kept the Step 1 default universe rule tied to average daily volume across the provided frame.
+- The Step 1 default universe rule now uses the latest 20-session average daily volume so the
+  example strategy matches the Step 7 sprint contract.
 - `query_minute_data()` was already implemented in Sprint 1, so Step 2 closed as a verification gate
   rather than a new code-change step.
-- Deferred the more opinionated `20-day average volume` example to Step 7, where the sprint plan
-  explicitly calls for the dual-method example strategy.
 - Preserved a compatibility path where `TradingStrategy.generate_signals(pd.DataFrame)` still returns
   a single `pd.Series` until Step 6 rewires the live backtester to the minute-data dict contract.
 - The design sketch in `docs/data-pipeline-v2.md` has an off-by-one issue on the last window, so the
@@ -248,4 +258,4 @@ pytest --tb=short -q
 
 ### Follow-ups
 
-- Next execution target: Step 7 in this sprint doc (update `active_strategy.py` dual-method example)
+- Next execution target: Step 8 in this sprint doc (strategy interface test closeout)
