@@ -50,6 +50,7 @@ checks that cache refresh behavior does not introduce duplicate daily rows.
 - [x] Run `uv run python cli.py backtest --start 2024-01-01 --end 2024-12-31`
 - [x] Run `uv run python cli.py backtest`
 - [x] Run `uv run python cli.py update-data`
+- [x] Re-run security-focused tests under isolated temp directories so full regression leaves no repo-root artifacts
 - [x] Capture the command outputs or summary observations for review
 
 ### Step 4 -- Feed runtime results into closeout
@@ -63,6 +64,7 @@ checks that cache refresh behavior does not introduce duplicate daily rows.
 - [x] `fetch` returns minute-bar output for a known ticker/date range
 - [x] `backtest` runs against the minute-data pipeline without crashing
 - [x] `update-data` completes without duplicate-row regressions in DuckDB
+- [x] Full regression does not leave repo-root test artifacts behind
 - [x] Runtime evidence is captured in a reviewable location
 
 ## 5) Verification Commands
@@ -77,6 +79,10 @@ uv run python cli.py fetch AAPL --start 2025-11-03 --end 2025-11-05
 uv run python cli.py backtest --start 2024-01-01 --end 2024-12-31
 uv run python cli.py backtest
 uv run python cli.py update-data
+uv run pytest tests/unit/test_security.py -v
+uv run pytest tests/security/test_adversarial.py -v
+uv run pytest --tb=short -v
+git status --short --branch
 
 uv run python -c "import duckdb; con = duckdb.connect('data/daily_cache.duckdb', read_only=True); row = con.execute(\"SELECT COUNT(*), COUNT(DISTINCT ticker || ':' || CAST(session_date AS VARCHAR)), MAX(session_date) FROM daily_bars\").fetchone(); print(row); con.close()"
 ```
@@ -88,6 +94,7 @@ uv run python -c "import duckdb; con = duckdb.connect('data/daily_cache.duckdb',
 - Closed out Sprint 3 infra Step 1 by re-validating the live CLI command surface for `setup-data`, `fetch`, `backtest`, and `update-data`
 - Closed out Sprint 3 infra Step 2 by capturing DuckDB refresh semantics before and after `update-data`
 - Closed out Sprint 3 infra Step 3 by re-running the final smoke commands against the feature worktree
+- Closed out the final merge-gate hygiene regression by isolating security/adversarial tests to `tmp_path` so they no longer leave `strategy.py` in the repo root
 - Closed out Sprint 3 infra Step 4 by recording runtime evidence for Sprint 3 closeout and the follow-on issue summary
 
 ### Command Results
@@ -101,14 +108,19 @@ uv run python -c "import duckdb; con = duckdb.connect('data/daily_cache.duckdb',
 - `uv run python cli.py backtest --start 2024-01-01 --end 2024-12-31` -> succeeded and printed the metrics block plus `PER_SYMBOL`
 - `uv run python cli.py backtest` -> succeeded and printed the metrics block plus `PER_SYMBOL`
 - `uv run python cli.py update-data` -> succeeded; processed `2026-03` and `2026-04`, and reported `latest session date: 2026-03-30`
+- `uv run pytest tests/unit/test_security.py -v` -> `6 passed`; added a regression proving repo-root `strategy.py` is no longer created
+- `uv run pytest tests/security/test_adversarial.py -v` -> `3 passed`; adversarial security checks now run with an isolated cwd
+- `uv run pytest --tb=short -v` -> `144 passed in 1.15s`
+- `git status --short --branch` after the full regression -> only intentional tracked doc/test edits remained; no stray `strategy.py` artifact
 - Post-refresh DuckDB check -> `rows=13273623 distinct_rows=13273623 latest=2026-03-30 duplicates=0`
 
 ### Blockers / Deviations
 
 - The incremental refresh path was exercised successfully, but the local dataset did not contain sessions newer than `2026-03-30`, so no new rows were appended during the verification run
 - The runtime surface uses hyphenated Typer commands; infra closeout normalized docs away from older underscored command spellings
+- A first post-closeout regression run surfaced repo-root `strategy.py` leakage from security tests; this was fixed within Sprint 3 closeout by isolating those tests to temp directories and re-running the gate
 
 ### Follow-Ups
 
 - Sprint 3 infra is complete
-- The issue-level closeout note should reference this runtime evidence when moving issue #11 toward review
+- The issue-level closeout note should reference this runtime evidence and the clean post-pytest worktree when moving issue #11 toward review

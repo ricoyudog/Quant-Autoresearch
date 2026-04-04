@@ -4,6 +4,12 @@ from core.backtester import walk_forward_validation
 import sys
 from io import StringIO
 
+
+@pytest.fixture(autouse=True)
+def isolated_strategy_cwd(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+
 def test_evil_agent_infinite_loop(tmp_path, monkeypatch):
     """Tests that an infinite loop in strategy.py doesn't crash the runner's validation (if possible, or at least handles it)."""
     # Note: Truly infinite loops are hard to catch without timeouts.

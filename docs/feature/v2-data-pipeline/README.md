@@ -15,6 +15,7 @@ walk-forward backtesting.
 - Sprint 2 backend execution completed on 2026-04-04; Step 1 through Step 9 are closed out
 - Sprint 3 backend and infra execution completed on 2026-04-05
 - Full regression plus CLI smoke evidence was captured on 2026-04-05
+- Security/adversarial tests were isolated to temp directories on 2026-04-05 so the merge gate leaves no repo-root `strategy.py` artifact
 - Next execution target is the issue-level review handoff for #11
 - The issue-level phase table is the umbrella summary only; implementation belongs in the
   referenced `sprintN/` docs

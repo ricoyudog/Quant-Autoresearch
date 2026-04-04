@@ -3,7 +3,7 @@
 > Feature branch: `feature/v2-data-pipeline`
 > Umbrella issue: #11
 > Last updated: 2026-04-05
-> Planning status: Sprint 3 and full-regression evidence recorded; merge gate complete
+> Planning status: Sprint 3, full-regression evidence, and post-pytest hygiene checks recorded; merge gate complete
 
 ## Objective
 
@@ -26,7 +26,7 @@ commands that expose the runtime model.
 | Sprint 1 | QA + Infra | DuckDB cache build, helper imports, legacy-import cleanup | `pytest tests/unit/test_duckdb_connector.py -v`, `uv run python cli.py setup-data`, runtime-module scan | Cache builds, helper tests pass, no stale data-loader imports |
 | Sprint 2 | QA | Strategy contract and backtester behavior | `pytest tests/unit/test_strategy_interface.py -v`, targeted backtester import or behavior checks | Dual-method contract and trading-day windows verified |
 | Sprint 3 | QA | CLI surface, integration path, runtime docs | `pytest tests/integration/test_minute_backtest.py -v`, CLI smoke commands | End-to-end pipeline and CLI behavior verified |
-| Phase 4 | QA + Infra | Full regression and merge gate | `pytest --tb=short -v`, full CLI smoke set, issue evidence update | Review-ready evidence exists with no unresolved regressions |
+| Phase 4 | QA + Infra | Full regression and merge gate | `pytest --tb=short -v`, full CLI smoke set, clean `git status`, issue evidence update | Review-ready evidence exists with no unresolved regressions or repo-root test artifacts |
 
 ## Planned Test Files
 
@@ -120,6 +120,7 @@ uv run python cli.py update-data
 
 ```bash
 pytest --tb=short -v
+git status --short --branch
 ```
 
 Any failures in surviving tests outside the data pipeline must still block closeout until they are
@@ -135,6 +136,7 @@ explained or resolved.
 - [x] Legacy connector/preprocessor expectations are removed or rewritten
 - [x] No surviving test imports reference removed data-loader modules
 - [x] `pytest --tb=short -q` passes
+- [x] Full regression leaves no repo-root `strategy.py` test artifact behind
 - [x] `uv run python cli.py setup-data` works end to end
 - [x] `uv run python cli.py backtest` works end to end
 - [x] `uv run python cli.py update-data` works without duplicate-row regressions
