@@ -45,9 +45,9 @@ Add DuckDB as a project dependency and create `src/data/duckdb_connector.py` to 
 - [x] Record baseline: `92 pass, 0 fail`
 
 ### Step 2 -- Add DuckDB dependency (DUCK-02)
-- [ ] Edit `pyproject.toml`: add `duckdb>=1.0.0` to dependencies
-- [ ] Run `uv sync` and verify DuckDB installs
-- [ ] Verify: `python -c "import duckdb; print(duckdb.__version__)"`
+- [x] Edit `pyproject.toml`: add `duckdb>=1.0.0` to dependencies
+- [x] Run `uv sync` and verify DuckDB installs
+- [x] Verify: `python -c "import duckdb; print(duckdb.__version__)"`
 
 ### Step 3 -- Create duckdb_connector.py (DUCK-03, DUCK-04, DUCK-05)
 - [ ] Create `src/data/duckdb_connector.py`
@@ -144,6 +144,9 @@ pytest --tb=short -q
 - Added `tests/unit/test_logger.py` as a regression test to prove `utils.logger` can be imported
   when `experiments/logs/` does not exist yet.
 - Re-ran the baseline after the logger fix and got a clean result.
+- Added `duckdb>=1.0.0` to `pyproject.toml` under `[project].dependencies`.
+- Ran `uv sync`, which installed `duckdb==1.5.1`.
+- Verified `duckdb` imports successfully from the repo environment.
 
 ### Command Results
 
@@ -162,6 +165,9 @@ pytest --tb=short -q
   - GREEN: `uv run pytest tests/unit/test_logger.py -q` -> `1 passed`
 - Final baseline:
   - `uv run pytest --tb=short -q` -> `92 passed in 2.59s`
+- DuckDB dependency step:
+  - `uv sync` -> success; installed `duckdb==1.5.1`
+  - `uv run python -c "import duckdb; print(duckdb.__version__)"` -> `1.5.1`
 
 ### Blockers / Deviations
 
@@ -169,8 +175,9 @@ pytest --tb=short -q
   working repo-equivalent baseline command here.
 - The baseline was initially blocked by logger setup assuming `experiments/logs/` already existed.
   That blocker is now resolved.
+- No blocking issues found while adding the DuckDB dependency.
 
 ### Follow-ups
 
 - Sprint 2: strategy interface (`select_universe`), backtester minute-level integration
-- Proceed to Sprint 1 Step 2 with TDD discipline before changing DuckDB-related production code.
+- Proceed to Sprint 1 Step 3 with TDD discipline before changing DuckDB-related production code.
