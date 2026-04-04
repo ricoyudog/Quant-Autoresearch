@@ -40,10 +40,10 @@ path, and the first smoke evidence for `setup_data`.
 - [x] Record any path or schema drift before backend implementation starts
 
 ### Step 2 -- Validate artifact and temp-file behavior
-- [ ] Confirm `data/daily_cache.duckdb` is the intended cache artifact path
-- [ ] Confirm `/tmp/` is acceptable for month-batch CSV exports during cache build
-- [ ] Define cleanup expectations so temp CSVs do not accumulate between batches
-- [ ] Define timeout and progress-reporting expectations for long-running monthly aggregation
+- [x] Confirm `data/daily_cache.duckdb` is the intended cache artifact path
+- [x] Confirm `/tmp/` is acceptable for month-batch CSV exports during cache build
+- [x] Define cleanup expectations so temp CSVs do not accumulate between batches
+- [x] Define timeout and progress-reporting expectations for long-running monthly aggregation
 
 ### Step 3 -- Prepare and run the Sprint 1 smoke gate
 - [ ] Confirm `uv run python cli.py setup_data --help` exposes the intended cache-build command
@@ -93,6 +93,15 @@ con.close()
   present.
 - Compared the CLI schema output against `docs/data-pipeline-v2.md` Section 1.2 and recorded the
   non-blocking drift below.
+- Confirmed the intended cache artifact path remains `data/daily_cache.duckdb` across the spec,
+  feature infra plan, and Sprint 1 backend plan.
+- Verified the repo-local `data/` parent path is writable and that `/tmp/` is writable and usable
+  for create/delete cycles.
+- Defined operational expectations for Sprint 1 cache build:
+  - delete each month-batch CSV immediately after DuckDB ingest
+  - use a 300-second timeout per CLI batch
+  - emit visible per-month progress output during cache build
+- Added `*.duckdb` to `.gitignore` so the planned cache artifact does not pollute git status.
 
 ### Command Results
 
@@ -114,6 +123,23 @@ con.close()
   - `close`
   - `volume`
   - `transactions`
+- Artifact path references:
+  - `docs/data-pipeline-v2.md` uses `data/daily_cache.duckdb` in build and read examples
+  - `docs/feature/v2-data-pipeline/v2-data-pipeline-infra.md` defines `data/daily_cache.duckdb`
+    as the stable DuckDB output path
+  - `docs/feature/v2-data-pipeline/sprint1/sprint1-backend.md` uses
+    `data/daily_cache.duckdb` as the default `output_path`
+- Parent-path and temp-path checks:
+  - `DATA_DIR_WRITABLE`
+  - `ARTIFACT_PARENT_WRITE_OK`
+  - `DATA_DIR_CLEANED`
+  - `TMP_WRITABLE`
+  - `CREATED:/tmp/quant-autoresearch-step2.hl5bbH`
+  - `TMP_CLEANED`
+  - `/tmp` free space: `67Gi` available at verification time
+- Repo hygiene:
+  - before the fix: `DUCKDB_NOT_IGNORED`
+  - after the fix, `.gitignore` now includes `*.duckdb`
 
 ### Blockers / Deviations
 
@@ -121,8 +147,11 @@ con.close()
 - `minute-aggs schema` currently exposes two extra logical columns, `schema_version` and
   `source_file`, beyond the nine fields documented in the sprint/spec. These are non-blocking for
   Step 1 but should remain ignored unless downstream cache logic explicitly needs them.
+- The planned cache artifact path was not originally ignored by git because `.gitignore` covered
+  `*.db` but not `*.duckdb`; this was fixed during Step 2.
 
 ### Follow-Ups
 
-- Proceed to Step 2 in this infra doc: validate the DuckDB artifact path and temp-file behavior.
-- Hand off the confirmed dataset path and the non-blocking schema extras to Sprint 1 backend work.
+- Proceed to Step 3 in this infra doc after the Sprint 1 backend implementation lands.
+- Hand off the confirmed cache path, `/tmp` behavior, 300-second timeout target, and progress
+  requirement to Sprint 1 backend work.
