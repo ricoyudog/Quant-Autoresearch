@@ -48,7 +48,11 @@ class TradingStrategy:
         if frame is None or frame.empty:
             return pd.Series(index=getattr(frame, "index", pd.Index([])), dtype=float)
 
-        close_col = "close" if "close" in frame.columns else "Close" if "Close" in frame.columns else None
+        close_col = (
+            "close" if "close" in frame.columns
+            else "Close" if "Close" in frame.columns
+            else None
+        )
         if close_col is None:
             return pd.Series(0.0, index=frame.index)
 
@@ -74,10 +78,10 @@ class TradingStrategy:
         The backtester remains responsible for applying the enforced 1-bar lag.
         """
         if isinstance(data, dict):
-            signals = {}
-            for ticker, frame in data.items():
-                signals[str(ticker)] = self.generate_signal_series(frame)
-            return signals
+            return {
+                str(ticker): self.generate_signal_series(frame)
+                for ticker, frame in data.items()
+            }
 
         if isinstance(data, pd.DataFrame):
             return self.generate_signal_series(data)
