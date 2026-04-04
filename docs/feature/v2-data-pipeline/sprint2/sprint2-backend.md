@@ -65,14 +65,14 @@ Extend the strategy interface with `select_universe(daily_data)` for strategy-dr
 - [x] Verify: signals index aligns with minute data index
 
 ### Step 5 -- Implement minute-level walk-forward (STRAT-05)
-- [ ] Implement `calculate_walk_forward_windows(start_date, end_date, n_windows=5)`:
+- [x] Implement `calculate_walk_forward_windows(start_date, end_date, n_windows=5)`:
   - Call `get_trading_days()` to get ordered trading date list
   - Divide into n_windows equal-sized chunks
   - For each window: train = [0 .. train_end], test = [test_start .. test_end]
   - Return list of window dicts with train/test boundaries
-- [ ] Each window boundary is a trading date (not calendar date)
-- [ ] Each test window contains full trading sessions (390 bars/day)
-- [ ] Verify: 5 windows, no date gaps, no overlap
+- [x] Each window boundary is a trading date (not calendar date)
+- [x] Each test window contains full trading sessions (390 bars/day)
+- [x] Verify: 5 windows, no date gaps, no overlap
 
 ### Step 6 -- Integrate into backtester (STRAT-06)
 - [ ] Update `src/core/backtester.py` walk_forward_validation():
@@ -116,7 +116,7 @@ Extend the strategy interface with `select_universe(daily_data)` for strategy-dr
 
 - [x] After Step 1: `from src.strategies.active_strategy import *` works
 - [x] After Step 3: `find_strategy_methods()` correctly detects both methods
-- [ ] After Step 5: walk-forward windows have correct trading-day boundaries
+- [x] After Step 5: walk-forward windows have correct trading-day boundaries
 - [ ] After Step 6: backtester pipeline runs end-to-end (manual test with small date range)
 - [ ] After Step 8: all strategy interface tests pass
 - [ ] Verify: `pytest --tb=short -q` all tests pass
@@ -177,6 +177,13 @@ pytest --tb=short -q
   behavior per ticker ahead of the Step 6 integration work.
 - Expanded `tests/unit/test_strategy_interface.py` with minute-mode shape, index-alignment, and
   signal-range cases, and added per-ticker lag coverage in `tests/unit/test_backtester_v2.py`.
+- Added `calculate_walk_forward_windows()` to `src/data/duckdb_connector.py` as the dedicated
+  trading-day window helper that Step 6 will consume.
+- Added mock-driven Step 5 coverage in `tests/unit/test_duckdb_connector.py` for five windows,
+  trading-day boundaries, non-overlapping gap-free test ranges, remainder handling, and invalid
+  inputs.
+- Verified the helper against the live DuckDB cache with a November 2025 smoke range, confirming
+  five real trading-day windows are emitted from the local cache.
 
 ### Command Results
 
@@ -188,6 +195,9 @@ pytest --tb=short -q
 - `PYTHONPATH=src uv run python -c "from strategies.active_strategy import TradingStrategy; import pandas as pd; frame = pd.DataFrame({'ticker':['AAPL','AAPL'],'session_date':pd.to_datetime(['2025-11-03','2025-11-03']),'window_start_ns':[1,2],'open':[1.0,1.1],'high':[1.1,1.2],'low':[0.9,1.0],'close':[1.0,1.2],'volume':[100,120],'transactions':[10,12]}); result = TradingStrategy().generate_signals({'AAPL': frame}); print(type(result).__name__, sorted(result.keys()), result['AAPL'].index.equals(frame.index), sorted(set(result['AAPL'].tolist())))"` -> `dict ['AAPL'] True [0.0]`
 - `PYTHONPATH=src uv run python -c "from core.backtester import apply_signal_lag; import pandas as pd; print(apply_signal_lag({'AAPL': pd.Series([1, -1, 0])})['AAPL'].tolist())"` -> `[0.0, 1.0, -1.0]`
 - `uv run pytest tests/unit/test_strategy_interface.py tests/unit/test_backtester_v2.py -v` -> 46 passed
+- `uv run pytest tests/unit/test_duckdb_connector.py -v` -> 10 passed
+- `PYTHONPATH=src uv run python -c "from data.duckdb_connector import calculate_walk_forward_windows; print('IMPORT OK', callable(calculate_walk_forward_windows))"` -> `IMPORT OK True`
+- `PYTHONPATH=src uv run python -c "from data.duckdb_connector import calculate_walk_forward_windows; windows = calculate_walk_forward_windows('2025-11-03', '2025-11-21', n_windows=5); print('count', len(windows)); print('first', windows[0]); print('last', windows[-1])"` -> `count 5`, first window `{'train_start': '2025-11-03', 'train_end': '2025-11-05', 'test_start': '2025-11-06', 'test_end': '2025-11-10'}`, last window `{'train_start': '2025-11-03', 'train_end': '2025-11-19', 'test_start': '2025-11-20', 'test_end': '2025-11-21'}`
 
 ### Blockers / Deviations
 
@@ -198,7 +208,10 @@ pytest --tb=short -q
   explicitly calls for the dual-method example strategy.
 - Preserved a compatibility path where `TradingStrategy.generate_signals(pd.DataFrame)` still returns
   a single `pd.Series` until Step 6 rewires the live backtester to the minute-data dict contract.
+- The design sketch in `docs/data-pipeline-v2.md` has an off-by-one issue on the last window, so the
+  helper uses `n_windows + 1` contiguous trading-day slices: one initial training slice followed by
+  `n_windows` non-overlapping test slices.
 
 ### Follow-ups
 
-- Next execution target: Step 5 in this sprint doc (`calculate_walk_forward_windows()`)
+- Next execution target: Step 6 in this sprint doc (live minute-level backtester integration)

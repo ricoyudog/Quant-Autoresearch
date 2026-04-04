@@ -6,6 +6,11 @@ import pandas as pd
 import pytest
 
 
+def _make_trading_days(count: int) -> list[str]:
+    """Create an ordered list of business-day strings."""
+    return pd.bdate_range("2025-11-03", periods=count).strftime("%Y-%m-%d").tolist()
+
+
 def _seed_daily_cache(db_path: Path) -> None:
     connection = duckdb.connect(str(db_path))
     connection.execute(
@@ -120,6 +125,102 @@ def test_get_trading_days_returns_ordered_date_strings(tmp_path, monkeypatch):
     result = duckdb_connector.get_trading_days(start_date="2025-11-03", end_date="2025-11-04")
 
     assert result == ["2025-11-03", "2025-11-04"]
+
+
+def test_calculate_walk_forward_windows_returns_five_expanding_windows(monkeypatch):
+    from data import duckdb_connector
+
+    trading_days = _make_trading_days(12)
+    monkeypatch.setattr(duckdb_connector, "get_trading_days", lambda start_date, end_date: trading_days)
+
+    windows = duckdb_connector.calculate_walk_forward_windows("2025-11-03", "2025-11-20", n_windows=5)
+
+    assert windows == [
+        {
+            "train_start": trading_days[0],
+            "train_end": trading_days[1],
+            "test_start": trading_days[2],
+            "test_end": trading_days[3],
+        },
+        {
+            "train_start": trading_days[0],
+            "train_end": trading_days[3],
+            "test_start": trading_days[4],
+            "test_end": trading_days[5],
+        },
+        {
+            "train_start": trading_days[0],
+            "train_end": trading_days[5],
+            "test_start": trading_days[6],
+            "test_end": trading_days[7],
+        },
+        {
+            "train_start": trading_days[0],
+            "train_end": trading_days[7],
+            "test_start": trading_days[8],
+            "test_end": trading_days[9],
+        },
+        {
+            "train_start": trading_days[0],
+            "train_end": trading_days[9],
+            "test_start": trading_days[10],
+            "test_end": trading_days[11],
+        },
+    ]
+
+
+def test_calculate_walk_forward_windows_uses_trading_day_boundaries_without_gaps(monkeypatch):
+    from data import duckdb_connector
+
+    trading_days = [
+        "2025-11-03",
+        "2025-11-04",
+        "2025-11-06",
+        "2025-11-07",
+        "2025-11-10",
+        "2025-11-11",
+        "2025-11-13",
+        "2025-11-14",
+        "2025-11-17",
+        "2025-11-18",
+        "2025-11-20",
+        "2025-11-21",
+    ]
+    monkeypatch.setattr(duckdb_connector, "get_trading_days", lambda start_date, end_date: trading_days)
+
+    windows = duckdb_connector.calculate_walk_forward_windows("2025-11-03", "2025-11-21", n_windows=5)
+
+    covered_test_days = []
+    for window in windows:
+        train_end_idx = trading_days.index(window["train_end"])
+        test_start_idx = trading_days.index(window["test_start"])
+        test_end_idx = trading_days.index(window["test_end"])
+
+        assert train_end_idx < test_start_idx
+        covered_test_days.extend(trading_days[test_start_idx : test_end_idx + 1])
+
+    assert covered_test_days == trading_days[2:]
+
+
+def test_calculate_walk_forward_windows_last_window_absorbs_remainder_days(monkeypatch):
+    from data import duckdb_connector
+
+    trading_days = _make_trading_days(13)
+    monkeypatch.setattr(duckdb_connector, "get_trading_days", lambda start_date, end_date: trading_days)
+
+    windows = duckdb_connector.calculate_walk_forward_windows("2025-11-03", "2025-11-21", n_windows=5)
+
+    assert len(windows) == 5
+    assert windows[-1]["test_end"] == trading_days[-1]
+
+
+def test_calculate_walk_forward_windows_raises_for_insufficient_trading_days(monkeypatch):
+    from data import duckdb_connector
+
+    monkeypatch.setattr(duckdb_connector, "get_trading_days", lambda start_date, end_date: [])
+
+    with pytest.raises(ValueError, match="at least"):
+        duckdb_connector.calculate_walk_forward_windows("2025-11-03", "2025-11-21", n_windows=5)
 
 
 def test_query_minute_data_returns_one_dataframe_per_ticker(monkeypatch):

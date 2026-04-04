@@ -42,6 +42,7 @@ CREATE TABLE daily_bars (
 
 __all__ = [
     "build_daily_cache",
+    "calculate_walk_forward_windows",
     "get_trading_days",
     "load_daily_data",
     "query_minute_data",
@@ -200,6 +201,43 @@ def get_trading_days(start_date: Optional[str] = None, end_date: Optional[str] =
 
     dates = frame["session_date"].drop_duplicates().sort_values()
     return [value.strftime("%Y-%m-%d") for value in dates]
+
+
+def calculate_walk_forward_windows(start_date: str, end_date: str, n_windows: int = 5) -> List[Dict[str, str]]:
+    """Build expanding-train, non-overlapping test windows on trading-day boundaries."""
+    if n_windows <= 0:
+        raise ValueError("n_windows must be a positive integer")
+
+    trading_days = get_trading_days(start_date=start_date, end_date=end_date)
+    required_days = n_windows + 1
+    if len(trading_days) < required_days:
+        raise ValueError(f"Need at least {required_days} trading days to build {n_windows} walk-forward windows")
+
+    slice_count = n_windows + 1
+    base_size, remainder = divmod(len(trading_days), slice_count)
+
+    slices: List[List[str]] = []
+    cursor = 0
+    for slice_index in range(slice_count):
+        slice_size = base_size + (1 if slice_index < remainder else 0)
+        next_cursor = cursor + slice_size
+        slices.append(trading_days[cursor:next_cursor])
+        cursor = next_cursor
+
+    windows: List[Dict[str, str]] = []
+    train_days = list(slices[0])
+    for test_days in slices[1:]:
+        windows.append(
+            {
+                "train_start": train_days[0],
+                "train_end": train_days[-1],
+                "test_start": test_days[0],
+                "test_end": test_days[-1],
+            }
+        )
+        train_days.extend(test_days)
+
+    return windows
 
 
 def query_minute_data(tickers: List[str], start_date: str, end_date: str) -> Dict[str, pd.DataFrame]:
