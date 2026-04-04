@@ -20,7 +20,7 @@ Extend the strategy interface with `select_universe(daily_data)` for strategy-dr
 **Scope**
 - Add `select_universe(daily_data) -> list[str]` to strategy interface (optional method)
 - Update `generate_signals(data: dict[str, pd.DataFrame]) -> dict[str, pd.Series]` for minute data
-- Update `find_strategy_methods()` to detect `select_universe` presence
+- Update `find_strategy_class()` to detect `select_universe` presence
 - Implement minute-level walk-forward window calculation using `get_trading_days()`
 - Integrate DuckDB daily loading + CLI minute queries into backtester pipeline
 - Update `src/strategies/active_strategy.py` with a working dual-method example
@@ -50,8 +50,8 @@ Extend the strategy interface with `select_universe(daily_data)` for strategy-dr
 - [x] Test with a small query: AAPL for 1 week
 - [x] Verify: returns correct schema and data
 
-### Step 3 -- Update find_strategy_methods (STRAT-03)
-- [x] Locate `find_strategy_methods()` or `find_strategy_class()` in `src/core/backtester.py`
+### Step 3 -- Update find_strategy_class (STRAT-03)
+- [x] Locate `find_strategy_class()` in `src/core/backtester.py`
 - [x] Update return value: `(class, has_universe)` tuple
 - [x] `has_universe = hasattr(obj, 'select_universe')`
 - [x] If no method found, return `(None, False)`
@@ -96,13 +96,13 @@ Extend the strategy interface with `select_universe(daily_data)` for strategy-dr
   - `select_universe()`: top 30 by 20-day average volume
   - `generate_signals()`: simple 20-bar momentum on minute data
 - [x] Verify: strategy loads and methods are callable
-- [x] Verify: `find_strategy_methods()` returns `(class, True)`
+- [x] Verify: `find_strategy_class()` returns `(class, True)`
 
 ### Step 8 -- Write strategy interface tests (STRAT-01..04 tests)
 - [x] Create `tests/unit/test_strategy_interface.py`
-- [x] Test `find_strategy_methods()` with both methods present
-- [x] Test `find_strategy_methods()` with only `generate_signals`
-- [x] Test `find_strategy_methods()` with no valid strategy class
+- [x] Test `find_strategy_class()` with both methods present
+- [x] Test `find_strategy_class()` with only `generate_signals`
+- [x] Test `find_strategy_class()` with no valid strategy class
 - [x] Test `select_universe()` returns list of strings
 - [x] Test `generate_signals()` returns dict of Series with values in {-1, 0, 1}
 - [x] Test signal lag enforcement in minute mode (covered in `tests/unit/test_backtester_v2.py`)
@@ -115,7 +115,7 @@ Extend the strategy interface with `select_universe(daily_data)` for strategy-dr
 ## 4) Test Plan
 
 - [x] After Step 1: `from src.strategies.active_strategy import *` works
-- [x] After Step 3: `find_strategy_methods()` correctly detects both methods
+- [x] After Step 3: `find_strategy_class()` correctly detects both methods
 - [x] After Step 5: walk-forward windows have correct trading-day boundaries
 - [x] After Step 6: targeted minute-pipeline behavior checks and backtester import smoke pass
 - [x] After Step 8: all strategy interface tests pass
