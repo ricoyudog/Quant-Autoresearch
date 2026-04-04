@@ -380,6 +380,80 @@ class MinuteStrategy:
         assert "T30" not in query_calls[0][0]
         assert "BASELINE_SHARPE: 0.5500" in output
 
+    def test_walk_forward_validation_handles_real_metrics_with_multiple_tickers(self, monkeypatch, tmp_path, capsys):
+        """Real metric calculation should work for multi-ticker minute windows."""
+        strategy_path = tmp_path / "strategy.py"
+        strategy_path.write_text(
+            """
+class MinuteStrategy:
+    def select_universe(self, daily_data):
+        return ["AAA", "BBB"]
+
+    def generate_signals(self, data):
+        signals = {}
+        for ticker, frame in data.items():
+            signals[ticker] = pd.Series([1.0, 0.0, -1.0], index=frame.index)
+        return signals
+""".strip()
+        )
+
+        daily_data = build_daily_universe_frame()
+        monkeypatch.setattr(backtester, "STRATEGY_FILE", str(strategy_path))
+        monkeypatch.setattr(backtester, "security_check", lambda: (True, ""))
+        monkeypatch.setattr(backtester, "load_daily_data", lambda start_date=None, end_date=None: daily_data.copy())
+        monkeypatch.setattr(
+            backtester,
+            "calculate_walk_forward_windows",
+            lambda start_date, end_date, n_windows=5: [
+                {
+                    "train_start": "2025-11-03",
+                    "train_end": "2025-11-05",
+                    "test_start": "2025-11-06",
+                    "test_end": "2025-11-07",
+                }
+            ],
+        )
+        monkeypatch.setattr(
+            backtester,
+            "query_minute_data",
+            lambda symbols, start_date, end_date: build_window_minute_data(list(symbols), start_date),
+        )
+
+        backtester.walk_forward_validation()
+        output = capsys.readouterr().out
+
+        assert "SCORE:" in output
+        assert "PER_SYMBOL:" in output
+        assert "AAA:" in output
+        assert "BBB:" in output
+
+
+class TestPrepareMinuteFrame:
+    """Tests for minute-frame preparation helpers."""
+
+    def test_prepare_minute_frame_resets_returns_at_session_boundaries(self):
+        """The first bar of each session should not inherit the prior session close."""
+        frame = pd.DataFrame(
+            {
+                "ticker": ["AAA"] * 4,
+                "session_date": pd.to_datetime(
+                    ["2025-11-03", "2025-11-03", "2025-11-04", "2025-11-04"]
+                ),
+                "window_start_ns": [1, 2, 1, 2],
+                "close": [100.0, 101.0, 110.0, 111.0],
+                "open": [99.5, 100.5, 109.5, 110.5],
+                "high": [100.5, 101.5, 110.5, 111.5],
+                "low": [99.0, 100.0, 109.0, 110.0],
+                "volume": [1_000, 1_100, 1_200, 1_300],
+                "transactions": [10, 11, 12, 13],
+            }
+        )
+
+        prepared = backtester.prepare_minute_frame(frame)
+
+        assert prepared["returns"].tolist()[0] == 0.0
+        assert prepared["returns"].tolist()[2] == 0.0
+
 
 # =============================================================================
 # calculate_metrics tests

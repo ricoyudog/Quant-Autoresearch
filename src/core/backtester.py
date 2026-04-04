@@ -97,10 +97,21 @@ def prepare_minute_frame(frame: pd.DataFrame) -> pd.DataFrame:
     if "close" not in prepared.columns:
         return prepared
 
-    prepared["returns"] = prepared["close"].astype(float).pct_change().fillna(0.0)
-    prepared["volatility"] = (
-        prepared["returns"].rolling(window=20, min_periods=1).std().fillna(0.0)
-    )
+    close = prepared["close"].astype(float)
+    if "session_date" in prepared.columns:
+        prepared["returns"] = (
+            close.groupby(prepared["session_date"], sort=False).pct_change().fillna(0.0)
+        )
+        prepared["volatility"] = (
+            prepared.groupby("session_date", sort=False)["returns"]
+            .transform(lambda series: series.rolling(window=20, min_periods=1).std())
+            .fillna(0.0)
+        )
+    else:
+        prepared["returns"] = close.pct_change().fillna(0.0)
+        prepared["volatility"] = (
+            prepared["returns"].rolling(window=20, min_periods=1).std().fillna(0.0)
+        )
     return prepared
 
 
@@ -554,7 +565,8 @@ def walk_forward_validation():
 
         if window_returns:
             combined = pd.concat(window_returns, axis=1).mean(axis=1)
-            metrics = calculate_metrics(combined, pd.concat(window_positions, axis=0))
+            combined_positions = pd.concat(window_positions, axis=1).mean(axis=1)
+            metrics = calculate_metrics(combined, combined_positions)
             all_metrics.append(metrics)
 
     if not all_metrics:

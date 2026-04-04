@@ -198,6 +198,13 @@ pytest --tb=short -q
   strategies that iterate over `data.items()` continue to run inside the sandbox.
 - Added focused Step 6 coverage in `tests/unit/test_backtester_v2.py` for both the
   `select_universe()` path and the fallback-universe path.
+- Fixed the multi-symbol minute-window metrics path so `calculate_metrics()` now receives a
+  portfolio-level position series aligned to the aggregated return series instead of a mismatched
+  per-ticker concatenation.
+- Updated `prepare_minute_frame()` so minute returns and rolling volatility reset at each
+  `session_date` boundary and do not auto-connect overnight gaps across trading sessions.
+- Added regression coverage for the real multi-ticker metrics path and the no-overnight-gap return
+  rule in `tests/unit/test_backtester_v2.py`.
 
 ### Command Results
 
@@ -212,9 +219,9 @@ pytest --tb=short -q
 - `uv run pytest tests/unit/test_duckdb_connector.py -v` -> 10 passed
 - `PYTHONPATH=src uv run python -c "from data.duckdb_connector import calculate_walk_forward_windows; print('IMPORT OK', callable(calculate_walk_forward_windows))"` -> `IMPORT OK True`
 - `PYTHONPATH=src uv run python -c "from data.duckdb_connector import calculate_walk_forward_windows; windows = calculate_walk_forward_windows('2025-11-03', '2025-11-21', n_windows=5); print('count', len(windows)); print('first', windows[0]); print('last', windows[-1])"` -> `count 5`, first window `{'train_start': '2025-11-03', 'train_end': '2025-11-05', 'test_start': '2025-11-06', 'test_end': '2025-11-10'}`, last window `{'train_start': '2025-11-03', 'train_end': '2025-11-19', 'test_start': '2025-11-20', 'test_end': '2025-11-21'}`
-- `uv run pytest tests/unit/test_backtester_v2.py -q` -> `28 passed in 0.30s`
-- `uv run pytest tests/unit/test_strategy_interface.py tests/unit/test_backtester_v2.py tests/unit/test_duckdb_connector.py -q` -> `58 passed in 0.36s`
-- `uv run pytest tests/security/test_adversarial.py -q` -> `3 passed in 0.25s`
+- `uv run pytest tests/unit/test_backtester_v2.py -q` -> `30 passed in 0.37s`
+- `uv run pytest tests/unit/test_strategy_interface.py tests/unit/test_backtester_v2.py tests/unit/test_duckdb_connector.py -q` -> `60 passed in 0.44s`
+- `uv run pytest tests/security/test_adversarial.py -q` -> `3 passed in 0.32s`
 - `PYTHONPATH=src uv run python -c "from core.backtester import *; print('IMPORT OK')"` -> `IMPORT OK`
 
 ### Blockers / Deviations
@@ -233,6 +240,8 @@ pytest --tb=short -q
   querying the full daily universe when `select_universe()` is absent or unusable.
 - The restricted minute-strategy path needed `_iter_unpack_sequence_` and `_unpack_sequence_`
   guards so strategies that iterate over `dict.items()` remain executable in the sandbox.
+- A QA follow-up exposed a real multi-symbol metrics-alignment bug and an overnight return-bridging
+  bug in the first Step 6 cut; both were fixed before the final closeout evidence was recorded.
 - The Step 6 manual small-range runtime smoke remains pending in the test plan because
   `walk_forward_validation()` still runs the full configured backtest range; this slice closed on
   deterministic unit and security evidence plus the import smoke.
