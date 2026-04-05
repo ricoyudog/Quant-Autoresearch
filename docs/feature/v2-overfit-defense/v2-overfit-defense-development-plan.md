@@ -58,7 +58,7 @@ The V2 overfit defense architecture replaces naive statistical tests with academ
 | Sprint | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
 | Sprint 1 — Built-in Defense | Newey-West Sharpe + Deflated SR + remove Monte Carlo | backtester.py updated, validation/newey_west.py, validation/deflated_sr.py, output format updated, program.md guidance added | complete | proceed to Sprint 2 |
-| Sprint 2 — Advanced Validation CLI | CPCV + Regime check + Parameter stability CLI commands | validation/cpcv.py, validation/regime.py, validation/stability.py, cli.py validate command, tests for all CLI commands, knowledge base notes | pending | merge readiness |
+| Sprint 2 — Advanced Validation CLI | CPCV + Regime check + Parameter stability CLI commands | validation/cpcv.py, validation/regime.py, validation/stability.py, cli.py validate command, tests for all CLI commands, knowledge base notes | complete | review readiness |
 
 ## Task Table
 
@@ -95,14 +95,14 @@ The V2 overfit defense architecture replaces naive statistical tests with academ
 ## Acceptance Criteria
 
 - [x] `feature/v2-overfit-defense` branch exists
-- [ ] `src/validation/` module created with 5 files (__init__, newey_west, deflated_sr, cpcv, regime, stability)
+- [x] `src/validation/` module created with 6 files (__init__, newey_west, deflated_sr, cpcv, regime, stability)
 - [x] Backtester SCORE reports Newey-West adjusted Sharpe (not raw Sharpe)
 - [x] Backtester output includes NAIVE_SHARPE, DEFLATED_SR, NW_SHARPE_BIAS
 - [x] `monte_carlo_permutation_test` removed from backtester.py
 - [x] P_VALUE removed from output format
-- [ ] `uv run python cli.py validate --method cpcv` works
-- [ ] `uv run python cli.py validate --method regime` works
-- [ ] `uv run python cli.py validate --method stability` works
+- [x] `uv run python cli.py validate --method cpcv` works
+- [x] `uv run python cli.py validate --method regime` works
+- [x] `uv run python cli.py validate --method stability` works
 - [x] `pytest` passes with 0 failures
 - [x] program.md contains overfitting defense guidance section
 

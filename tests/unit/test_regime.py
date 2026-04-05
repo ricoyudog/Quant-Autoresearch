@@ -1,0 +1,93 @@
+"""Unit tests for regime robustness analysis."""
+
+import numpy as np
+import pandas as pd
+
+from validation.regime import classify_market_regimes, regime_analysis
+
+
+def make_market_data(returns: list[float]) -> pd.DataFrame:
+    """Create deterministic market data from a return path."""
+    dates = pd.date_range("2024-01-01", periods=len(returns), freq="D")
+    returns_series = pd.Series(returns, index=dates)
+    close = 100 * (1 + returns_series).cumprod()
+    return pd.DataFrame({"Close": close, "returns": returns_series}, index=dates)
+
+
+def make_strategy_returns(index: pd.Index) -> pd.Series:
+    """Create a deterministic strategy return path aligned to market data."""
+    values = np.where(np.arange(len(index)) % 3 == 0, 0.01, -0.002)
+    return pd.Series(values, index=index)
+
+
+def test_regime_four_classifications():
+    """All four regimes should appear in a mixed market path."""
+    bull_quiet = [0.003] * 40
+    bull_volatile = ([0.02, -0.005, 0.018, -0.004] * 10)
+    bear_quiet = [-0.003] * 40
+    bear_volatile = ([-0.02, 0.005, -0.018, 0.004] * 10)
+    market_data = make_market_data(bull_quiet + bull_volatile + bear_quiet + bear_volatile)
+
+    regimes = classify_market_regimes(market_data)
+
+    assert set(regimes.dropna().unique()) == {
+        "bull_quiet",
+        "bull_volatile",
+        "bear_quiet",
+        "bear_volatile",
+    }
+
+
+def test_regime_bull_quiet_criteria():
+    """Positive rolling return and low volatility should classify as bull_quiet."""
+    market_data = make_market_data(([0.02, -0.005, 0.018, -0.004] * 10) + ([0.002] * 30))
+    regimes = classify_market_regimes(market_data)
+
+    assert regimes.dropna().iloc[-1] == "bull_quiet"
+
+
+def test_regime_bear_volatile_criteria():
+    """Negative rolling return with high volatility should classify as bear_volatile."""
+    market_data = make_market_data(([-0.02, 0.005, -0.018, 0.004] * 15))
+    regimes = classify_market_regimes(market_data)
+
+    assert regimes.dropna().iloc[-1] == "bear_volatile"
+
+
+def test_regime_per_regime_sharpe():
+    """Each non-empty regime receives its own Newey-West Sharpe."""
+    market_data = make_market_data(([0.003] * 40) + ([-0.003] * 40))
+    strategy_returns = make_strategy_returns(market_data.index)
+
+    results = regime_analysis(strategy_returns, market_data)
+
+    assert results
+    assert all("sharpe" in metrics for metrics in results.values())
+
+
+def test_regime_all_bull():
+    """All-bull market data should not create bear regimes."""
+    market_data = make_market_data(([0.002] * 40) + ([0.02, -0.005, 0.018, -0.004] * 10))
+    strategy_returns = make_strategy_returns(market_data.index)
+
+    results = regime_analysis(strategy_returns, market_data)
+
+    assert set(results.keys()) <= {"bull_quiet", "bull_volatile"}
+
+
+def test_regime_empty_strategy_returns():
+    """Empty strategy returns should be handled gracefully."""
+    market_data = make_market_data([0.002] * 50)
+
+    assert regime_analysis(pd.Series(dtype=float), market_data) == {}
+
+
+def test_regime_output_keys():
+    """Each regime metric block exposes the expected fields."""
+    market_data = make_market_data(([0.003] * 40) + ([-0.003] * 40))
+    strategy_returns = make_strategy_returns(market_data.index)
+
+    results = regime_analysis(strategy_returns, market_data)
+
+    assert results
+    assert all(set(metrics.keys()) == {"sharpe", "return", "count", "win_rate"} for metrics in results.values())
