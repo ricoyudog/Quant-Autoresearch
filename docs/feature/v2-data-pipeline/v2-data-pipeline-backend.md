@@ -3,7 +3,7 @@
 > Feature branch: `feature/v2-data-pipeline`
 > Role: Backend
 > Canonical workspace: `docs/feature/v2-data-pipeline/`
-> Last updated: 2026-04-04
+> Last updated: 2026-04-05
 
 ## Mission
 
@@ -17,7 +17,7 @@ the CLI.
 | Surface | Sprint | Contract |
 | --- | --- | --- |
 | `src/data/duckdb_connector.py` | Sprint 1 | build/load DuckDB daily cache, expose trading days, bridge minute-data queries |
-| `src/core/backtester.py` | Sprint 2 | load daily data, run universe selection, compute trading-day windows, evaluate minute-data signals |
+| `src/core/backtester.py` | Sprint 2 | load daily data, run universe selection, validate minute-window completeness, compute trading-day windows, evaluate minute-data signals, and report portfolio/per-symbol metrics |
 | `src/strategies/active_strategy.py` | Sprint 2 | expose `select_universe(daily_data)` and minute-data `generate_signals()` example |
 | `cli.py` | Sprint 1 + Sprint 3 | build cache, fetch minute bars, backtest minute mode, refresh the cache incrementally via `update-data` |
 | `program.md` / `CLAUDE.md` | Sprint 3 | document the final backend/runtime contracts once implementation settles |
@@ -25,11 +25,15 @@ the CLI.
 ## Cross-Sprint Contract Decisions
 
 - Daily data is the screening surface. Minute data is loaded only for the selected universe and only
-  for the current walk-forward window.
+  for the current walk-forward window, and each window must contain the full selected ticker set.
 - `select_universe(daily_data)` is optional. If omitted, the backtester must still have a safe
   fallback universe rule.
 - `generate_signals(minute_data)` works on `dict[str, pd.DataFrame]` keyed by ticker and must still
   honor the existing lag and sandbox rules.
+- `walk_forward_validation()` must fail fast on empty or incomplete minute windows instead of
+  silently skipping them.
+- Portfolio trade metrics are computed from gross exposure plus summed per-symbol trade activity, so
+  offsetting books still report non-zero trading activity.
 - The CLI remains the operator-facing surface for cache build, fetch, backtest, and refresh flows.
 
 ## Backend Deliverables
@@ -57,11 +61,11 @@ step-by-step plans.
 
 ## Backend Acceptance
 
-- [ ] The old data-loader modules are fully retired
-- [ ] The backtester supports the dual-stage daily/minute pipeline
-- [ ] The strategy example demonstrates the new interface clearly
-- [ ] CLI commands expose the new runtime model without hidden manual steps
-- [ ] Runtime docs match the implemented behavior
+- [x] The old data-loader modules are fully retired
+- [x] The backtester supports the dual-stage daily/minute pipeline
+- [x] The strategy example demonstrates the new interface clearly
+- [x] CLI commands expose the new runtime model without hidden manual steps
+- [x] Runtime docs match the implemented behavior
 
 ## Backend Risks
 
