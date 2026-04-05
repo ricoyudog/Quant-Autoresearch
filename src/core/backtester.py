@@ -7,12 +7,98 @@ from RestrictedPython import compile_restricted, safe_builtins
 from RestrictedPython.Guards import safer_getattr
 from RestrictedPython.Eval import default_guarded_getiter, default_guarded_getitem
 from data.connector import DataConnector
+from validation.deflated_sr import deflated_sharpe_ratio
+from validation.newey_west import newey_west_sharpe
 
 CACHE_DIR = os.environ.get("CACHE_DIR", "data/cache")
 STRATEGY_FILE = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("STRATEGY_FILE", "src/strategies/active_strategy.py")
 
 FORBIDDEN_BUILTINS = {'exec', 'eval', 'open', 'getattr', 'setattr', 'delattr'}
 FORBIDDEN_MODULES = {'socket', 'requests', 'urllib', 'os', 'sys', 'shutil', 'subprocess'}
+RESULTS_TSV_CANDIDATES = ("experiments/results.tsv", "results.tsv")
+
+
+def calculate_naive_sharpe(returns: pd.Series) -> float:
+    """Calculate the minute-bar annualized raw Sharpe Ratio."""
+    clean_returns = pd.Series(returns).dropna()
+    std_ret = clean_returns.std()
+    if len(clean_returns) < 2 or std_ret == 0:
+        return 0.0
+
+    return float((clean_returns.mean() / std_ret) * np.sqrt(252 * 390))
+
+
+def count_experiment_trials() -> int:
+    """Count prior experiment rows, defaulting to the current trial only."""
+    for candidate in RESULTS_TSV_CANDIDATES:
+        if not os.path.exists(candidate):
+            continue
+
+        try:
+            with open(candidate, "r") as handle:
+                non_empty_lines = [line for line in handle if line.strip()]
+        except OSError:
+            return 1
+
+        if len(non_empty_lines) <= 1:
+            return 1
+
+        return len(non_empty_lines)
+
+    return 1
+
+
+def get_results_tsv_path() -> str:
+    """Resolve the preferred results.tsv location for the current workspace."""
+    for candidate in RESULTS_TSV_CANDIDATES:
+        if os.path.exists(candidate):
+            return candidate
+
+    return RESULTS_TSV_CANDIDATES[0]
+
+
+def append_results_tsv(
+    avg_metrics: dict,
+    baseline_sharpe: float,
+) -> None:
+    """Ensure the Sprint 1 results.tsv header exists and append the latest run."""
+    results_path = get_results_tsv_path()
+    parent_dir = os.path.dirname(results_path)
+    if parent_dir:
+        os.makedirs(parent_dir, exist_ok=True)
+
+    header = (
+        "commit\tscore\tnaive_sharpe\tdeflated_sr\tsortino\tcalmar\tdrawdown\tmax_dd_days\t"
+        "trades\twin_rate\tprofit_factor\tavg_win\tavg_loss\tbaseline_sharpe\tnw_bias\tstatus\t"
+        "description"
+    )
+
+    if not os.path.exists(results_path) or os.path.getsize(results_path) == 0:
+        with open(results_path, "w") as handle:
+            handle.write(f"{header}\n")
+
+    row = [
+        os.environ.get("RESULTS_COMMIT", "working"),
+        f"{avg_metrics['sharpe']:.6f}",
+        f"{avg_metrics['naive_sharpe']:.6f}",
+        f"{avg_metrics['deflated_sr']:.6f}",
+        f"{avg_metrics['sortino']:.6f}",
+        f"{avg_metrics['calmar']:.6f}",
+        f"{avg_metrics['drawdown']:.6f}",
+        str(avg_metrics["max_dd_days"]),
+        str(avg_metrics["trades"]),
+        f"{avg_metrics['win_rate']:.6f}",
+        f"{avg_metrics['profit_factor']:.6f}",
+        f"{avg_metrics['avg_win']:.6f}",
+        f"{avg_metrics['avg_loss']:.6f}",
+        f"{baseline_sharpe:.6f}",
+        f"{avg_metrics['nw_sharpe_bias']:.6f}",
+        "pending",
+        "",
+    ]
+
+    with open(results_path, "a") as handle:
+        handle.write("\t".join(row) + "\n")
 
 
 def find_strategy_class(sandbox_locals: dict) -> type | None:
@@ -26,10 +112,9 @@ def find_strategy_class(sandbox_locals: dict) -> type | None:
 def calculate_metrics(combined_returns: pd.Series, trades: pd.Series) -> dict:
     """Calculate 10 performance metrics from combined returns and trade signals."""
     mean_ret = combined_returns.mean()
-    std_ret = combined_returns.std()
 
-    # Sharpe
-    sharpe = (mean_ret / std_ret) * np.sqrt(252) if std_ret != 0 else 0.0
+    naive_sharpe = calculate_naive_sharpe(combined_returns)
+    sharpe = newey_west_sharpe(combined_returns)
 
     # Sortino — downside deviation only
     downside = combined_returns[combined_returns < 0]
@@ -81,6 +166,8 @@ def calculate_metrics(combined_returns: pd.Series, trades: pd.Series) -> dict:
 
     return {
         "sharpe": sharpe,
+        "naive_sharpe": naive_sharpe,
+        "nw_sharpe_bias": naive_sharpe - sharpe,
         "sortino": sortino,
         "calmar": calmar,
         "drawdown": max_drawdown,
@@ -102,8 +189,7 @@ def calculate_baseline_sharpe(data: dict) -> float:
     if not all_returns:
         return 0.0
     combined = pd.concat(all_returns).dropna()
-    std = combined.std()
-    return float((combined.mean() / std) * np.sqrt(252)) if std != 0 else 0.0
+    return calculate_naive_sharpe(combined)
 
 
 def run_per_symbol_analysis(strategy_instance, data: dict, start_idx: int, end_idx: int) -> dict:
@@ -134,8 +220,7 @@ def run_per_symbol_analysis(strategy_instance, data: dict, start_idx: int, end_i
         net_returns = daily_returns - costs
 
         # Metrics
-        std = net_returns.std()
-        sharpe = float((net_returns.mean() / std) * np.sqrt(252)) if std != 0 else 0.0
+        sharpe = newey_west_sharpe(net_returns)
 
         downside = net_returns[net_returns < 0]
         downside_std = downside.std() if len(downside) > 0 else 0.0
@@ -281,11 +366,7 @@ def run_backtest(strategy_instance, data, start_idx, end_idx):
         
     combined_returns = pd.concat(total_returns, axis=1).mean(axis=1)
     
-    # Sharpe Ratio (Annualized)
-    if combined_returns.std() == 0:
-        sharpe = 0.0
-    else:
-        sharpe = (combined_returns.mean() / combined_returns.std()) * np.sqrt(252)
+    sharpe = newey_west_sharpe(combined_returns)
     
     # Max Drawdown
     cum_returns = (1 + combined_returns).cumprod()
@@ -365,6 +446,7 @@ def walk_forward_validation():
     # Walk-forward: 5 windows
     window_size = min_len // 5
     all_metrics = []
+    n_trials = count_experiment_trials()
 
     for i in range(5):
         train_end = int((i + 1) * window_size * 0.7)
@@ -398,6 +480,7 @@ def walk_forward_validation():
         if window_returns:
             combined = pd.concat(window_returns, axis=1).mean(axis=1)
             metrics = calculate_metrics(combined, window_trades)
+            metrics["deflated_sr"] = deflated_sharpe_ratio(combined, n_trials)
             all_metrics.append(metrics)
 
     if not all_metrics:
@@ -416,16 +499,19 @@ def walk_forward_validation():
     last_test_start = int(5 * window_size * 0.7)
     last_test_end = 5 * window_size
     per_symbol = run_per_symbol_analysis(strategy_instance, data, last_test_start, last_test_end)
+    append_results_tsv(avg_metrics, baseline_sharpe)
 
     # Output YAML-like format
     print("---")
     print(f"SCORE: {avg_metrics['sharpe']:.4f}")
+    print(f"NAIVE_SHARPE: {avg_metrics['naive_sharpe']:.4f}")
+    print(f"NW_SHARPE_BIAS: {avg_metrics['nw_sharpe_bias']:.4f}")
+    print(f"DEFLATED_SR: {avg_metrics['deflated_sr']:.4f}")
     print(f"SORTINO: {avg_metrics['sortino']:.4f}")
     print(f"CALMAR: {avg_metrics['calmar']:.4f}")
     print(f"DRAWDOWN: {avg_metrics['drawdown']:.4f}")
     print(f"MAX_DD_DAYS: {avg_metrics['max_dd_days']}")
     print(f"TRADES: {avg_metrics['trades']}")
-    print(f"P_VALUE: 0.0000")
     print(f"WIN_RATE: {avg_metrics['win_rate']:.4f}")
     print(f"PROFIT_FACTOR: {avg_metrics['profit_factor']:.4f}")
     print(f"AVG_WIN: {avg_metrics['avg_win']:.4f}")

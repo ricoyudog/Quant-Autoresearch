@@ -14,7 +14,7 @@ To set up a new experiment:
 4. **Verify data exists**: Check `data/cache/` has Parquet files.
    If not, tell the human to run `uv run python cli.py setup_data`.
 5. **Initialize files**:
-   - Create `results.tsv` with header row.
+   - Create `experiments/results.tsv` with header row if needed.
    - Create `experiments/notes/` directory.
 6. **Run baseline** — always run the unmodified strategy first.
 7. **Confirm and go**.
@@ -23,7 +23,7 @@ To set up a new experiment:
 
 Each experiment:
 ```bash
-uv run python src/core/backtester.py > run.log 2>&1
+uv run python src/core/backtester.py > experiments/run.log 2>&1
 ```
 
 **What you CAN do:**
@@ -46,13 +46,15 @@ Get the highest **SCORE** (Average Walk-Forward OOS Sharpe Ratio).
 
 ```
 ---
-SCORE: 0.5432
+SCORE: 0.4521
+NAIVE_SHARPE: 0.6832
+NW_SHARPE_BIAS: 0.2311
+DEFLATED_SR: 0.9200
 SORTINO: 0.8100
 CALMAR: 1.2300
 DRAWDOWN: -0.1200
 MAX_DD_DAYS: 45
 TRADES: 120
-P_VALUE: 0.0300
 WIN_RATE: 0.5500
 PROFIT_FACTOR: 1.8500
 AVG_WIN: 0.0120
@@ -66,20 +68,34 @@ PER_SYMBOL:
 
 Extract:
 ```bash
-grep "^SCORE:\|^DRAWDOWN:\|^P_VALUE:\|^BASELINE_SHARPE:\|^PROFIT_FACTOR:" run.log
+grep "^SCORE:\|^NAIVE_SHARPE:\|^NW_SHARPE_BIAS:\|^DEFLATED_SR:\|^BASELINE_SHARPE:" experiments/run.log
 ```
 
 ## Decision rules
 
 **KEEP if:**
 - SCORE > previous best AND
-- P_VALUE <= 0.05 AND
 - SCORE > BASELINE_SHARPE
 
 **DISCARD if:**
 - SCORE <= previous best OR
-- P_VALUE > 0.05 (not statistically significant) OR
 - SCORE <= BASELINE_SHARPE (can't beat Buy&Hold)
+
+**Advisories:**
+- If `DEFLATED_SR < 0.5`, treat the result as not robust yet and run deeper validation before trusting it.
+- If `NW_SHARPE_BIAS > 0.3`, serial correlation is materially inflating the naive estimate.
+
+## Overfit Defense Guidance
+
+- `SCORE` is now the Newey-West adjusted Sharpe Ratio, not the naive Sharpe.
+- `NAIVE_SHARPE` is retained only as a comparison point.
+- `NW_SHARPE_BIAS = NAIVE_SHARPE - SCORE`; larger values indicate more serial-correlation inflation.
+- Use advanced validation when a change improves `SCORE` by more than `0.05`, after parameter changes, and at least every `5-10` experiments.
+- Red flags:
+  - `NW_SHARPE_BIAS > 0.3`
+  - `DEFLATED_SR < 0.5`
+  - future CPCV percent-positive below `50%`
+  - future stability score below `0.5`
 
 **Simplicity criterion**:
 All else being equal, simpler is better.
@@ -89,9 +105,9 @@ All else being equal, simpler is better.
 
 ## Logging results
 
-Log to `results.tsv` (tab-separated, do NOT commit):
+Log to `experiments/results.tsv` (tab-separated, do NOT commit):
 ```
-commit  sharpe  sortino  calmar  drawdown  max_dd_days  trades  win_rate  profit_factor  p_value  baseline_sharpe  status  description
+commit  score  naive_sharpe  deflated_sr  sortino  calmar  drawdown  max_dd_days  trades  win_rate  profit_factor  avg_win  avg_loss  baseline_sharpe  nw_bias  status  description
 ```
 
 ## Obsidian experiment notes
@@ -130,7 +146,8 @@ false signals during high-volatility periods while maintaining trend capture.
 | Sortino | 0.9800 | +0.1700 |
 | Profit Factor | 2.3000 | +0.4500 |
 | Win Rate | 60% | +5% |
-| P-Value | 0.008 | Significant |
+| Deflated SR | 0.92 | Robust after multiple-testing penalty |
+| NW Bias | 0.12 | Mild serial-correlation inflation |
 
 ## Per-Symbol
 - SPY: 0.62 (strong in low-vol regime)
@@ -153,14 +170,14 @@ false signals during high-volatility periods while maintaining trend capture.
 
 LOOP FOREVER:
 1. Check git state: current branch/commit
-2. Read `results.tsv` for history
+2. Read `experiments/results.tsv` for history
 3. Propose hypothesis -> modify `src/strategies/active_strategy.py`
 4. `git add src/strategies/active_strategy.py && git commit -m "<description>"`
-5. `uv run python src/core/backtester.py > run.log 2>&1`
-6. `grep "^SCORE:\|^P-VALUE:\|^BASELINE_SHARPE:" run.log`
-7. If grep empty -> crash. `tail -n 50 run.log`. Fix or skip.
-8. Check hard constraints (p_value, baseline_sharpe)
-9. Record in results.tsv
+5. `uv run python src/core/backtester.py > experiments/run.log 2>&1`
+6. `grep "^SCORE:\|^DEFLATED_SR:\|^NW_SHARPE_BIAS:\|^BASELINE_SHARPE:" experiments/run.log`
+7. If grep empty -> crash. `tail -n 50 experiments/run.log`. Fix or skip.
+8. Check hard constraints (`SCORE`, `BASELINE_SHARPE`) and advisories (`DEFLATED_SR`, `NW_SHARPE_BIAS`)
+9. Record in `experiments/results.tsv`
 10. Write Obsidian note
 11. If KEEP -> keep commit, advance branch
 12. If DISCARD -> `git reset --hard HEAD~1`
@@ -174,7 +191,7 @@ Pace yourself for meaningful experiments, not random changes.
 
 **Stuck?**
 - Re-read strategy code for new angles
-- Read results.tsv for patterns
+- Read `experiments/results.tsv` for patterns
 - Try combining previous near-misses
 - Try more radical architectural changes
 - Review your Obsidian notes for forgotten ideas

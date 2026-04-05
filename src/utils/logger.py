@@ -14,7 +14,12 @@ def setup_logging(name="quant_autoresearch", log_file="experiments/logs/run.log"
         console_formatter = logging.Formatter('%(levelname)s: %(message)s')
         
         # File handler (10MB per file, max 5 backups)
-        file_handler = RotatingFileHandler(log_file, maxBytes=10*1024*1024, backupCount=5)
+        resolved_log_file = os.path.abspath(log_file)
+        log_dir = os.path.dirname(resolved_log_file)
+        if log_dir:
+            os.makedirs(log_dir, exist_ok=True)
+
+        file_handler = RotatingFileHandler(resolved_log_file, maxBytes=10*1024*1024, backupCount=5)
         file_handler.setFormatter(file_formatter)
         logger.addHandler(file_handler)
         
