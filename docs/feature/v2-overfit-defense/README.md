@@ -16,7 +16,7 @@ Phase 1 (issue #8) must be complete: backtester upgrades (dynamic class loading,
 
 | Issue | Scope | Status |
 | --- | --- | --- |
-| #12 | Umbrella: Session 3 Overfit Defense | in progress |
+| #12 | Umbrella: Session 3 Overfit Defense | review |
 | Sprint 1 | Newey-West Sharpe + Deflated SR + remove Monte Carlo | complete |
 | Sprint 2 | CPCV CLI + Regime check + Param stability | complete |
 
@@ -37,7 +37,7 @@ Sprint 2 depends on Sprint 1 (Newey-West Sharpe is used by regime analysis).
 ## Sprint Docs
 
 - [sprint1/sprint1-backend.md](./sprint1/sprint1-backend.md) — Sprint 1 closeout complete; ready to proceed to Sprint 2
-- [sprint2/sprint2-backend.md](./sprint2/sprint2-backend.md) — Sprint 2 complete; ready for commit/review
+- [sprint2/sprint2-backend.md](./sprint2/sprint2-backend.md) — Sprint 2 complete; verification synced and ready for review
 
 ## Governing Specs
 

@@ -3,7 +3,7 @@
 > Feature: `v2-overfit-defense`
 > Role: Backend
 > Derived from: #12 (Umbrella: Session 3 Overfit Defense) — Layer 2 advanced validation
-> Last Updated: 2026-04-05 (Sprint 2 implementation complete; commit pending)
+> Last Updated: 2026-04-05 (Sprint 2 implementation and verification complete; ready for review)
 
 ## 0) Governing Specs
 
@@ -36,7 +36,7 @@ Build the Layer 2 advanced validation tools as CLI commands: CPCV combinatorial 
 ## 3) Step-by-Step Plan
 
 ### Step 1 — Verify Sprint 1 complete
-- [x] `pytest tests/unit/test_newey_west.py tests/unit/test_deflated_sr.py tests/unit/test_backtester_overfit.py -v`
+- [x] `uv run pytest tests/unit/test_newey_west.py tests/unit/test_deflated_sr.py tests/unit/test_backtester_overfit.py -v`
 - [x] Verify `src/validation/newey_west.py` and `src/validation/deflated_sr.py` exist
 - [x] Verify backtester output includes SCORE (NW), NAIVE_SHARPE, DEFLATED_SR, NW_SHARPE_BIAS
 - [x] Verify Monte Carlo removed from backtester
@@ -95,7 +95,7 @@ Build the Layer 2 advanced validation tools as CLI commands: CPCV combinatorial 
   - `test_cpcv_output_format`: output dict has required keys
   - `test_cpcv_pct_positive_range`: pct_positive in [0, 1]
   - `test_cpcv_with_constant_strategy`: zero-signal strategy, Sharpe near 0
-- [x] Verify: `pytest tests/unit/test_cpcv.py -v`
+- [x] Verify: `uv run pytest tests/unit/test_cpcv.py -v`
 
 ### Step 7 — Write regime tests (CLI-06)
 - [x] Create `tests/unit/test_regime.py`:
@@ -106,7 +106,7 @@ Build the Layer 2 advanced validation tools as CLI commands: CPCV combinatorial 
   - `test_regime_all_bull`: only bull regimes in bull market data
   - `test_regime_empty_strategy_returns`: graceful handling
   - `test_regime_output_keys`: correct dict keys
-- [x] Verify: `pytest tests/unit/test_regime.py -v`
+- [x] Verify: `uv run pytest tests/unit/test_regime.py -v`
 
 ### Step 8 — Write parameter stability tests (CLI-07)
 - [x] Create `tests/unit/test_stability.py`:
@@ -118,7 +118,7 @@ Build the Layer 2 advanced validation tools as CLI commands: CPCV combinatorial 
   - `test_stability_high_stability`: flat Sharpe → near 1.0
   - `test_stability_low_stability`: sharp peak → near 0.0
   - `test_overall_stability_is_mean`: overall = mean of individual scores
-- [x] Verify: `pytest tests/unit/test_stability.py -v`
+- [x] Verify: `uv run pytest tests/unit/test_stability.py -v`
 
 ### Step 9 — Write CLI integration tests (CLI-08)
 - [x] Create `tests/integration/test_validate_cli.py`:
@@ -129,7 +129,7 @@ Build the Layer 2 advanced validation tools as CLI commands: CPCV combinatorial 
   - `test_cli_validate_cpcv_custom_groups`: `--groups 6 --test-groups 1` works
   - `test_cli_validate_stability_custom_perturbation`: `--perturbation 0.3 --steps 7` works
   - `test_cli_validate_no_data`: missing data → informative error
-- [x] Verify: `pytest tests/integration/test_validate_cli.py -v`
+- [x] Verify: `uv run pytest tests/integration/test_validate_cli.py -v`
 
 ### Step 10 — Write knowledge base notes on overfit defense (CLI-09)
 - [x] Create overfit defense knowledge base document covering:
@@ -141,7 +141,7 @@ Build the Layer 2 advanced validation tools as CLI commands: CPCV combinatorial 
   - Academic references: Lopez de Prado (2018), Bailey & Lopez de Prado (2014), Harvey et al. (2016)
 
 ### Step 11 — Sprint 2 full integration test (CLI-10)
-- [x] Run full test suite: `pytest --tb=short -v`
+- [x] Run full test suite: `uv run pytest --tb=short -v`
 - [x] Manual smoke test each CLI command:
   ```bash
   uv run python cli.py validate --method cpcv --groups 6 --test-groups 1
@@ -160,11 +160,11 @@ Build the Layer 2 advanced validation tools as CLI commands: CPCV combinatorial 
 
 ## 4) Test Plan
 
-- [ ] After Step 6: `pytest tests/unit/test_cpcv.py -v`
-- [ ] After Step 7: `pytest tests/unit/test_regime.py -v`
-- [ ] After Step 8: `pytest tests/unit/test_stability.py -v`
-- [ ] After Step 9: `pytest tests/integration/test_validate_cli.py -v`
-- [ ] After Step 11: `pytest --tb=short -v` — full suite green
+- [x] After Step 6: `uv run pytest tests/unit/test_cpcv.py -v`
+- [x] After Step 7: `uv run pytest tests/unit/test_regime.py -v`
+- [x] After Step 8: `uv run pytest tests/unit/test_stability.py -v`
+- [x] After Step 9: `uv run pytest tests/integration/test_validate_cli.py -v`
+- [x] After Step 11: `uv run pytest --tb=short -v` — full suite green
 
 ## 5) Verification Commands
 
@@ -189,7 +189,7 @@ uv run python cli.py validate --method regime
 uv run python cli.py validate --method stability --perturbation 0.2 --steps 5
 
 # Full test suite
-pytest --tb=short -v
+uv run pytest --tb=short -v
 ```
 
 ## 6) Implementation Update Space
@@ -201,12 +201,18 @@ pytest --tb=short -v
 - Added `src/validation/stability.py` with numeric parameter extraction, perturbation sweeps, and stability verdicts.
 - Added `validate` command to `cli.py` for `cpcv`, `regime`, and `stability`, plus reusable strategy loading and combined-return helpers.
 - Added Sprint 2 test coverage in `tests/unit/test_cpcv.py`, `tests/unit/test_regime.py`, `tests/unit/test_stability.py`, `tests/integration/test_validate_cli.py`, and CLI registration coverage in `tests/unit/test_cli.py`.
+- Hardened `run_cpcv()` to reject none-only / empty-only data configs with a clear error and strengthened CPCV unit coverage for summary metrics and purge-sensitive behavior.
 - Added `docs/feature/v2-overfit-defense/overfit-defense-knowledge-base.md` and linked it from the feature README.
 
 ### Command Results
 
-- `uv run pytest tests/unit/test_cpcv.py tests/unit/test_regime.py tests/unit/test_stability.py tests/integration/test_validate_cli.py -v` -> `31 passed in 0.65s`
-- `uv run pytest --tb=short -q` -> `148 passed in 1.36s`
+- `uv run pytest tests/unit/test_cpcv.py -v` -> `11 passed in 0.37s`
+- `uv run pytest tests/unit/test_regime.py -v` -> `7 passed in 0.36s`
+- `uv run pytest tests/unit/test_stability.py -v` -> `9 passed in 0.35s`
+- `uv run pytest tests/integration/test_validate_cli.py -v` -> `7 passed in 0.74s`
+- `uv run pytest tests/unit/test_cpcv.py tests/unit/test_regime.py tests/unit/test_stability.py tests/integration/test_validate_cli.py -v` -> `34 passed in 0.66s`
+- `uv run pytest --tb=short -v` -> `150 passed in 1.35s`
+- `uv run pytest --tb=short -q` -> `150 passed in 1.34s`
 - `CACHE_DIR=/tmp/quant-smoke-cache uv run python cli.py validate --method cpcv --groups 6 --test-groups 1` -> exited `0`, printed `VERDICT: STRONG`
 - `CACHE_DIR=/tmp/quant-smoke-cache uv run python cli.py validate --method regime` -> exited `0`, printed `VERDICT: CONCENTRATED`
 - `CACHE_DIR=/tmp/quant-smoke-cache uv run python cli.py validate --method stability --perturbation 0.2 --steps 5` -> exited `0`, printed `VERDICT: GOOD`
@@ -214,10 +220,8 @@ pytest --tb=short -v
 ### Blockers / Deviations
 
 - The repo does not currently ship seeded `data/cache/` data in this worktree, so manual CLI smoke verification used a temporary synthetic cache at `/tmp/quant-smoke-cache`.
-- The umbrella issue body on GitHub still reports Sprint 1 / Sprint 2 status as pending; local sprint docs now reflect the implemented state and should be synced during closeout.
 - An untracked root-level `strategy.py` file was present in the worktree during implementation and was left untouched.
 
 ### Follow-ups
 
-- Step 12 commit is still pending in this worktree.
 - After merge: update CLAUDE.md to reflect overfit defense architecture

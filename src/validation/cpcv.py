@@ -140,7 +140,11 @@ def run_cpcv(
     if not data_config:
         raise ValueError("data_config must not be empty")
 
-    min_length = min(len(df) for df in data_config.values() if df is not None)
+    usable_frames = [df for df in data_config.values() if df is not None and not df.empty]
+    if not usable_frames:
+        raise ValueError("data_config must contain at least one dataframe")
+
+    min_length = min(len(df) for df in usable_frames)
     group_slices = build_group_slices(min_length, n_groups)
     path_sharpes = []
 

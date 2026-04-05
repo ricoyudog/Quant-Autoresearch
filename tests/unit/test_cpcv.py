@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from validation.cpcv import (
     build_group_slices,
@@ -115,6 +116,18 @@ def test_cpcv_output_format():
     assert set(result.keys()) == expected_keys
 
 
+def test_cpcv_summary_metrics_match_distribution():
+    """Summary metrics should be derived from the returned Sharpe distribution."""
+    result = run_cpcv(ZeroSignalStrategy, make_validation_data(), n_groups=6, n_test=1)
+    sharpes = np.array(result["sharpe_distribution"], dtype=float)
+
+    assert len(sharpes) == 6
+    assert result["mean_sharpe"] == pytest.approx(float(sharpes.mean()))
+    assert result["std_sharpe"] == pytest.approx(float(sharpes.std()))
+    assert result["worst_sharpe"] == pytest.approx(float(sharpes.min()))
+    assert result["best_sharpe"] == pytest.approx(float(sharpes.max()))
+
+
 def test_cpcv_pct_positive_range():
     """Positive-path share should always be a probability."""
     result = run_cpcv(ZeroSignalStrategy, make_validation_data(), n_groups=6, n_test=1)
@@ -138,4 +151,15 @@ def test_cpcv_runner_honors_purging():
     unpurged = run_cpcv(BoundarySignalStrategy, data, n_groups=3, n_test=1, purge_bars=0)
     purged = run_cpcv(BoundarySignalStrategy, data, n_groups=3, n_test=1, purge_bars=1)
 
-    assert purged["sharpe_distribution"] != unpurged["sharpe_distribution"]
+    assert unpurged["pct_positive"] == pytest.approx(1 / 3)
+    assert unpurged["best_sharpe"] > 50
+    assert purged["sharpe_distribution"] == [0.0, 0.0, 0.0]
+    assert purged["mean_sharpe"] == 0.0
+    assert purged["std_sharpe"] == 0.0
+    assert purged["pct_positive"] == 0.0
+
+
+def test_cpcv_rejects_none_only_data_config():
+    """CPCV should reject configs that contain no usable dataframes."""
+    with pytest.raises(ValueError, match="data_config must contain at least one dataframe"):
+        run_cpcv(ZeroSignalStrategy, {"SPY": None}, n_groups=3, n_test=1)
