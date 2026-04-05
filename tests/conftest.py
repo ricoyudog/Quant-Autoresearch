@@ -48,3 +48,91 @@ class TradingStrategy:
 """
     strategy_path.write_text(content)
     return strategy_path
+
+
+@pytest.fixture
+def test_duckdb_path(tmp_path):
+    """Temporary DuckDB path for minute-pipeline integration tests."""
+    return tmp_path / "daily_cache.duckdb"
+
+
+@pytest.fixture
+def sample_daily_data():
+    """Sample daily-bar frame for the DuckDB-backed minute pipeline."""
+    sessions = pd.bdate_range("2025-11-03", periods=12)
+    rows = []
+    volumes = {"AAA": 5_000_000.0, "BBB": 3_000_000.0, "CCC": 500_000.0}
+    closes = {"AAA": 100.0, "BBB": 60.0, "CCC": 20.0}
+
+    for session in sessions:
+        for ticker in ["AAA", "BBB", "CCC"]:
+            close = closes[ticker]
+            rows.append(
+                {
+                    "ticker": ticker,
+                    "session_date": session,
+                    "open": close - 0.5,
+                    "high": close + 0.8,
+                    "low": close - 1.0,
+                    "close": close,
+                    "volume": volumes[ticker],
+                    "transactions": 100,
+                    "vwap": close - 0.1,
+                }
+            )
+            closes[ticker] = close + 0.5
+
+    return pd.DataFrame(rows)
+
+
+@pytest.fixture
+def test_duckdb(test_duckdb_path, sample_daily_data, monkeypatch):
+    """Seed a temp DuckDB cache and point the connector runtime at it."""
+    import duckdb
+
+    from data import duckdb_connector
+
+    connection = duckdb.connect(str(test_duckdb_path))
+    connection.execute(duckdb_connector.DAILY_BARS_TABLE_SQL)
+    connection.register("sample_daily_data_view", sample_daily_data)
+    connection.execute(
+        """
+        INSERT INTO daily_bars
+        SELECT
+            ticker,
+            session_date,
+            open,
+            high,
+            low,
+            close,
+            volume,
+            transactions,
+            vwap
+        FROM sample_daily_data_view
+        """
+    )
+    connection.close()
+
+    monkeypatch.setattr(duckdb_connector, "DEFAULT_CACHE_PATH", test_duckdb_path)
+    return test_duckdb_path
+
+
+@pytest.fixture
+def minute_strategy_file(tmp_path):
+    """Minute-mode strategy file that passes the restricted runtime contract."""
+    strategy_path = tmp_path / "minute_strategy.py"
+    strategy_path.write_text(
+        """
+class TradingStrategy:
+    def select_universe(self, daily_data):
+        return ["AAA", "BBB"]
+
+    def generate_signals(self, data):
+        signals = {}
+        for ticker, frame in data.items():
+            momentum = frame["close"].diff().fillna(0.0)
+            signals[ticker] = (momentum > 0).astype(float)
+        return signals
+""".strip()
+    )
+    return strategy_path

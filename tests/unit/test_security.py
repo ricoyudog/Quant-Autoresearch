@@ -1,11 +1,33 @@
+from pathlib import Path
+
 import pytest
-import os
-import ast
+
 from core.backtester import security_check
+
+
+@pytest.fixture(autouse=True)
+def isolated_strategy_cwd(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
 
 def create_strategy_file(content):
     with open("strategy.py", "w") as f:
         f.write(content)
+
+def test_security_tests_do_not_write_strategy_to_repo_root():
+    repo_root_strategy = Path(__file__).resolve().parents[2] / "strategy.py"
+    repo_root_strategy.unlink(missing_ok=True)
+    try:
+        create_strategy_file(
+            """
+class TradingStrategy:
+    def generate_signals(self, data):
+        return None
+"""
+        )
+        assert not repo_root_strategy.exists()
+    finally:
+        repo_root_strategy.unlink(missing_ok=True)
 
 def test_security_check_safe_strategy():
     safe_code = """

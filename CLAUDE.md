@@ -1,150 +1,121 @@
 # CLAUDE.md
 
-This file gives coding-agent guidance for working in this repository.
+This file provides repository guidance for Claude Code and similar coding agents.
 
 ## Project Overview
 
-Quant Autoresearch is a V2 strategy-research workflow centered on:
+Quant Autoresearch is an autonomous quantitative strategy discovery framework. The current V2 data
+pipeline is local-first: DuckDB stores a daily-bar cache, while minute bars are queried on demand
+from the local `massive-minute-aggs` dataset through the `minute-aggs` CLI.
 
-- `program.md` as the experiment instruction contract
-- `src/strategies/active_strategy.py` as the strategy under iteration
-- `src/core/backtester.py` as the fixed evaluation harness
-- `src/data/connector.py` as the market-data ingestion and cache interface
-- `cli.py` as the supported command entrypoint
+## Commands
 
-Treat the repository as execution-first. Run experiments through the backtester,
-keep the strategy compatible with the sandbox, and keep docs aligned with the
-current CLI and output surfaces.
-
-## Supported Commands
-
-### Setup and Data
+### Install And Test
 
 ```bash
 uv sync
 uv sync --all-extras --dev
-uv run python cli.py --help
+
+pytest
+pytest tests/unit/
+pytest tests/integration/test_minute_backtest.py -v
+pytest tests/security/
+pytest tests/regression/
+```
+
+### V2 CLI Runtime
+
+```bash
+# Build the DuckDB daily cache
 uv run python cli.py setup-data
-uv run python cli.py fetch SPY --start 2020-01-01
+
+# Refresh the cache incrementally
+uv run python cli.py update-data
+
+# Query minute bars
+uv run python cli.py fetch AAPL --start 2025-11-03 --end 2025-11-05
+
+# Run the minute-mode walk-forward backtest
+uv run python cli.py backtest --start 2024-01-01 --end 2024-12-31
+uv run python cli.py backtest --strategy src/strategies/active_strategy.py --universe-size 20
 ```
 
-### Backtesting
+Live Typer command names are hyphenated: `setup-data` and `update-data`.
 
-```bash
-uv run python cli.py backtest
-uv run python cli.py backtest --strategy src/strategies/active_strategy.py
-uv run python src/core/backtester.py > run.log 2>&1
-```
+## Architecture
 
-### Testing
+### 6-Phase OPENDEV Loop
 
-```bash
-uv run pytest
-uv run pytest --tb=short -q
-uv run pytest tests/unit/test_cli.py -v
-uv run pytest tests/unit/test_backtester_v2.py -v
-uv run pytest tests/unit/test_strategy_interface.py -v
-uv run pytest tests/security/test_adversarial.py -v
-```
+The research engine still follows the existing 6-phase OPENDEV loop:
 
-The current suite also includes coverage for data, playbook memory, research,
-retry logic, telemetry, tracker metrics, determinism, and integration flows
-under `tests/`.
+1. Context management
+2. Thinking
+3. Action selection
+4. Doom-loop detection
+5. Execution
+6. Observation
 
-## Current Architecture Surfaces
+That engine is separate from the Sprint 3 CLI/data-pipeline work in this branch.
 
-### `program.md`
+### V2 Data Architecture
 
-Defines the operating contract for autonomous experimentation, including:
+The current backtesting path is:
 
-- setup sequence
-- keep/discard rules
-- output schema expectations
-- notes workflow under `experiments/notes/`
+1. Load daily bars from DuckDB via `src/data/duckdb_connector.py`
+2. Run `select_universe(daily_data)` on the full daily frame
+3. Build 5 walk-forward windows on trading-day boundaries
+4. Query minute bars per window through the `minute-aggs` CLI
+5. Run `generate_signals(minute_data)` in the RestrictedPython sandbox
+6. Apply the enforced 1-bar lag and compute portfolio/per-symbol metrics
 
-When code and `program.md` disagree, align changes to the current repository
-behavior and keep the contract internally consistent.
+## Key Components
 
-### `src/core/backtester.py`
+- `src/core/engine.py` - autonomous research loop orchestrator
+- `src/core/backtester.py` - minute-mode walk-forward validation, sandbox loading, metrics output
+- `src/core/research.py` - literature and web research helpers
+- `src/data/duckdb_connector.py` - DuckDB cache build/load helpers, trading-day lookup, minute-query bridge, incremental refresh
+- `src/strategies/active_strategy.py` - example dual-method strategy surface
+- `src/memory/playbook.py` - SQLite-based episodic memory
+- `src/models/router.py` - multi-provider model routing
+- `program.md` - current repo/runtime constitution for the V2 data pipeline
 
-Backtester responsibilities:
+## Critical Patterns
 
-- load cached data
-- run strategy code with RestrictedPython protections
-- enforce AST checks, including look-ahead bias blocking
-- perform walk-forward validation
-- print the score and risk metrics used by decision rules
-
-Treat this file as the evaluation truth surface.
-
-### `src/strategies/active_strategy.py`
-
-Strategy requirements:
-
-- define at least one class with `generate_signals(self, data)`
-- return signals compatible with backtester expectations
-- keep logic vectorized with pandas and numpy
-- avoid look-ahead behavior such as negative shifts
-
-The full file is editable in V2 as long as sandbox and interface constraints
-hold.
-
-### `src/data/connector.py`
-
-Data responsibilities:
-
-- fetch equity and crypto data
-- enrich data with required features such as `returns`, `volatility`, and `atr`
-- cache datasets under `data/cache/`
-- load cached datasets for backtesting
-
-Prefer connector interfaces over ad-hoc data-path logic.
-
-### `cli.py`
-
-Supported commands are:
-
-- `setup-data`
-- `fetch`
-- `backtest`
-
-Keep docs and examples aligned with this surface.
-
-### `src/core/research.py`
-
-This module is still present for research helpers and optional web-backed
-context gathering. It is not the primary runtime loop and should not be
-documented as if it replaces the backtester-driven V2 workflow.
+- Strategy contract:
+  - `select_universe(daily_data)` is optional and receives the full daily-bar frame.
+  - `generate_signals(minute_data)` receives `dict[str, pd.DataFrame]` and returns `dict[str, pd.Series]`.
+- Walk-forward runtime:
+  - daily-first universe selection
+  - minute queries scoped to selected tickers and test windows
+  - 5 trading-day-aware windows
+  - enforced 1-bar lag in the backtester, not in the strategy
+- Security:
+  - RestrictedPython sandbox
+  - AST gate blocks forbidden builtins/imports and look-ahead patterns such as `.shift(-1)`
+- CLI surface:
+  - operator-facing commands are `setup-data`, `update-data`, `fetch`, and `backtest`
+  - legacy `run`, `status`, and `report` flows are not part of the V2 CLI contract
 
 ## Environment Variables
 
-Use `.env` for runtime configuration. Common active variables include:
+Common runtime variables:
 
-- `WANDB_API_KEY`, `WANDB_PROJECT`, `WANDB_ENTITY` for telemetry
-- `EXA_API_KEY` or `SERPAPI_KEY` for research-related integrations
-- `CACHE_DIR` to override the cache location for direct backtester runs
-- `STRATEGY_FILE` to override the strategy path when invoking `src/core/backtester.py` directly
+- `MINUTE_AGGS_CLI` - path to the `minute-aggs` executable
+- `MINUTE_AGGS_DATASET_ROOT` - root of the local minute parquet dataset
+- `STRATEGY_FILE` - backtest strategy override
+- `BACKTEST_START_DATE` / `BACKTEST_END_DATE` - optional backtest date bounds
+- `BACKTEST_UNIVERSE_SIZE` - optional ticker cap
 
-Only document variables that are actively used by current code paths.
+Model and telemetry keys from the broader project still apply where those subsystems are in use.
 
-## Engineering Guidelines
+## Data And Cache
 
-- Python target: 3.10+
-- Keep lines under 120 chars and use 4-space indentation
-- Import order: stdlib, third-party, local
-- Add type hints and concise docstrings where meaningful
-- Keep strategy and backtester interfaces stable
-- Prefer small, auditable changes with explicit verification commands
-
-## Data and Output Hygiene
-
-- `data/cache/` holds cached market-data artifacts
-- `results.tsv` and `run.log` are local experiment outputs and should not be
-  committed
-- `experiments/notes/` holds markdown experiment notes and is intended to
-  remain tracked
+- Daily cache path: `data/daily_cache.duckdb`
+- Minute dataset root defaults to the local iCloud path configured in `src/data/duckdb_connector.py`
+- Cache builds and refreshes use temp CSV exports in `/tmp`
+- `update-data` is append-oriented and ignores duplicate primary keys on `(ticker, session_date)`
 
 ## CI
 
-CI runs dependency install and tests via `uv` and `pytest`. Keep command
-examples and verification steps CI-compatible.
+GitHub Actions still run the standard Python/uv/pytest pipeline. For this feature branch, the
+important merge gate is that the DuckDB/minute-pipeline tests and CLI smoke flows stay green.

@@ -4,32 +4,38 @@ import os
 import sys
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
-from RestrictedPython import compile_restricted, safe_builtins
-from RestrictedPython.Guards import safer_getattr
-from RestrictedPython.Eval import default_guarded_getiter, default_guarded_getitem
-
 if __package__ in {None, ""}:
     SRC_DIR = Path(__file__).resolve().parents[1]
     if str(SRC_DIR) not in sys.path:
         sys.path.insert(0, str(SRC_DIR))
 
-from data.connector import DataConnector
+import numpy as np
+import pandas as pd
+from RestrictedPython import compile_restricted, safe_builtins
+from RestrictedPython.Eval import default_guarded_getitem, default_guarded_getiter
+from RestrictedPython.Guards import (
+    guarded_iter_unpack_sequence,
+    guarded_unpack_sequence,
+    safer_getattr,
+)
+
+from data.cache_connector import CacheConnector
+from data.duckdb_connector import (
+    calculate_walk_forward_windows,
+    load_daily_data,
+    query_minute_data,
+)
 
 CACHE_DIR = os.environ.get("CACHE_DIR", "data/cache")
 DEFAULT_STRATEGY_FILE = "src/strategies/active_strategy.py"
 STRATEGY_FILE = DEFAULT_STRATEGY_FILE
 
-FORBIDDEN_BUILTINS = {'exec', 'eval', 'open', 'getattr', 'setattr', 'delattr'}
-FORBIDDEN_MODULES = {'socket', 'requests', 'urllib', 'os', 'sys', 'shutil', 'subprocess'}
+FORBIDDEN_BUILTINS = {"exec", "eval", "open", "getattr", "setattr", "delattr"}
+FORBIDDEN_MODULES = {"socket", "requests", "urllib", "os", "sys", "shutil", "subprocess"}
 
 
-def resolve_strategy_file(file_path: str | None = None) -> str:
-    """Resolve the active strategy path using runtime inputs instead of import-time state."""
-    if file_path:
-        return file_path
-
+def get_strategy_file() -> str:
+    """Resolve the strategy file at call time so CLI env overrides are honored."""
     env_strategy_file = os.environ.get("STRATEGY_FILE")
     if env_strategy_file:
         return env_strategy_file
@@ -41,14 +47,36 @@ def resolve_strategy_file(file_path: str | None = None) -> str:
 
 
 def format_p_value(p_value: float | None) -> str:
-    """Render the p-value field without implying significance when unavailable."""
+    """Render unavailable significance as NA instead of a fake passing value."""
     if p_value is None or pd.isna(p_value):
         return "NA"
     return f"{p_value:.4f}"
 
 
+def get_backtest_runtime_config() -> tuple[str | None, str | None, int | None]:
+    """Read and validate optional CLI overrides for the minute-mode backtest."""
+    start_date = os.environ.get("BACKTEST_START_DATE")
+    end_date = os.environ.get("BACKTEST_END_DATE")
+    if bool(start_date) != bool(end_date):
+        raise ValueError("Provide both BACKTEST_START_DATE and BACKTEST_END_DATE together.")
+
+    universe_raw = os.environ.get("BACKTEST_UNIVERSE_SIZE")
+    if universe_raw is None:
+        return start_date, end_date, None
+
+    try:
+        universe_size = int(universe_raw)
+    except ValueError as exc:
+        raise ValueError("BACKTEST_UNIVERSE_SIZE must be a positive integer.") from exc
+
+    if universe_size <= 0:
+        raise ValueError("BACKTEST_UNIVERSE_SIZE must be a positive integer.")
+
+    return start_date, end_date, universe_size
+
+
 def _is_instantiable_without_args(strategy_class: type) -> bool:
-    """Return True when a strategy class can be instantiated with no arguments."""
+    """Return True when a strategy class can be instantiated with no required args."""
     try:
         signature = inspect.signature(strategy_class.__init__)
     except (TypeError, ValueError):
@@ -64,8 +92,8 @@ def _is_instantiable_without_args(strategy_class: type) -> bool:
     return True
 
 
-def find_strategy_class(sandbox_locals: dict) -> type | None:
-    """Select the most concrete zero-arg strategy class from sandbox locals."""
+def find_strategy_class(sandbox_locals: dict) -> tuple[type | None, bool]:
+    """Find the most concrete zero-arg strategy class and universe support flag."""
     direct_candidates = []
     inherited_candidates = []
 
@@ -82,28 +110,177 @@ def find_strategy_class(sandbox_locals: dict) -> type | None:
         else:
             inherited_candidates.append(obj)
 
+    strategy_class = None
     if direct_candidates:
-        return direct_candidates[-1]
-    if inherited_candidates:
-        return inherited_candidates[-1]
-    return None
+        strategy_class = direct_candidates[-1]
+    elif inherited_candidates:
+        strategy_class = inherited_candidates[-1]
+
+    if strategy_class is None:
+        return None, False
+
+    return strategy_class, hasattr(strategy_class, "select_universe")
 
 
-def extract_trade_returns(returns: pd.Series, positions: pd.Series) -> pd.Series:
-    """Aggregate per-bar returns into closed-trade returns over contiguous positions."""
-    aligned_positions = positions.fillna(0)
-    aligned_returns = returns.reindex(aligned_positions.index).fillna(0.0)
-    active_mask = aligned_positions != 0
+def apply_signal_lag(signals_by_ticker: dict[str, pd.Series]) -> dict[str, pd.Series]:
+    """Apply the enforced one-bar lag independently to each ticker signal series."""
+    lagged_signals = {}
+    for ticker, signals in signals_by_ticker.items():
+        series = signals if isinstance(signals, pd.Series) else pd.Series(signals)
+        lagged_signals[ticker] = series.shift(1).fillna(0)
+    return lagged_signals
 
-    if not active_mask.any():
-        return pd.Series(dtype=float)
 
-    trade_groups = (aligned_positions != aligned_positions.shift(fill_value=0)).cumsum()
-    return aligned_returns[active_mask].groupby(trade_groups[active_mask]).sum().astype(float)
+def default_universe_from_daily_data(daily_data: pd.DataFrame, max_tickers: int = 30) -> list[str]:
+    """Select a safe fallback ticker subset from the full daily frame."""
+    if daily_data is None or daily_data.empty or "ticker" not in daily_data.columns:
+        return []
+
+    ranked = daily_data.dropna(subset=["ticker"]).copy()
+    if ranked.empty:
+        return []
+
+    if "volume" in ranked.columns:
+        ranked = ranked.dropna(subset=["volume"])
+        if not ranked.empty:
+            universe = (
+                ranked.groupby("ticker", as_index=False)["volume"]
+                .mean()
+                .sort_values(["volume", "ticker"], ascending=[False, True], kind="mergesort")
+            )
+            return universe["ticker"].astype(str).head(max_tickers).tolist()
+
+    return ranked["ticker"].astype(str).drop_duplicates().head(max_tickers).tolist()
+
+
+def normalize_universe_selection(selected_tickers, daily_data: pd.DataFrame) -> list[str]:
+    """Sanitize strategy-selected tickers and fall back to a safe ranked subset."""
+    if isinstance(selected_tickers, str):
+        selected_tickers = [selected_tickers]
+
+    if not isinstance(selected_tickers, (list, tuple, set, pd.Index, np.ndarray)):
+        return default_universe_from_daily_data(daily_data)
+
+    normalized = []
+    for ticker in selected_tickers:
+        if pd.isna(ticker):
+            continue
+        value = str(ticker).strip()
+        if value and value not in normalized:
+            normalized.append(value)
+
+    return normalized or default_universe_from_daily_data(daily_data)
+
+
+def prepare_minute_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    """Sort a minute frame and derive returns plus rolling volatility."""
+    if frame is None or frame.empty:
+        return pd.DataFrame(index=getattr(frame, "index", pd.Index([])))
+
+    prepared = frame.copy()
+    sort_columns = [column for column in ["session_date", "window_start_ns"] if column in prepared.columns]
+    if sort_columns:
+        prepared = prepared.sort_values(sort_columns).reset_index(drop=True)
+
+    if "close" not in prepared.columns:
+        return prepared
+
+    close = prepared["close"].astype(float)
+    if "session_date" in prepared.columns:
+        prepared["returns"] = (
+            close.groupby(prepared["session_date"], sort=False).pct_change().fillna(0.0)
+        )
+        prepared["volatility"] = (
+            prepared.groupby("session_date", sort=False)["returns"]
+            .transform(lambda series: series.rolling(window=20, min_periods=1).std())
+            .fillna(0.0)
+        )
+    else:
+        prepared["returns"] = close.pct_change().fillna(0.0)
+        prepared["volatility"] = (
+            prepared["returns"].rolling(window=20, min_periods=1).std().fillna(0.0)
+        )
+    return prepared
+
+
+def coerce_signal_series(signal_values, index: pd.Index) -> pd.Series:
+    """Coerce arbitrary signal output into a float Series aligned to the frame index."""
+    if isinstance(signal_values, pd.Series):
+        series = signal_values.copy()
+        if len(series) == len(index):
+            series.index = index
+        else:
+            series = series.reset_index(drop=True).reindex(range(len(index)), fill_value=0.0)
+            series.index = index
+        return series.fillna(0.0).astype(float)
+
+    series = pd.Series(signal_values).reset_index(drop=True)
+    if len(series) != len(index):
+        series = series.reindex(range(len(index)), fill_value=0.0)
+    series.index = index
+    return series.fillna(0.0).astype(float)
+
+
+def normalize_minute_signals(raw_signals, minute_data: dict[str, pd.DataFrame]) -> dict[str, pd.Series]:
+    """Normalize strategy output to one aligned Series per ticker."""
+    if isinstance(raw_signals, pd.Series) and len(minute_data) == 1:
+        ticker = next(iter(minute_data))
+        raw_signals = {ticker: raw_signals}
+    elif not isinstance(raw_signals, dict):
+        raw_signals = {}
+
+    normalized = {}
+    for ticker, frame in minute_data.items():
+        signal_values = raw_signals.get(ticker, pd.Series(0.0, index=frame.index))
+        normalized[ticker] = coerce_signal_series(signal_values, frame.index)
+    return normalized
+
+
+def validate_window_minute_data(
+    expected_tickers: list[str],
+    minute_data: dict[str, pd.DataFrame],
+) -> dict[str, pd.DataFrame]:
+    """Require complete per-window minute data for the selected universe."""
+    if not minute_data:
+        raise ValueError("no minute data returned")
+
+    missing_tickers = [ticker for ticker in expected_tickers if ticker not in minute_data]
+    if missing_tickers:
+        raise ValueError(f"missing minute data for tickers: {', '.join(missing_tickers)}")
+
+    prepared_minute_data = {}
+    invalid_tickers = []
+    for ticker in expected_tickers:
+        frame = minute_data.get(ticker)
+        if frame is None or frame.empty:
+            invalid_tickers.append(ticker)
+            continue
+
+        prepared = prepare_minute_frame(frame)
+        if prepared.empty or "returns" not in prepared.columns:
+            invalid_tickers.append(ticker)
+            continue
+
+        prepared_minute_data[ticker] = prepared
+
+    if invalid_tickers:
+        raise ValueError(f"incomplete minute frames for tickers: {', '.join(invalid_tickers)}")
+
+    return prepared_minute_data
+
+
+def build_portfolio_activity(position_series: list[pd.Series]) -> tuple[pd.Series, pd.Series]:
+    """Collapse per-symbol positions into gross exposure and summed trade activity."""
+    positions_frame = pd.concat(position_series, axis=1).fillna(0.0)
+    gross_exposure = positions_frame.abs().max(axis=1)
+    trade_activity = positions_frame.diff().abs().fillna(0.0).sum(axis=1)
+    return gross_exposure, trade_activity
 
 
 def calculate_metrics(
-    combined_returns: pd.Series, trades: pd.Series, trade_returns: pd.Series | None = None
+    combined_returns: pd.Series,
+    trades: pd.Series,
+    trade_activity: pd.Series | None = None,
 ) -> dict:
     """Calculate 10 performance metrics from combined returns and trade signals."""
     mean_ret = combined_returns.mean()
@@ -135,12 +312,19 @@ def calculate_metrics(
         dd_durations = in_dd.groupby(dd_groups).sum()
         max_dd_days = int(dd_durations.max()) if len(dd_durations) > 0 else 0
 
-    if trade_returns is None:
-        trade_returns = extract_trade_returns(combined_returns, trades)
+    # Trades count — number of position changes
+    if trade_activity is None:
+        trade_activity = trades.diff().abs()
     else:
-        trade_returns = pd.Series(trade_returns).dropna().astype(float)
+        trade_activity = coerce_signal_series(trade_activity, combined_returns.index)
 
-    total_trades = int(len(trade_returns))
+    trade_changes = trade_activity
+    trade_changes = trade_changes[trade_changes > 0]
+    total_trades = int(trade_changes.sum()) if len(trade_changes) > 0 else 0
+
+    # Trade-level returns — actual returns when a position is active
+    active_mask = trades != 0
+    trade_returns = combined_returns[active_mask]
 
     # Win Rate
     if len(trade_returns) > 0:
@@ -224,8 +408,11 @@ def run_per_symbol_analysis(strategy_instance, data: dict, start_idx: int, end_i
         running_max = cum.cummax()
         dd = ((cum - running_max) / running_max).min()
 
-        trade_rets = extract_trade_returns(net_returns, signals)
-        trade_count = int(len(trade_rets))
+        trade_changes = signals.diff().abs()
+        trade_changes = trade_changes[trade_changes > 0]
+        trade_count = int(trade_changes.sum()) if len(trade_changes) > 0 else 0
+
+        trade_rets = net_returns[signals != 0]
         if len(trade_rets) > 0:
             wins = (trade_rets > 0).sum()
             wr = float(wins / len(trade_rets))
@@ -252,7 +439,7 @@ def security_check(file_path: str = None):
     """
     Performs security analysis on a strategy file using AST to find forbidden patterns.
     """
-    target = resolve_strategy_file(file_path)
+    target = file_path or get_strategy_file()
     if not os.path.exists(target):
         return False, f"Strategy file not found: {target}"
     
@@ -304,7 +491,7 @@ def is_negative_val(node):
     return False
 
 def load_data():
-    connector = DataConnector(CACHE_DIR)
+    connector = CacheConnector(CACHE_DIR)
     return connector.load_all_cached()
 
 def run_backtest(strategy_instance, data, start_idx, end_idx):
@@ -383,16 +570,22 @@ def run_backtest(strategy_instance, data, start_idx, end_idx):
     return sharpe, max_drawdown, total_trades
 
 def walk_forward_validation(strategy_file: str | None = None):
-    target = resolve_strategy_file(strategy_file)
+    try:
+        start_date_override, end_date_override, universe_size_override = get_backtest_runtime_config()
+    except ValueError as exc:
+        print(f"DATA ERROR: {exc}")
+        sys.exit(1)
 
-    is_safe, msg = security_check(target)
+    strategy_file = strategy_file or get_strategy_file()
+
+    is_safe, msg = security_check(strategy_file)
     if not is_safe:
         print(f"SECURITY ERROR: {msg}")
         sys.exit(1)
         
     # Load Strategy via RestrictedPython Sandbox
     try:
-        with open(target, "r") as f:
+        with open(strategy_file, "r") as f:
             strategy_lines = f.readlines()
         
         # Strip import statements for restricted execution
@@ -409,8 +602,13 @@ def walk_forward_validation(strategy_file: str | None = None):
             '_write_': lambda x: x,
             '_getiter_': default_guarded_getiter,
             '_getitem_': default_guarded_getitem,
+            '_iter_unpack_sequence_': guarded_iter_unpack_sequence,
+            '_unpack_sequence_': guarded_unpack_sequence,
             '__name__': 'sandbox',
             '__metaclass__': type,
+            'dict': dict,
+            'list': list,
+            'set': set,
             'pd': pd,
             'np': np,
         }
@@ -422,71 +620,107 @@ def walk_forward_validation(strategy_file: str | None = None):
         sandbox_locals = {}
         exec(byte_code, safe_globals, sandbox_locals)
         
-        strategy_class = find_strategy_class(sandbox_locals)
+        strategy_class, _ = find_strategy_class(sandbox_locals)
         if not strategy_class:
-            print(f"STRATEGY ERROR: No class with generate_signals found in {target}")
+            print("STRATEGY ERROR: No class with generate_signals found in strategy.py")
             sys.exit(1)
             
         strategy_instance = strategy_class()
     except Exception as e:
         print(f"STRATEGY LOAD ERROR (Restricted): {e}")
         sys.exit(1)
-        
-    data = load_data()
-    if not data:
-        print("DATA ERROR: No cached data found.")
+
+    daily_data = load_daily_data(start_date=start_date_override, end_date=end_date_override)
+    if daily_data is None or daily_data.empty:
+        print("DATA ERROR: No daily DuckDB data found.")
         sys.exit(1)
-        
-    # Determine the shortest timeframe to align windows
-    min_len = min([len(df) for df in data.values()])
-    
-    # Walk-forward: 5 windows
-    window_size = min_len // 5
+
+    if "session_date" not in daily_data.columns:
+        print("DATA ERROR: Daily DuckDB data must include session_date.")
+        sys.exit(1)
+
+    daily_dates = pd.to_datetime(daily_data["session_date"])
+    start_date = daily_dates.min().strftime("%Y-%m-%d")
+    end_date = daily_dates.max().strftime("%Y-%m-%d")
+
+    try:
+        windows = calculate_walk_forward_windows(start_date, end_date, n_windows=5)
+    except ValueError as exc:
+        print(f"DATA ERROR: {exc}")
+        sys.exit(1)
+
+    try:
+        selected_tickers = (
+            strategy_instance.select_universe(daily_data)
+            if hasattr(strategy_instance, "select_universe")
+            else None
+        )
+    except Exception:
+        selected_tickers = None
+
+    selected_tickers = normalize_universe_selection(selected_tickers, daily_data)
+    if universe_size_override is not None:
+        selected_tickers = selected_tickers[:universe_size_override]
+    if not selected_tickers:
+        print("DATA ERROR: No tickers available for minute backtest.")
+        sys.exit(1)
+
     all_metrics = []
+    baseline_frames: dict[str, list[pd.DataFrame]] = {}
+    per_symbol_returns: dict[str, list[pd.Series]] = {}
+    per_symbol_signals: dict[str, list[pd.Series]] = {}
 
-    for i in range(5):
-        train_end = int((i + 1) * window_size * 0.7)
-        test_start = train_end
-        test_end = (i + 1) * window_size
+    for window in windows:
+        try:
+            minute_data = query_minute_data(
+                selected_tickers,
+                window["test_start"],
+                window["test_end"],
+            )
+            prepared_minute_data = validate_window_minute_data(selected_tickers, minute_data)
+        except Exception as exc:
+            print(f"DATA ERROR ({window['test_start']}..{window['test_end']}): {exc}")
+            sys.exit(1)
 
-        # Collect combined returns and trades for metrics
+        for ticker, prepared in prepared_minute_data.items():
+            baseline_frames.setdefault(ticker, []).append(prepared)
+
+        try:
+            raw_signals = strategy_instance.generate_signals(prepared_minute_data)
+        except Exception as exc:
+            print(f"WINDOW ERROR ({window['test_start']}..{window['test_end']}): {exc}", file=sys.stderr)
+            sys.exit(1)
+
+        normalized_signals = normalize_minute_signals(raw_signals, prepared_minute_data)
+        lagged_signals = apply_signal_lag(normalized_signals)
+
         window_returns = []
-        window_trade_returns = []
-        for symbol, df in data.items():
-            history_df = df.iloc[:test_end].copy()
-            try:
-                full_signals = strategy_instance.generate_signals(history_df)
-                if not isinstance(full_signals, pd.Series):
-                    full_signals = pd.Series(full_signals, index=history_df.index)
-                full_signals = full_signals.fillna(0)
-                signals = full_signals.shift(1).fillna(0).iloc[test_start:test_end]
-            except Exception:
-                continue
-
-            test_returns = df.iloc[test_start:test_end]["returns"]
-            daily_returns = test_returns * signals
-            trades = signals.diff().abs().fillna(0)
-            vol = df.iloc[test_start:test_end]["volatility"]
-            slippage = vol * 0.1
+        window_positions = []
+        for ticker, frame in prepared_minute_data.items():
+            signals = coerce_signal_series(lagged_signals.get(ticker), frame.index)
+            minute_returns = frame["returns"].fillna(0.0)
+            trades = signals.diff().abs().fillna(0.0)
+            slippage = frame["volatility"].fillna(0.0) * 0.1
             costs = trades * (0.0005 + slippage)
-            net_returns = daily_returns - costs
-            window_returns.append(net_returns)
-            symbol_trade_returns = extract_trade_returns(net_returns, signals)
-            if not symbol_trade_returns.empty:
-                window_trade_returns.append(symbol_trade_returns.reset_index(drop=True))
+            net_returns = (minute_returns * signals) - costs
+
+            window_returns.append(net_returns.rename(ticker))
+            window_positions.append(signals.rename(ticker))
+            per_symbol_returns.setdefault(ticker, []).append(net_returns)
+            per_symbol_signals.setdefault(ticker, []).append(signals)
 
         if window_returns:
             combined = pd.concat(window_returns, axis=1).mean(axis=1)
-            combined_trade_returns = (
-                pd.concat(window_trade_returns, ignore_index=True)
-                if window_trade_returns
-                else pd.Series(dtype=float)
-            )
-            metrics = calculate_metrics(combined, pd.Series(dtype=float), trade_returns=combined_trade_returns)
+            combined_positions, combined_trade_activity = build_portfolio_activity(window_positions)
+            metrics = calculate_metrics(combined, combined_positions, combined_trade_activity)
             all_metrics.append(metrics)
 
     if not all_metrics:
         print("ERROR: No valid windows produced results")
+        sys.exit(1)
+
+    if len(all_metrics) != len(windows):
+        print(f"DATA ERROR: Expected {len(windows)} completed windows, got {len(all_metrics)}.")
         sys.exit(1)
 
     # Average metrics across all windows
@@ -494,13 +728,25 @@ def walk_forward_validation(strategy_file: str | None = None):
     for key in all_metrics[0]:
         avg_metrics[key] = float(np.mean([m[key] for m in all_metrics]))
 
-    # Baseline Sharpe
-    baseline_sharpe = calculate_baseline_sharpe(data)
+    baseline_data = {
+        ticker: pd.concat(frames, ignore_index=True)
+        for ticker, frames in baseline_frames.items()
+    }
+    baseline_sharpe = calculate_baseline_sharpe(baseline_data)
 
-    # Per-symbol analysis (on last window)
-    last_test_start = int(5 * window_size * 0.7)
-    last_test_end = 5 * window_size
-    per_symbol = run_per_symbol_analysis(strategy_instance, data, last_test_start, last_test_end)
+    per_symbol = {}
+    for ticker in sorted(per_symbol_returns):
+        symbol_returns = pd.concat(per_symbol_returns[ticker], ignore_index=True)
+        symbol_signals = pd.concat(per_symbol_signals[ticker], ignore_index=True)
+        metrics = calculate_metrics(symbol_returns, symbol_signals)
+        per_symbol[ticker] = {
+            "sharpe": metrics["sharpe"],
+            "sortino": metrics["sortino"],
+            "dd": metrics["drawdown"],
+            "pf": metrics["profit_factor"],
+            "trades": metrics["trades"],
+            "wr": metrics["win_rate"],
+        }
 
     # Output YAML-like format
     print("---")

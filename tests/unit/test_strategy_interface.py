@@ -17,8 +17,26 @@ from RestrictedPython import compile_restricted
 from RestrictedPython.Guards import safer_getattr, full_write_guard
 from RestrictedPython.Eval import default_guarded_getiter, default_guarded_getitem
 
-from core.backtester import find_strategy_class
+from core.backtester import find_strategy_class, security_check
 import strategies.active_strategy
+
+
+def build_minute_frame(ticker: str, closes: list[float]) -> pd.DataFrame:
+    """Build a minute-bar frame matching the Sprint 2 schema."""
+    row_count = len(closes)
+    return pd.DataFrame(
+        {
+            "ticker": [ticker] * row_count,
+            "session_date": pd.to_datetime(["2025-11-03"] * row_count),
+            "window_start_ns": np.arange(row_count, dtype=np.int64) * 60_000_000_000,
+            "open": np.array(closes, dtype=float) - 0.1,
+            "high": np.array(closes, dtype=float) + 0.2,
+            "low": np.array(closes, dtype=float) - 0.2,
+            "close": np.array(closes, dtype=float),
+            "volume": np.linspace(1_000, 2_000, row_count),
+            "transactions": np.arange(1, row_count + 1),
+        }
+    )
 
 
 # =============================================================================
@@ -36,10 +54,11 @@ class TestDynamicLoading:
                 return pd.Series(1, index=data.index)
 
         sandbox_locals = {'MomentumStrategy': MomentumStrategy}
-        result = find_strategy_class(sandbox_locals)
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
 
-        assert result is MomentumStrategy
-        assert result.__name__ == 'MomentumStrategy'
+        assert strategy_class is MomentumStrategy
+        assert strategy_class.__name__ == 'MomentumStrategy'
+        assert has_universe is False
 
     def test_custom_class_name(self):
         """'MomentumStrategy' loads correctly."""
@@ -54,13 +73,14 @@ class TestDynamicLoading:
             'MomentumStrategy': MomentumStrategy,
             'TradingStrategy': None,
         }
-        result = find_strategy_class(sandbox_locals)
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
 
-        assert result is MomentumStrategy
-        assert result.__name__ == 'MomentumStrategy'
+        assert strategy_class is MomentumStrategy
+        assert strategy_class.__name__ == 'MomentumStrategy'
+        assert has_universe is False
 
     def test_multiple_methods_allowed(self):
-        """Class with generate_signals + helper methods."""
+        """Class with generate_signals + select_universe sets has_universe."""
         class ComplexStrategy:
             def __init__(self):
                 self.param = 10
@@ -73,18 +93,22 @@ class TestDynamicLoading:
                 """Another public method."""
                 return x * 2
 
+            def select_universe(self, daily_data):
+                return ['AAPL']
+
             def generate_signals(self, data):
                 signals = pd.Series(0, index=data.index)
                 signals.iloc[10:] = 1
                 return signals
 
         sandbox_locals = {'ComplexStrategy': ComplexStrategy}
-        result = find_strategy_class(sandbox_locals)
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
 
-        assert result is ComplexStrategy
-        assert hasattr(result, 'generate_signals')
-        assert hasattr(result, '_helper_method')
-        assert hasattr(result, 'another_method')
+        assert strategy_class is ComplexStrategy
+        assert hasattr(strategy_class, 'generate_signals')
+        assert hasattr(strategy_class, '_helper_method')
+        assert hasattr(strategy_class, 'another_method')
+        assert has_universe is True
 
     def test_no_generate_signals_rejected(self):
         """Class without generate_signals returns None."""
@@ -96,9 +120,10 @@ class TestDynamicLoading:
                 return data
 
         sandbox_locals = {'IncompleteStrategy': IncompleteStrategy}
-        result = find_strategy_class(sandbox_locals)
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
 
-        assert result is None
+        assert strategy_class is None
+        assert has_universe is False
 
     def test_non_class_with_generate_signals_ignored(self):
         """Function named generate_signals ignored."""
@@ -113,10 +138,11 @@ class TestDynamicLoading:
             'generate_signals': generate_signals,  # Function, not class
             'ValidStrategy': ValidStrategy,
         }
-        result = find_strategy_class(sandbox_locals)
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
 
         # Should find ValidStrategy, not the function
-        assert result is ValidStrategy
+        assert strategy_class is ValidStrategy
+        assert has_universe is False
 
 
 # =============================================================================
@@ -173,6 +199,19 @@ class TestStrategyFile:
 
         pytest.fail("TradingStrategy class not found")
 
+    def test_trading_strategy_has_select_universe(self, strategy_file_path):
+        """TradingStrategy class exposes select_universe."""
+        content = strategy_file_path.read_text()
+        tree = ast.parse(content)
+
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef) and node.name == 'TradingStrategy':
+                methods = [n.name for n in node.body if isinstance(n, ast.FunctionDef)]
+                assert 'select_universe' in methods
+                return
+
+        pytest.fail("TradingStrategy class not found")
+
     def test_strategy_has_imports(self, strategy_file_path):
         """File has pandas and numpy imports."""
         content = strategy_file_path.read_text()
@@ -218,46 +257,191 @@ class TestStrategyFile:
         except Exception as e:
             pytest.fail(f"active_strategy.py failed to compile in RestrictedPython: {e}")
 
-    def test_strategy_returns_series(self, strategy_file_path):
-        """generate_signals returns pd.Series for sample data."""
-        # Import the actual strategy
+    def test_active_strategy_passes_security_check(self, strategy_file_path):
+        """The default strategy file should pass the AST security guard."""
+        is_safe, msg = security_check(str(strategy_file_path))
+
+        assert is_safe
+        assert msg == ""
+
+    def test_active_strategy_discovery_reports_universe_support(self, strategy_file_path):
+        """The real TradingStrategy example is discoverable and reports select_universe support."""
+        content = strategy_file_path.read_text()
+
+        sanitized_lines = []
+        for line in content.split('\n'):
+            if not (line.strip().startswith("import ") or line.strip().startswith("from ")):
+                sanitized_lines.append(line)
+        sanitized_code = '\n'.join(sanitized_lines)
+
+        safe_builtins = {
+            '__build_class__': __builtins__['__build_class__'],
+            '_write_': lambda x: x,
+            '_getattr_': safer_getattr,
+        }
+        safe_globals = {
+            '__builtins__': safe_builtins,
+            '_getattr_': safer_getattr,
+            '_write_': lambda x: x,
+            '_getiter_': default_guarded_getiter,
+            '_getitem_': default_guarded_getitem,
+            '__name__': 'sandbox',
+            '__metaclass__': type,
+            'pd': pd,
+            'np': np,
+        }
+
+        byte_code = compile_restricted(sanitized_code, filename='active_strategy.py', mode='exec')
+        sandbox_locals = {}
+        exec(byte_code, safe_globals, sandbox_locals)
+
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
+
+        assert strategy_class is not None
+        assert strategy_class.__name__ == 'TradingStrategy'
+        assert has_universe is True
+
+    def test_strategy_returns_signal_dict(self, strategy_file_path):
+        """generate_signals returns one signal Series per ticker."""
         from strategies.active_strategy import TradingStrategy
 
-        # Create sample data
-        dates = pd.date_range('2023-01-01', periods=100)
-        data = pd.DataFrame({
-            'Close': np.linspace(100, 110, 100),
-            'returns': [0.001] * 100,
-            'volatility': [0.01] * 100,
-            'atr': [1.0] * 100,
-        }, index=dates)
+        minute_data = {
+            "AAPL": build_minute_frame("AAPL", np.linspace(100, 110, 80).tolist()),
+            "MSFT": build_minute_frame("MSFT", np.linspace(210, 195, 60).tolist()),
+        }
 
         strategy = TradingStrategy()
-        signals = strategy.generate_signals(data)
+        signals = strategy.generate_signals(minute_data)
 
-        assert isinstance(signals, pd.Series)
-        assert len(signals) == len(data)
+        assert isinstance(signals, dict)
+        assert set(signals.keys()) == {"AAPL", "MSFT"}
+        assert all(isinstance(series, pd.Series) for series in signals.values())
+
+    def test_strategy_signal_indexes_align_with_minute_frames(self, strategy_file_path):
+        """Each returned Series stays aligned with its ticker frame index."""
+        from strategies.active_strategy import TradingStrategy
+
+        minute_data = {
+            "AAPL": build_minute_frame("AAPL", np.linspace(100, 110, 80).tolist()),
+            "MSFT": build_minute_frame("MSFT", np.linspace(210, 195, 60).tolist()),
+        }
+
+        strategy = TradingStrategy()
+        signals = strategy.generate_signals(minute_data)
+
+        for ticker, frame in minute_data.items():
+            assert signals[ticker].index.equals(frame.index)
+            assert len(signals[ticker]) == len(frame)
 
     def test_strategy_signal_range(self, strategy_file_path):
-        """Signals in {-1, 0, 1}."""
+        """Minute-mode signals stay in {-1, 0, 1}."""
         from strategies.active_strategy import TradingStrategy
 
-        # Create sample data
-        dates = pd.date_range('2023-01-01', periods=100)
-        data = pd.DataFrame({
-            'Close': np.linspace(100, 110, 100),
-            'returns': [0.001] * 100,
-            'volatility': [0.01] * 100,
-            'atr': [1.0] * 100,
-        }, index=dates)
+        minute_data = {
+            "AAPL": build_minute_frame("AAPL", np.linspace(100, 110, 80).tolist()),
+            "MSFT": build_minute_frame("MSFT", np.linspace(210, 195, 60).tolist()),
+        }
 
         strategy = TradingStrategy()
-        signals = strategy.generate_signals(data)
+        signals = strategy.generate_signals(minute_data)
 
-        # Check unique values are in expected range
-        unique_values = set(signals.dropna().unique())
-        for val in unique_values:
-            assert val in {-1.0, 0.0, 1.0}, f"Unexpected signal value: {val}"
+        for ticker_signals in signals.values():
+            unique_values = set(ticker_signals.dropna().unique())
+            for val in unique_values:
+                assert val in {-1.0, 0.0, 1.0}, f"Unexpected signal value: {val}"
+
+    def test_select_universe_returns_ranked_ticker_list(self, strategy_file_path):
+        """select_universe returns ticker strings ranked by average daily volume."""
+        from strategies.active_strategy import TradingStrategy
+
+        daily_data = pd.DataFrame(
+            {
+                'ticker': ['AAPL', 'MSFT', 'TSLA', 'AAPL', 'MSFT', 'TSLA'],
+                'session_date': pd.to_datetime(
+                    ['2024-01-02', '2024-01-02', '2024-01-02', '2024-01-03', '2024-01-03', '2024-01-03']
+                ),
+                'open': [100, 200, 300, 101, 201, 301],
+                'high': [101, 201, 301, 102, 202, 302],
+                'low': [99, 199, 299, 100, 200, 300],
+                'close': [100.5, 200.5, 300.5, 101.5, 201.5, 301.5],
+                'volume': [1000, 1100, 900, 2500, 4000, 1800],
+                'transactions': [10, 11, 9, 25, 40, 18],
+                'vwap': [100.2, 200.2, 300.2, 101.2, 201.2, 301.2],
+            }
+        )
+
+        strategy = TradingStrategy()
+        universe = strategy.select_universe(daily_data)
+
+        assert universe[:3] == ['MSFT', 'AAPL', 'TSLA']
+        assert all(isinstance(ticker, str) for ticker in universe)
+
+    def test_select_universe_uses_20_day_average_volume(self, strategy_file_path):
+        """The example strategy ranks tickers by the latest 20-session average volume."""
+        from strategies.active_strategy import TradingStrategy
+
+        session_dates = pd.date_range("2024-01-01", periods=21, freq="B")
+        rows = []
+        for idx, session_date in enumerate(session_dates):
+            rows.extend(
+                [
+                    {
+                        "ticker": "AAA",
+                        "session_date": session_date,
+                        "open": 10.0,
+                        "high": 10.5,
+                        "low": 9.5,
+                        "close": 10.2,
+                        "volume": 10_000 if idx == 0 else 1,
+                        "transactions": 10,
+                        "vwap": 10.1,
+                    },
+                    {
+                        "ticker": "BBB",
+                        "session_date": session_date,
+                        "open": 20.0,
+                        "high": 20.5,
+                        "low": 19.5,
+                        "close": 20.2,
+                        "volume": 200,
+                        "transactions": 20,
+                        "vwap": 20.1,
+                    },
+                    {
+                        "ticker": "CCC",
+                        "session_date": session_date,
+                        "open": 30.0,
+                        "high": 30.5,
+                        "low": 29.5,
+                        "close": 30.2,
+                        "volume": 0 if idx == 0 else 300,
+                        "transactions": 30,
+                        "vwap": 30.1,
+                    },
+                ]
+            )
+
+        strategy = TradingStrategy()
+        universe = strategy.select_universe(pd.DataFrame(rows))
+
+        assert universe[:3] == ["CCC", "BBB", "AAA"]
+
+    def test_generate_signals_uses_20_bar_momentum(self, strategy_file_path):
+        """The example strategy uses 20-bar price momentum in minute mode."""
+        from strategies.active_strategy import TradingStrategy
+
+        minute_data = {
+            "AAPL": build_minute_frame("AAPL", list(range(100, 125))),
+            "MSFT": build_minute_frame("MSFT", list(range(200, 175, -1))),
+        }
+
+        strategy = TradingStrategy()
+        signals = strategy.generate_signals(minute_data)
+
+        assert signals["AAPL"].iloc[19] == 0.0
+        assert signals["MSFT"].iloc[19] == 0.0
+        assert signals["AAPL"].iloc[20] == 1.0
+        assert signals["MSFT"].iloc[20] == -1.0
 
     def test_strategy_class_init(self, strategy_file_path):
         """TradingStrategy can be instantiated."""
@@ -289,6 +473,9 @@ class MyAlphaStrategy:
     def __init__(self, threshold=0.5):
         self.threshold = threshold
 
+    def select_universe(self, daily_data):
+        return ['AAPL', 'MSFT']
+
     def generate_signals(self, data):
         signals = pd.Series(0, index=data.index)
         signals.iloc[10:] = 1
@@ -318,15 +505,19 @@ class HelperClass:
         sandbox_locals = {}
         exec(byte_code, safe_globals, sandbox_locals)
 
-        result = find_strategy_class(sandbox_locals)
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
 
-        assert result is not None
-        assert result.__name__ == 'MyAlphaStrategy'
+        assert strategy_class is not None
+        assert strategy_class.__name__ == 'MyAlphaStrategy'
+        assert has_universe is True
 
     def test_multiple_strategies_returns_first(self):
-        """When multiple classes have generate_signals, first is returned."""
+        """When multiple classes have generate_signals, first is returned with universe flag."""
         strategy_code = """
 class StrategyA:
+    def select_universe(self, daily_data):
+        return ['AAPL']
+
     def generate_signals(self, data):
         return pd.Series(1, index=data.index)
 
@@ -355,8 +546,9 @@ class StrategyB:
         sandbox_locals = {}
         exec(byte_code, safe_globals, sandbox_locals)
 
-        result = find_strategy_class(sandbox_locals)
+        strategy_class, has_universe = find_strategy_class(sandbox_locals)
 
-        assert result is not None
-        assert hasattr(result, 'generate_signals')
-        assert result.__name__ in {'StrategyA', 'StrategyB'}
+        assert strategy_class is not None
+        assert hasattr(strategy_class, 'generate_signals')
+        assert strategy_class.__name__ in {'StrategyA', 'StrategyB'}
+        assert has_universe is (strategy_class.__name__ == 'StrategyA')
