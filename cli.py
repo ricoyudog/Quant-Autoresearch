@@ -65,13 +65,13 @@ def load_strategy_class(strategy_path: str):
 
 def compute_combined_strategy_returns(strategy_class, data: dict[str, pd.DataFrame]) -> pd.Series:
     """Compute combined net returns across all symbols for regime analysis."""
-    strategy = strategy_class()
     combined_returns = []
 
     for _, df in data.items():
-        if df.empty:
+        if df is None or df.empty:
             continue
 
+        strategy = strategy_class()
         signals = strategy.generate_signals(df.copy())
         if not isinstance(signals, pd.Series):
             signals = pd.Series(signals, index=df.index)
@@ -89,6 +89,26 @@ def compute_combined_strategy_returns(strategy_class, data: dict[str, pd.DataFra
         return pd.Series(dtype=float)
 
     return pd.concat(combined_returns, axis=1).mean(axis=1).fillna(0)
+
+
+def _usable_market_data(data: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
+    """Filter out empty cache entries before downstream validation."""
+    return {name: df for name, df in data.items() if df is not None and not df.empty}
+
+
+def _select_regime_market_data(data: dict[str, pd.DataFrame]) -> pd.DataFrame:
+    """Resolve the market benchmark used for regime validation."""
+    usable_data = _usable_market_data(data)
+    if not usable_data:
+        raise ValueError("data_config must contain at least one dataframe")
+
+    if len(usable_data) == 1:
+        return next(iter(usable_data.values()))
+
+    if "SPY" in usable_data:
+        return usable_data["SPY"]
+
+    raise ValueError("Regime validation requires a single symbol or cached SPY benchmark")
 
 
 def _cpcv_verdict(result: dict) -> str:
@@ -253,55 +273,63 @@ def validate(
             typer.echo("No valid symbols found after filtering")
             raise typer.Exit(code=1)
 
+    try:
+        output_lines: list[str] = []
+        if normalized_method == "cpcv":
+            from validation.cpcv import run_cpcv
+
+            result = run_cpcv(strategy_class, data, n_groups=groups, n_test=test_groups)
+            output_lines = [
+                "METHOD: CPCV",
+                f"MEAN_SHARPE: {result['mean_sharpe']:.4f}",
+                f"STD_SHARPE: {result['std_sharpe']:.4f}",
+                f"PCT_POSITIVE: {result['pct_positive']:.4f}",
+                f"WORST_SHARPE: {result['worst_sharpe']:.4f}",
+                f"BEST_SHARPE: {result['best_sharpe']:.4f}",
+                f"VERDICT: {_cpcv_verdict(result)}",
+            ]
+        elif normalized_method == "regime":
+            from validation.regime import regime_analysis
+
+            market_data = _select_regime_market_data(data)
+            strategy_returns = compute_combined_strategy_returns(strategy_class, data)
+            result = regime_analysis(strategy_returns, market_data)
+            output_lines = ["METHOD: REGIME"]
+            for regime_name, metrics in result.items():
+                output_lines.append(
+                    f"{regime_name.upper()}: sharpe={metrics['sharpe']:.4f} "
+                    f"return={metrics['return']:.4f} count={metrics['count']} "
+                    f"win_rate={metrics['win_rate']:.4f}"
+                )
+            output_lines.append(f"VERDICT: {_regime_verdict(result)}")
+        else:
+            from validation.stability import parameter_stability_test
+
+            result = parameter_stability_test(
+                strategy_class,
+                data,
+                perturbation=perturbation,
+                steps=steps,
+            )
+            output_lines = [
+                "METHOD: STABILITY",
+                f"OVERALL_STABILITY: {result['overall_stability']:.4f}",
+            ]
+            for parameter_name, metrics in result["parameters"].items():
+                output_lines.append(
+                    f"{parameter_name.upper()}: stability={metrics['stability']:.4f} "
+                    f"peak={metrics['peak_sharpe']:.4f} min={metrics['min_sharpe']:.4f}"
+                )
+            if result.get("message"):
+                output_lines.append(f"MESSAGE: {result['message']}")
+            output_lines.append(f"VERDICT: {result['verdict']}")
+    except Exception as e:
+        typer.echo(str(e))
+        raise typer.Exit(code=1)
+
     typer.echo("---")
-
-    if normalized_method == "cpcv":
-        from validation.cpcv import run_cpcv
-
-        result = run_cpcv(strategy_class, data, n_groups=groups, n_test=test_groups)
-        typer.echo(f"METHOD: CPCV")
-        typer.echo(f"MEAN_SHARPE: {result['mean_sharpe']:.4f}")
-        typer.echo(f"STD_SHARPE: {result['std_sharpe']:.4f}")
-        typer.echo(f"PCT_POSITIVE: {result['pct_positive']:.4f}")
-        typer.echo(f"WORST_SHARPE: {result['worst_sharpe']:.4f}")
-        typer.echo(f"BEST_SHARPE: {result['best_sharpe']:.4f}")
-        typer.echo(f"VERDICT: {_cpcv_verdict(result)}")
-
-    elif normalized_method == "regime":
-        from validation.regime import regime_analysis
-
-        strategy_returns = compute_combined_strategy_returns(strategy_class, data)
-        market_data = next(iter(data.values()))
-        result = regime_analysis(strategy_returns, market_data)
-        typer.echo("METHOD: REGIME")
-        for regime_name, metrics in result.items():
-            typer.echo(
-                f"{regime_name.upper()}: sharpe={metrics['sharpe']:.4f} "
-                f"return={metrics['return']:.4f} count={metrics['count']} "
-                f"win_rate={metrics['win_rate']:.4f}"
-            )
-        typer.echo(f"VERDICT: {_regime_verdict(result)}")
-
-    else:
-        from validation.stability import parameter_stability_test
-
-        result = parameter_stability_test(
-            strategy_class,
-            data,
-            perturbation=perturbation,
-            steps=steps,
-        )
-        typer.echo("METHOD: STABILITY")
-        typer.echo(f"OVERALL_STABILITY: {result['overall_stability']:.4f}")
-        for parameter_name, metrics in result["parameters"].items():
-            typer.echo(
-                f"{parameter_name.upper()}: stability={metrics['stability']:.4f} "
-                f"peak={metrics['peak_sharpe']:.4f} min={metrics['min_sharpe']:.4f}"
-            )
-        if result.get("message"):
-            typer.echo(f"MESSAGE: {result['message']}")
-        typer.echo(f"VERDICT: {result['verdict']}")
-
+    for line in output_lines:
+        typer.echo(line)
     typer.echo("---")
 
 

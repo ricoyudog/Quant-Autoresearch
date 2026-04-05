@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from validation.regime import classify_market_regimes, regime_analysis
 
@@ -91,3 +92,23 @@ def test_regime_output_keys():
 
     assert results
     assert all(set(metrics.keys()) == {"sharpe", "return", "count", "win_rate"} for metrics in results.values())
+
+
+def test_regime_intraday_does_not_classify_before_20_days():
+    """Intraday data shorter than 20 days should not produce classified regimes."""
+    index = pd.date_range("2024-01-01", periods=200, freq="min")
+    close = pd.Series(np.linspace(100, 120, len(index)), index=index)
+    market_data = pd.DataFrame({"Close": close}, index=index)
+
+    regimes = classify_market_regimes(market_data)
+
+    assert regimes.notna().sum() == 0
+
+
+def test_regime_short_history_raises_value_error():
+    """regime_analysis should reject data that cannot support 20-day classification."""
+    market_data = make_market_data([0.002] * 10)
+    strategy_returns = make_strategy_returns(market_data.index)
+
+    with pytest.raises(ValueError, match="insufficient history"):
+        regime_analysis(strategy_returns, market_data)

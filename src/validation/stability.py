@@ -89,7 +89,10 @@ def parameter_stability_test(
             sharpes.append(float(scoring_function(strategy, data_config)))
 
         peak_sharpe = max(sharpes) if sharpes else 0.0
-        threshold = peak_sharpe * 0.5
+        if peak_sharpe < 0:
+            threshold = peak_sharpe - (abs(peak_sharpe) * 0.5)
+        else:
+            threshold = peak_sharpe * 0.5
         stable_count = sum(1 for sharpe in sharpes if sharpe >= threshold)
         stability = stable_count / len(sharpes) if sharpes else 1.0
         parameter_results[parameter_name] = {

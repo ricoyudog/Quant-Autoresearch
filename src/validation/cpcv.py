@@ -79,12 +79,11 @@ def _evaluate_cpcv_path(
     if not test_indices:
         return 0.0
 
-    strategy = strategy_class()
     all_returns = []
     visible_indices = sorted(set(train_indices).union(test_indices))
 
     for _, df in data_config.items():
-        if df.empty:
+        if df is None or df.empty:
             continue
 
         valid_visible_indices = [index for index in visible_indices if index < len(df)]
@@ -95,19 +94,34 @@ def _evaluate_cpcv_path(
         if history_df.empty:
             continue
 
-        signals = strategy.generate_signals(history_df)
-        if not isinstance(signals, pd.Series):
-            signals = pd.Series(signals, index=history_df.index)
+        visible_position_map = {
+            original_index: position for position, original_index in enumerate(valid_visible_indices)
+        }
 
-        signals = signals.reindex(history_df.index).fillna(0)
-        lagged_signals = signals.shift(1).fillna(0)
+        # Build lagged positions causally so each test bar only sees prior visible bars.
+        lagged_values = [0.0]
+        for visible_position in range(1, len(valid_visible_indices)):
+            prefix_indices = valid_visible_indices[:visible_position]
+            prefix_df = df.iloc[prefix_indices].copy()
+            if prefix_df.empty:
+                lagged_values.append(0.0)
+                continue
 
-        valid_test_labels = [index for index in test_indices if index in valid_visible_indices]
+            prefix_signals = strategy_class().generate_signals(prefix_df)
+            if not isinstance(prefix_signals, pd.Series):
+                prefix_signals = pd.Series(prefix_signals, index=prefix_df.index)
+
+            prefix_signals = prefix_signals.reindex(prefix_df.index).fillna(0)
+            lagged_values.append(float(prefix_signals.iloc[-1]))
+
+        lagged_signals = pd.Series(lagged_values, index=history_df.index, dtype=float)
+
+        valid_test_labels = [index for index in test_indices if index in visible_position_map]
         if not valid_test_labels:
             continue
 
         history_positions = [
-            position for position, original_index in enumerate(valid_visible_indices) if original_index in set(valid_test_labels)
+            visible_position_map[original_index] for original_index in valid_test_labels
         ]
 
         path_returns = history_df.iloc[history_positions]["returns"]

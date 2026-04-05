@@ -26,7 +26,7 @@ class DataConnector:
         if not os.path.exists(self.cache_dir):
             return data
             
-        for file in os.listdir(self.cache_dir):
+        for file in sorted(os.listdir(self.cache_dir)):
             path = os.path.join(self.cache_dir, file)
             symbol = None
             df = None

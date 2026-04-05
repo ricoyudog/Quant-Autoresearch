@@ -26,6 +26,25 @@ class BoundarySignalStrategy:
         return (data["returns"] > 0.1).astype(float)
 
 
+class LookaheadSignalStrategy:
+    """Non-causal strategy used to detect CPCV leakage across test bars."""
+
+    def generate_signals(self, data):
+        return (data["returns"].shift(-1) > 0).astype(float)
+
+
+class StatefulPrefixStrategy:
+    """Strategy used to detect state leakage across repeated prefix evaluations."""
+
+    def __init__(self):
+        self.calls = 0
+
+    def generate_signals(self, data):
+        self.calls += 1
+        value = 1.0 if self.calls > 1 else 0.0
+        return pd.Series(value, index=data.index)
+
+
 def make_validation_data(length: int = 80) -> dict[str, pd.DataFrame]:
     """Create deterministic market data for CPCV tests."""
     dates = pd.date_range("2024-01-01", periods=length, freq="D")
@@ -163,3 +182,37 @@ def test_cpcv_rejects_none_only_data_config():
     """CPCV should reject configs that contain no usable dataframes."""
     with pytest.raises(ValueError, match="data_config must contain at least one dataframe"):
         run_cpcv(ZeroSignalStrategy, {"SPY": None}, n_groups=3, n_test=1)
+
+
+def test_cpcv_does_not_leak_future_test_information():
+    """Signals for early test bars must not depend on later test bars."""
+    data = make_validation_data(length=20)
+    data["SPY"]["returns"] = np.array([-0.01] * 10 + [0.01] * 10)
+    data["SPY"]["volatility"] = 0.0
+
+    result = run_cpcv(
+        LookaheadSignalStrategy,
+        data,
+        n_groups=2,
+        n_test=1,
+        purge_bars=0,
+        embargo_bars=0,
+    )
+
+    assert result["sharpe_distribution"] == [0.0, 0.0]
+    assert result["mean_sharpe"] == 0.0
+    assert result["pct_positive"] == 0.0
+
+
+def test_cpcv_prefix_evaluations_do_not_share_strategy_state():
+    """Repeated prefix evaluations should not accumulate strategy instance state."""
+    result = run_cpcv(
+        StatefulPrefixStrategy,
+        make_validation_data(length=20),
+        n_groups=2,
+        n_test=1,
+        purge_bars=0,
+        embargo_bars=0,
+    )
+
+    assert result["sharpe_distribution"] == [0.0, 0.0]

@@ -1,5 +1,6 @@
 """Integration tests for the validate CLI command."""
 
+from collections import OrderedDict
 from pathlib import Path
 import sys
 from unittest.mock import patch
@@ -199,3 +200,72 @@ def test_cli_validate_no_data(mock_load_strategy_class, mock_load_data):
 
     assert result.exit_code == 1
     assert "No cached data found" in result.stdout
+
+
+@patch("core.backtester.load_data")
+@patch("cli.load_strategy_class")
+def test_cli_validate_runtime_validation_errors_are_informative(mock_load_strategy_class, mock_load_data):
+    """Validation-time errors should reach stdout instead of bubbling raw exceptions."""
+    mock_load_strategy_class.return_value = DummyStrategy
+    mock_load_data.return_value = {"SPY": None}
+
+    result = runner.invoke(app, ["validate", "--method", "cpcv"])
+
+    assert result.exit_code == 1
+    assert "data_config must contain at least one dataframe" in result.stdout
+
+
+@patch("validation.regime.regime_analysis")
+@patch("cli.compute_combined_strategy_returns")
+@patch("core.backtester.load_data")
+@patch("cli.load_strategy_class")
+def test_cli_validate_regime_prefers_spy_benchmark(
+    mock_load_strategy_class,
+    mock_load_data,
+    mock_compute_combined_returns,
+    mock_regime_analysis,
+):
+    """Regime validation should use SPY as the market benchmark when available."""
+    mock_load_strategy_class.return_value = DummyStrategy
+    cached_data = OrderedDict(
+        [
+            ("QQQ", make_cached_data()["SPY"].copy()),
+            ("SPY", make_cached_data()["SPY"].copy()),
+        ]
+    )
+    cached_data["SPY"]["Close"] = cached_data["SPY"]["Close"] + 5
+    mock_load_data.return_value = cached_data
+    mock_compute_combined_returns.return_value = pd.Series(
+        np.full(40, 0.01),
+        index=next(iter(cached_data.values())).index,
+    )
+    mock_regime_analysis.return_value = {}
+
+    result = runner.invoke(app, ["validate", "--method", "regime"])
+
+    assert result.exit_code == 0
+    assert mock_regime_analysis.call_args.args[1] is cached_data["SPY"]
+
+
+@patch("validation.regime.regime_analysis")
+@patch("cli.compute_combined_strategy_returns")
+@patch("core.backtester.load_data")
+@patch("cli.load_strategy_class")
+def test_cli_validate_regime_requires_single_symbol_or_spy(
+    mock_load_strategy_class,
+    mock_load_data,
+    mock_compute_combined_returns,
+    mock_regime_analysis,
+):
+    """Multi-symbol regime validation needs an explicit market benchmark."""
+    mock_load_strategy_class.return_value = DummyStrategy
+    qqq = make_cached_data()["SPY"].copy()
+    qqq["Close"] = qqq["Close"] + 10
+    mock_load_data.return_value = OrderedDict([("QQQ", qqq), ("IWM", qqq.copy())])
+    mock_compute_combined_returns.return_value = pd.Series(np.full(40, 0.01), index=qqq.index)
+    mock_regime_analysis.return_value = {}
+
+    result = runner.invoke(app, ["validate", "--method", "regime"])
+
+    assert result.exit_code == 1
+    assert "single symbol or cached SPY benchmark" in result.stdout

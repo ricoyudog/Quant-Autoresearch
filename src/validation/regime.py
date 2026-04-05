@@ -21,8 +21,12 @@ def classify_market_regimes(market_data: pd.DataFrame) -> pd.Series:
         raise ValueError("market_data must contain Close or close column")
 
     returns = market_data["returns"] if "returns" in market_data.columns else market_data[close_column].pct_change()
-    rolling_return = market_data[close_column].pct_change(20)
-    rolling_volatility = returns.rolling(20).std()
+    if isinstance(market_data.index, pd.DatetimeIndex):
+        rolling_return = market_data[close_column].pct_change(freq="20D")
+        rolling_volatility = returns.rolling("20D", min_periods=20).std()
+    else:
+        rolling_return = market_data[close_column].pct_change(20)
+        rolling_volatility = returns.rolling(20).std()
     volatility_median = rolling_volatility.dropna().median()
 
     regimes = pd.Series(index=market_data.index, dtype="object")
@@ -39,6 +43,8 @@ def regime_analysis(strategy_returns: pd.Series, market_data: pd.DataFrame) -> d
         return {}
 
     regimes = classify_market_regimes(market_data)
+    if not regimes.notna().any():
+        raise ValueError("insufficient history for 20-day regime classification")
     aligned_returns = strategy_returns.reindex(market_data.index).dropna()
 
     results = {}

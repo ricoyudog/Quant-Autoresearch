@@ -83,6 +83,18 @@ def test_stability_flat_zero_surface_is_stable():
     assert result["overall_stability"] == 1.0
 
 
+def test_stability_flat_negative_surface_is_stable():
+    """A perfectly flat negative surface is stable even if performance is poor."""
+    result = parameter_stability_test(
+        TunableStrategy,
+        data_config={},
+        evaluator=lambda strategy, _: -1.0,
+    )
+
+    assert result["overall_stability"] == 1.0
+    assert result["verdict"] == "GOOD"
+
+
 def test_stability_low_stability():
     """A sharp optimum should produce low stability."""
 
