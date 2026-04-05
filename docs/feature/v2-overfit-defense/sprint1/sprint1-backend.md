@@ -3,7 +3,7 @@
 > Feature: `v2-overfit-defense`
 > Role: Backend
 > Derived from: #12 (Umbrella: Session 3 Overfit Defense) — Layer 1 built-in defense
-> Last Updated: 2026-04-02
+> Last Updated: 2026-04-05 (Sprint 1 closeout)
 
 ## 0) Governing Specs
 
@@ -162,15 +162,29 @@ pytest --tb=short -v
 
 ### Completed Work
 
-*(To be filled during implementation)*
+- Added `src/validation/newey_west.py` with `newey_west_sharpe()` and `src/validation/deflated_sr.py` with `deflated_sharpe_ratio()`
+- Migrated `src/core/backtester.py` to report Newey-West `SCORE`, `NAIVE_SHARPE`, `NW_SHARPE_BIAS`, and `DEFLATED_SR`
+- Removed the Monte Carlo placeholder output and any `P_VALUE` / permutation references from the backtester contract
+- Added `experiments/results.tsv` initialization and append logic with the Sprint 1 column layout
+- Updated `program.md` to reflect the new decision rules, advisories, and experiment-output paths
+- Added Sprint 1 QA coverage in `tests/unit/test_newey_west.py`, `tests/unit/test_deflated_sr.py`, `tests/unit/test_backtester_overfit.py`, and the logger/worktree regression in `tests/unit/test_logger_setup.py`
+- Adjusted existing backtester expectations in `tests/unit/test_backtester_v2.py` to the new Sharpe contract
 
 ### Command Results
 
-*(To be filled during implementation)*
+- `uv run pytest tests/unit/test_newey_west.py tests/unit/test_deflated_sr.py tests/unit/test_backtester_overfit.py -q` -> `23 passed in 0.69s`
+- `uv run pytest --tb=short -q` -> `115 passed in 1.35s`
+- `grep -rn "monte_carlo_permutation_test\\|P_VALUE" src/core/backtester.py || echo CLEAN` -> `CLEAN`
+- `grep -n "NAIVE_SHARPE\\|DEFLATED_SR\\|NW_SHARPE_BIAS" src/core/backtester.py` -> lines `507-509`
+- `ls src/validation/__init__.py src/validation/newey_west.py src/validation/deflated_sr.py` -> all expected Sprint 1 validation files present
+- Implementation commit: `b910ac2`
+- Sprint checklist sync commit: `ae58d3c`
 
 ### Blockers / Deviations
 
-*(To be filled during implementation)*
+- `utils.logger` originally failed in clean worktrees because `experiments/logs/` was not created before `RotatingFileHandler` initialization; fixed in Sprint 1 because it blocked all QA collection
+- `results.tsv` pathing was inconsistent across older docs (`results.tsv`) and the current runtime layout (`experiments/results.tsv`); Sprint 1 standardized on `experiments/results.tsv`
+- Live issue-body / note / board updates are blocked in this workspace because `glab` is unavailable and the configured remotes do not expose issue `#12`
 
 ### Follow-ups
 
