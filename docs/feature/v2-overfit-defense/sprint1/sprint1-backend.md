@@ -119,21 +119,21 @@ Replace the backtester's raw Sharpe Ratio with Newey-West adjusted Sharpe (corre
 - [x] Verify: `pytest tests/unit/test_backtester_overfit.py -v`
 
 ### Step 10 — Commit sprint 1 changes
-- [ ] `git add src/validation/ tests/unit/test_newey_west.py tests/unit/test_deflated_sr.py tests/unit/test_backtester_overfit.py`
-- [ ] `git add src/core/backtester.py cli.py` (if modified)
-- [ ] `git add program.md` (or `src/prompts/program.md` if that is the location)
-- [ ] `git commit -m "feat(overfit): add Newey-West Sharpe, Deflated SR, remove Monte Carlo"`
+- [x] `git add src/validation/ tests/unit/test_newey_west.py tests/unit/test_deflated_sr.py tests/unit/test_backtester_overfit.py`
+- [x] `git add src/core/backtester.py cli.py` (if modified)
+- [x] `git add program.md` (or `src/prompts/program.md` if that is the location)
+- [x] `git commit -m "feat(overfit): add Newey-West Sharpe, Deflated SR, remove Monte Carlo"`
 
 ## 4) Test Plan
 
-- [ ] After Step 2: `pytest tests/unit/test_newey_west.py -v` — all NW Sharpe tests pass
-- [ ] After Step 3: `pytest tests/unit/test_deflated_sr.py -v` — all DSR tests pass
-- [ ] After Step 6: verify Monte Carlo fully removed:
+- [x] After Step 2: `pytest tests/unit/test_newey_west.py -v` — all NW Sharpe tests pass
+- [x] After Step 3: `pytest tests/unit/test_deflated_sr.py -v` — all DSR tests pass
+- [x] After Step 6: verify Monte Carlo fully removed:
   ```bash
   grep -rn "monte_carlo_permutation_test\|P_VALUE" src/core/backtester.py || echo "CLEAN"
   ```
-- [ ] After Step 9: `pytest tests/unit/test_newey_west.py tests/unit/test_deflated_sr.py tests/unit/test_backtester_overfit.py -v`
-- [ ] Full test suite: `pytest --tb=short -v`
+- [x] After Step 9: `pytest tests/unit/test_newey_west.py tests/unit/test_deflated_sr.py tests/unit/test_backtester_overfit.py -v`
+- [x] Full test suite: `pytest --tb=short -v`
 
 ## 5) Verification Commands
 
