@@ -229,7 +229,7 @@ class MinuteStrategy:
         monkeypatch.setattr(
             backtester,
             "calculate_metrics",
-            lambda combined_returns, trades: {
+            lambda combined_returns, trades, trade_activity=None: {
                 "sharpe": 1.0,
                 "sortino": 1.0,
                 "calmar": 1.0,
@@ -297,7 +297,7 @@ class MinuteStrategy:
         monkeypatch.setattr(
             backtester,
             "calculate_metrics",
-            lambda combined_returns, trades: {
+            lambda combined_returns, trades, trade_activity=None: {
                 "sharpe": 1.0,
                 "sortino": 1.0,
                 "calmar": 1.0,
@@ -318,6 +318,94 @@ class MinuteStrategy:
         assert query_calls == [["AAA", "BBB"]]
         assert "PER_SYMBOL:" in output
 
+
+def _build_minute_data_for_symbols(symbols: list[str], start_date: str) -> dict[str, pd.DataFrame]:
+    frames: dict[str, pd.DataFrame] = {}
+    for idx, ticker in enumerate(symbols):
+        closes = [100.0 + idx, 100.5 + idx]
+        frames[ticker] = pd.DataFrame(
+            {
+                "ticker": [ticker, ticker],
+                "session_date": pd.to_datetime([start_date, start_date]),
+                "window_start_ns": [1, 2],
+                "open": [close - 0.1 for close in closes],
+                "high": [close + 0.1 for close in closes],
+                "low": [close - 0.2 for close in closes],
+                "close": closes,
+                "volume": [1_000 + idx * 100] * 2,
+                "transactions": [10, 11],
+            }
+        )
+    return frames
+
+
+def _configure_walk_forward_env(monkeypatch, tmp_path, strategy_script: str, windows: list[dict[str, str]], daily_data: pd.DataFrame):
+    strategy_path = tmp_path / "strategy.py"
+    strategy_path.write_text(strategy_script)
+    monkeypatch.setenv("STRATEGY_FILE", str(strategy_path))
+    monkeypatch.setattr(backtester, "security_check", lambda file_path=None: (True, ""))
+    monkeypatch.delenv("BACKTEST_START_DATE", raising=False)
+    monkeypatch.delenv("BACKTEST_END_DATE", raising=False)
+    monkeypatch.delenv("BACKTEST_UNIVERSE_SIZE", raising=False)
+    monkeypatch.setattr(backtester, "calculate_walk_forward_windows", lambda start_date, end_date, n_windows=5: windows)
+    monkeypatch.setattr(backtester, "load_daily_data", lambda start_date=None, end_date=None: daily_data.copy())
+    return strategy_path
+
+
+def test_walk_forward_validation_errors_when_window_skips(monkeypatch, tmp_path):
+    """Walk-forward must fail when any window returns no minute data."""
+    strategy_script = """
+class MinuteStrategy:
+    def select_universe(self, daily_data):
+        return ["AAA"]
+
+    def generate_signals(self, data):
+        return {"AAA": data["AAA"]["close"].pct_change().fillna(0.0)}
+"""
+    windows = [
+        {"train_start": "2025-11-03", "train_end": "2025-11-05", "test_start": "2025-11-06", "test_end": "2025-11-06"},
+        {"train_start": "2025-11-03", "train_end": "2025-11-06", "test_start": "2025-11-07", "test_end": "2025-11-07"},
+    ]
+    daily_data = build_daily_universe_frame()
+    _configure_walk_forward_env(monkeypatch, tmp_path, strategy_script, windows, daily_data)
+
+    def fake_query(symbols, start_date, end_date):
+        if start_date == windows[0]["test_start"]:
+            return {}
+        return _build_minute_data_for_symbols(["AAA"], start_date)
+
+    monkeypatch.setattr(backtester, "query_minute_data", fake_query)
+
+    with pytest.raises(SystemExit):
+        backtester.walk_forward_validation()
+
+
+def test_walk_forward_validation_errors_when_ticker_missing(monkeypatch, tmp_path):
+    """Walk-forward should fail if minute data omits selected tickers."""
+    strategy_script = """
+class UniverseStrategy:
+    def select_universe(self, daily_data):
+        return ["AAA", "BBB"]
+
+    def generate_signals(self, data):
+        return {ticker: data[ticker]["close"].pct_change().fillna(0.0) for ticker in data}
+"""
+    windows = [
+        {"train_start": "2025-11-03", "train_end": "2025-11-05", "test_start": "2025-11-06", "test_end": "2025-11-06"}
+    ]
+    daily_data = build_daily_universe_frame()
+    _configure_walk_forward_env(monkeypatch, tmp_path, strategy_script, windows, daily_data)
+
+    def fake_query(symbols, start_date, end_date):
+        return _build_minute_data_for_symbols(["AAA"], start_date)
+
+    monkeypatch.setattr(backtester, "query_minute_data", fake_query)
+
+    with pytest.raises(SystemExit):
+        backtester.walk_forward_validation()
+
+
+class TestWalkForwardValidationMinutePipelineContinued:
     def test_walk_forward_validation_rejects_invalid_environment_configuration(self, monkeypatch, tmp_path, capsys):
         """Invalid environment overrides should fail deterministically."""
         strategy_path = tmp_path / "strategy.py"
@@ -415,7 +503,7 @@ class MinuteStrategy:
 
         monkeypatch.setattr(backtester, "apply_signal_lag", recording_apply_signal_lag)
 
-        def fake_calculate_metrics(combined_returns, trades):
+        def fake_calculate_metrics(combined_returns, trades, trade_activity=None):
             metric_inputs.append(
                 {
                     "combined_returns": combined_returns.tolist(),
@@ -465,7 +553,7 @@ class MinuteStrategy:
     def generate_signals(self, data):
         signals = {}
         for ticker, frame in data.items():
-            signals[ticker] = pd.Series([1.0, 0.0, -1.0], index=frame.index)
+            signals[ticker] = pd.Series([1.0] * len(frame), index=frame.index)
         return signals
 """.strip()
         )
@@ -518,13 +606,13 @@ class MinuteStrategy:
 
         def fake_query_minute_data(symbols, start_date, end_date):
             query_calls.append((list(symbols), start_date, end_date))
-            return build_window_minute_data(list(symbols)[:2], start_date)
+            return _build_minute_data_for_symbols(list(symbols), start_date)
 
         monkeypatch.setattr(backtester, "query_minute_data", fake_query_minute_data)
         monkeypatch.setattr(
             backtester,
             "calculate_metrics",
-            lambda combined_returns, trades: {
+            lambda combined_returns, trades, trade_activity=None: {
                 "sharpe": 1.0,
                 "sortino": 1.1,
                 "calmar": 0.9,
@@ -626,7 +714,7 @@ class MinuteStrategy:
         monkeypatch.setattr(
             backtester,
             "calculate_metrics",
-            lambda combined_returns, trades: {
+            lambda combined_returns, trades, trade_activity=None: {
                 "sharpe": 1.0,
                 "sortino": 1.0,
                 "calmar": 1.0,
@@ -808,6 +896,15 @@ class TestCalculateMetrics:
         assert result['avg_win'] > 0
         # Avg loss should be negative
         assert result['avg_loss'] < 0
+
+    def test_calculate_metrics_reports_trades_when_book_offsets(self):
+        """Offsetting per-symbol positions should still produce non-zero trade stats."""
+        returns = pd.Series([0.01, -0.01, 0.01, -0.01])
+        gross_exposure = pd.Series([1.0, 1.0, 1.0, 1.0])
+        trade_activity = pd.Series([0.0, 2.0, 2.0, 2.0])
+        result = calculate_metrics(returns, gross_exposure, trade_activity)
+        assert result['trades'] > 0
+        assert result['win_rate'] > 0 or result['profit_factor'] > 0
 
 
 # =============================================================================

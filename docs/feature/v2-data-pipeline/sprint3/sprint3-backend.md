@@ -182,14 +182,20 @@ find src -type d -name '__pycache__' -prune -o -type f -name '*.py' -print0 | xa
 - Closed out Sprint 3 backend Step 6 by rewriting `program.md` to the V2 DuckDB/minute-data runtime contract
 - Closed out Sprint 3 backend Step 7 by rewriting `CLAUDE.md` to the live CLI surface and V2 architecture
 - Closed out Sprint 3 backend Step 8 by re-running the full regression gate plus CLI smoke commands on the feature worktree
+- Reopened Sprint 3 backend closeout after review and hardened `src/core/backtester.py` so minute-mode walk-forward no longer silently skips empty or incomplete windows
+- Added hard-fail validation when `query_minute_data()` drops selected tickers from a window result, so incomplete minute queries cannot produce partial-window metrics
+- Fixed aggregate trade statistics so offsetting per-symbol books still report portfolio activity by combining gross exposure with summed per-symbol trade activity
+- Added review-follow-up regressions in `tests/integration/test_minute_backtest.py` and `tests/unit/test_backtester_v2.py` for skipped windows, missing tickers, and offsetting-book trade counts
+- Re-ran the focused backtester and integration suites plus the full regression gate after the review-fix slice and re-closed Sprint 3 backend with fresh evidence
 
 ### Command Results
 
 - `uv run pytest tests/unit/test_cli.py -k update_data -v` -> `3 passed`
 - `uv run pytest tests/unit/test_duckdb_connector.py -k refresh_daily_cache -v` -> `3 passed`
-- `uv run pytest tests/integration/test_minute_backtest.py -v` -> `5 passed`
+- `PYTHONPATH=src uv run pytest tests/unit/test_backtester_v2.py -v` -> `37 passed`
+- `uv run pytest tests/integration/test_minute_backtest.py -v` -> `7 passed`
 - `uv sync --all-extras --dev` -> succeeded (`Resolved 135 packages`, `Checked 118 packages`)
-- `uv run pytest --tb=short -v` -> `143 passed in 1.64s`
+- `uv run pytest --tb=short -v` -> `149 passed in 1.59s`
 - `uv run python cli.py setup-data --help` -> succeeded and exposed `--force`
 - `uv run python cli.py fetch --help` -> succeeded and exposed `SYMBOL`, `--start`, `--end`, and `--output`
 - `uv run python cli.py backtest --help` -> succeeded and exposed `--strategy`, `--start`, `--end`, and `--universe-size`
@@ -206,8 +212,9 @@ find src -type d -name '__pycache__' -prune -o -type f -name '*.py' -print0 | xa
 
 - `update-data` correctly took the incremental refresh path, but the local dataset did not expose sessions newer than `2026-03-30` at verification time, so the refresh completed as an idempotent no-op after checking partial March and April batches
 - Typer command names are hyphenated (`setup-data`, `update-data`); Sprint 3 documentation was normalized away from older underscored spellings during closeout
+- A post-closeout review pass exposed three correctness gaps in the minute backtester: skipped windows, incomplete minute-query ticker sets, and aggregate trade counts collapsing on offsetting books; Sprint 3 backend was reopened, fixed, and re-verified before returning to closeout
 
 ### Follow-Ups
 
-- Sprint 3 backend is complete
-- Issue #11 can hand off to the final issue closeout / review decision with the Phase 4 verification evidence already collected in this sprint closeout
+- Sprint 3 backend is complete again after the review-fix follow-up
+- Issue #11 can hand off to the final issue closeout / review decision with the refreshed Phase 4 verification evidence collected in this sprint closeout

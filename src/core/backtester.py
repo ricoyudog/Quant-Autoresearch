@@ -175,7 +175,52 @@ def normalize_minute_signals(raw_signals, minute_data: dict[str, pd.DataFrame]) 
     return normalized
 
 
-def calculate_metrics(combined_returns: pd.Series, trades: pd.Series) -> dict:
+def validate_window_minute_data(
+    expected_tickers: list[str],
+    minute_data: dict[str, pd.DataFrame],
+) -> dict[str, pd.DataFrame]:
+    """Require complete per-window minute data for the selected universe."""
+    if not minute_data:
+        raise ValueError("no minute data returned")
+
+    missing_tickers = [ticker for ticker in expected_tickers if ticker not in minute_data]
+    if missing_tickers:
+        raise ValueError(f"missing minute data for tickers: {', '.join(missing_tickers)}")
+
+    prepared_minute_data = {}
+    invalid_tickers = []
+    for ticker in expected_tickers:
+        frame = minute_data.get(ticker)
+        if frame is None or frame.empty:
+            invalid_tickers.append(ticker)
+            continue
+
+        prepared = prepare_minute_frame(frame)
+        if prepared.empty or "returns" not in prepared.columns:
+            invalid_tickers.append(ticker)
+            continue
+
+        prepared_minute_data[ticker] = prepared
+
+    if invalid_tickers:
+        raise ValueError(f"incomplete minute frames for tickers: {', '.join(invalid_tickers)}")
+
+    return prepared_minute_data
+
+
+def build_portfolio_activity(position_series: list[pd.Series]) -> tuple[pd.Series, pd.Series]:
+    """Collapse per-symbol positions into gross exposure and summed trade activity."""
+    positions_frame = pd.concat(position_series, axis=1).fillna(0.0)
+    gross_exposure = positions_frame.abs().max(axis=1)
+    trade_activity = positions_frame.diff().abs().fillna(0.0).sum(axis=1)
+    return gross_exposure, trade_activity
+
+
+def calculate_metrics(
+    combined_returns: pd.Series,
+    trades: pd.Series,
+    trade_activity: pd.Series | None = None,
+) -> dict:
     """Calculate 10 performance metrics from combined returns and trade signals."""
     mean_ret = combined_returns.mean()
     std_ret = combined_returns.std()
@@ -207,7 +252,12 @@ def calculate_metrics(combined_returns: pd.Series, trades: pd.Series) -> dict:
         max_dd_days = int(dd_durations.max()) if len(dd_durations) > 0 else 0
 
     # Trades count — number of position changes
-    trade_changes = trades.diff().abs()
+    if trade_activity is None:
+        trade_activity = trades.diff().abs()
+    else:
+        trade_activity = coerce_signal_series(trade_activity, combined_returns.index)
+
+    trade_changes = trade_activity
     trade_changes = trade_changes[trade_changes > 0]
     total_trades = int(trade_changes.sum()) if len(trade_changes) > 0 else 0
 
@@ -560,30 +610,25 @@ def walk_forward_validation():
     per_symbol_signals: dict[str, list[pd.Series]] = {}
 
     for window in windows:
-        minute_data = query_minute_data(
-            selected_tickers,
-            window["test_start"],
-            window["test_end"],
-        )
-        if not minute_data:
-            continue
+        try:
+            minute_data = query_minute_data(
+                selected_tickers,
+                window["test_start"],
+                window["test_end"],
+            )
+            prepared_minute_data = validate_window_minute_data(selected_tickers, minute_data)
+        except Exception as exc:
+            print(f"DATA ERROR ({window['test_start']}..{window['test_end']}): {exc}")
+            sys.exit(1)
 
-        prepared_minute_data = {}
-        for ticker, frame in minute_data.items():
-            prepared = prepare_minute_frame(frame)
-            if prepared.empty or "returns" not in prepared.columns:
-                continue
-            prepared_minute_data[ticker] = prepared
+        for ticker, prepared in prepared_minute_data.items():
             baseline_frames.setdefault(ticker, []).append(prepared)
-
-        if not prepared_minute_data:
-            continue
 
         try:
             raw_signals = strategy_instance.generate_signals(prepared_minute_data)
         except Exception as exc:
             print(f"WINDOW ERROR ({window['test_start']}..{window['test_end']}): {exc}", file=sys.stderr)
-            continue
+            sys.exit(1)
 
         normalized_signals = normalize_minute_signals(raw_signals, prepared_minute_data)
         lagged_signals = apply_signal_lag(normalized_signals)
@@ -605,12 +650,16 @@ def walk_forward_validation():
 
         if window_returns:
             combined = pd.concat(window_returns, axis=1).mean(axis=1)
-            combined_positions = pd.concat(window_positions, axis=1).mean(axis=1)
-            metrics = calculate_metrics(combined, combined_positions)
+            combined_positions, combined_trade_activity = build_portfolio_activity(window_positions)
+            metrics = calculate_metrics(combined, combined_positions, combined_trade_activity)
             all_metrics.append(metrics)
 
     if not all_metrics:
         print("ERROR: No valid windows produced results")
+        sys.exit(1)
+
+    if len(all_metrics) != len(windows):
+        print(f"DATA ERROR: Expected {len(windows)} completed windows, got {len(all_metrics)}.")
         sys.exit(1)
 
     # Average metrics across all windows

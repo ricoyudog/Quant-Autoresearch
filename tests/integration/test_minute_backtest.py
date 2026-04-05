@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 import core.backtester as backtester
 from data.duckdb_connector import calculate_walk_forward_windows
@@ -198,3 +199,75 @@ def test_minute_backtest_output_format_includes_per_symbol_section(
     assert "PER_SYMBOL:" in stdout
     assert "AAA:" in stdout
     assert "BBB:" in stdout
+
+
+def test_minute_backtest_fails_when_window_is_skipped(
+    test_duckdb,
+    minute_strategy_file,
+    monkeypatch,
+):
+    configure_strategy_env(monkeypatch, minute_strategy_file)
+
+    windows = [
+        {
+            "train_start": "2025-11-03",
+            "train_end": "2025-11-05",
+            "test_start": "2025-11-06",
+            "test_end": "2025-11-07",
+        },
+        {
+            "train_start": "2025-11-03",
+            "train_end": "2025-11-07",
+            "test_start": "2025-11-10",
+            "test_end": "2025-11-10",
+        },
+    ]
+
+    def fake_walk_forward_windows(*args, **kwargs):
+        return windows
+
+    def fake_query_minute_data(symbols, start_date, end_date):
+        if start_date == windows[0]["test_start"]:
+            return {}
+        return build_minute_range_data(list(symbols), start_date, end_date)
+
+    monkeypatch.setattr(backtester, "calculate_walk_forward_windows", fake_walk_forward_windows)
+    monkeypatch.setattr(backtester, "query_minute_data", fake_query_minute_data)
+
+    with pytest.raises(SystemExit) as excinfo:
+        backtester.walk_forward_validation()
+
+    assert excinfo.value.code == 1
+
+
+def test_minute_backtest_fails_when_query_drops_selected_tickers(
+    test_duckdb,
+    minute_strategy_file,
+    monkeypatch,
+):
+    configure_strategy_env(monkeypatch, minute_strategy_file)
+
+    windows = [
+        {
+            "train_start": "2025-11-03",
+            "train_end": "2025-11-04",
+            "test_start": "2025-11-05",
+            "test_end": "2025-11-05",
+        }
+    ]
+
+    def fake_walk_forward_windows(*args, **kwargs):
+        return windows
+
+    def fake_query_minute_data(symbols, start_date, end_date):
+        return {
+            "AAA": build_minute_range_data(["AAA"], start_date, end_date)["AAA"],
+        }
+
+    monkeypatch.setattr(backtester, "calculate_walk_forward_windows", fake_walk_forward_windows)
+    monkeypatch.setattr(backtester, "query_minute_data", fake_query_minute_data)
+
+    with pytest.raises(SystemExit) as excinfo:
+        backtester.walk_forward_validation()
+
+    assert excinfo.value.code == 1

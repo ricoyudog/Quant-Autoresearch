@@ -4,7 +4,7 @@
 > Umbrella issue: #11
 > Canonical root: `docs/feature/v2-data-pipeline/`
 > Last updated: 2026-04-05
-> Planning status: Sprint 3 execution and verification completed; issue #11 is ready for review
+> Planning status: Sprint 3 execution, verification, and post-review correction completed; issue #11 is ready for review
 
 ## 1. Context
 
@@ -99,7 +99,7 @@ repo's existing V2 naming convention instead of introducing an issue-number-only
 | Sprint 1 -- DuckDB + Daily Cache | Add DuckDB, create the daily cache, and replace the old data-loader entrypoint | `duckdb_connector.py`, updated `setup-data`, clean import graph, unit coverage | completed | begin Sprint 2 backend execution |
 | Sprint 2 -- Strategy + Backtester | Add the dual-method strategy interface and minute-level walk-forward pipeline | updated `backtester.py`, updated `active_strategy.py`, trading-day windows | completed | begin Sprint 3 backend + infra execution |
 | Sprint 3 -- CLI + Docs + Tests | Finish CLI behavior, integration coverage, and runtime docs | updated `cli.py`, integration tests, updated `program.md` and `CLAUDE.md` | completed | move to Phase 4 verification and review sync |
-| Phase 4 -- Verification + Closeout | Run the full gate and prepare review-ready evidence | green dependency sync, green test suite, smoke commands, issue evidence update | completed | move issue #11 to `workflow::review` |
+| Phase 4 -- Verification + Closeout | Run the full gate and prepare review-ready evidence | green dependency sync, green test suite, smoke commands, review-fix evidence sync, issue evidence update | completed | move issue #11 to `workflow::review` |
 
 ## 8. Task Tables
 
@@ -143,7 +143,7 @@ repo's existing V2 naming convention instead of introducing an issue-number-only
 
 | Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
 | --- | --- | --- | --- | --- | --- | --- |
-| VER-01 | Run `uv sync --all-extras --dev`, targeted suites, and the full `pytest` gate | QA | Sprint 3 complete | 0.2d | completed | dependency sync and tests pass without unresolved skips or failures |
+| VER-01 | Run `uv sync --all-extras --dev`, targeted suites, and the full `pytest` gate | QA | Sprint 3 complete | 0.2d | completed | dependency sync and tests pass without unresolved skips or failures, including reopened review-fix regressions |
 | VER-02 | Run CLI smoke tests for `setup-data`, `fetch`, `backtest`, and `update-data` | Infra | VER-01 | 0.2d | completed | smoke commands succeed and the outputs are captured as review evidence |
 | VER-03 | Update the umbrella issue or PR with evidence, remaining risks, and review notes | Planning | VER-01, VER-02 | 0.1d | completed | review-ready summary links to docs, commands, and residual risks |
 
@@ -205,6 +205,7 @@ xargs -0 grep -n "data.connector\|data.preprocessor\|DataConnector\|prepare_data
 # Feature-specific tests
 pytest tests/unit/test_duckdb_connector.py -v
 pytest tests/unit/test_strategy_interface.py -v
+PYTHONPATH=src pytest tests/unit/test_backtester_v2.py -v
 pytest tests/integration/test_minute_backtest.py -v
 ```
 
