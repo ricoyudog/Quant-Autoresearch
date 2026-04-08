@@ -220,8 +220,8 @@ uv run pytest --tb=short -v
 - `uv run pytest --tb=short -q` -> `150 passed in 1.34s`
 - `uv run pytest tests/integration/test_validate_cli.py tests/unit/test_cpcv.py tests/unit/test_regime.py tests/unit/test_stability.py -q` -> `42 passed in 1.58s`
 - `uv run pytest --tb=short -q` -> `157 passed in 1.61s`
-- `uv run pytest tests/unit/test_regime.py -q` -> `13 passed in 0.59s`
-- `uv run pytest --tb=short -q` -> `162 passed in 1.86s`
+- `uv run pytest tests/unit/test_regime.py -q` -> `13 passed in 0.60s`
+- `uv run pytest --tb=short -q` -> `162 passed in 1.88s`
 - `CACHE_DIR=/tmp/quant-smoke-cache uv run python cli.py validate --method cpcv --groups 6 --test-groups 1` -> exited `0`, printed `VERDICT: STRONG`
 - `CACHE_DIR=/tmp/quant-smoke-cache uv run python cli.py validate --method regime` -> exited `0`, printed `VERDICT: CONCENTRATED`
 - `CACHE_DIR=/tmp/quant-smoke-cache uv run python cli.py validate --method stability --perturbation 0.2 --steps 5` -> exited `0`, printed `VERDICT: GOOD`
