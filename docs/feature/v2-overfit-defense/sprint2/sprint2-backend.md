@@ -203,6 +203,9 @@ uv run pytest --tb=short -v
 - Added Sprint 2 test coverage in `tests/unit/test_cpcv.py`, `tests/unit/test_regime.py`, `tests/unit/test_stability.py`, `tests/integration/test_validate_cli.py`, and CLI registration coverage in `tests/unit/test_cli.py`.
 - Hardened `run_cpcv()` to reject none-only / empty-only data configs with a clear error and strengthened CPCV unit coverage for summary metrics and purge-sensitive behavior.
 - Added `docs/feature/v2-overfit-defense/overfit-defense-knowledge-base.md` and linked it from the feature README.
+- Closed review follow-ups in `c4ee998` by making CPCV path evaluation causal inside test slices, surfacing informative validation errors in `cli.py`, selecting a deterministic `SPY` regime benchmark when available, and rejecting ambiguous multi-symbol regime runs without `SPY`.
+- Tightened regime validation to respect 20-day semantics for datetime-indexed data and to fail fast when history is insufficient for regime classification.
+- Added regression coverage for CPCV leakage, regime short-history / intraday edge cases, flat negative stability surfaces, and validate-command review gaps.
 
 ### Command Results
 
@@ -213,6 +216,8 @@ uv run pytest --tb=short -v
 - `uv run pytest tests/unit/test_cpcv.py tests/unit/test_regime.py tests/unit/test_stability.py tests/integration/test_validate_cli.py -v` -> `34 passed in 0.66s`
 - `uv run pytest --tb=short -v` -> `150 passed in 1.35s`
 - `uv run pytest --tb=short -q` -> `150 passed in 1.34s`
+- `uv run pytest tests/integration/test_validate_cli.py tests/unit/test_cpcv.py tests/unit/test_regime.py tests/unit/test_stability.py -q` -> `42 passed in 1.58s`
+- `uv run pytest --tb=short -q` -> `157 passed in 1.61s`
 - `CACHE_DIR=/tmp/quant-smoke-cache uv run python cli.py validate --method cpcv --groups 6 --test-groups 1` -> exited `0`, printed `VERDICT: STRONG`
 - `CACHE_DIR=/tmp/quant-smoke-cache uv run python cli.py validate --method regime` -> exited `0`, printed `VERDICT: CONCENTRATED`
 - `CACHE_DIR=/tmp/quant-smoke-cache uv run python cli.py validate --method stability --perturbation 0.2 --steps 5` -> exited `0`, printed `VERDICT: GOOD`
@@ -225,3 +230,4 @@ uv run pytest --tb=short -v
 ### Follow-ups
 
 - After merge: update CLAUDE.md to reflect overfit defense architecture
+- Review-ready as of `c4ee998`; no additional implementation follow-up remains on issue #12.
