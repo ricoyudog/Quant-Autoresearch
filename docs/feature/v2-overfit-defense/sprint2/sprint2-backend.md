@@ -3,7 +3,7 @@
 > Feature: `v2-overfit-defense`
 > Role: Backend
 > Derived from: #12 (Umbrella: Session 3 Overfit Defense) — Layer 2 advanced validation
-> Last Updated: 2026-04-05 (Sprint 2 implementation and verification complete; ready for review)
+> Last Updated: 2026-04-08 (Business-day regime regression fix synced; ready for review)
 
 ## 0) Governing Specs
 
@@ -205,7 +205,9 @@ uv run pytest --tb=short -v
 - Added `docs/feature/v2-overfit-defense/overfit-defense-knowledge-base.md` and linked it from the feature README.
 - Closed review follow-ups in `c4ee998` by making CPCV path evaluation causal inside test slices, surfacing informative validation errors in `cli.py`, selecting a deterministic `SPY` regime benchmark when available, and rejecting ambiguous multi-symbol regime runs without `SPY`.
 - Tightened regime validation to respect 20-day semantics for datetime-indexed data and to fail fast when history is insufficient for regime classification.
+- Restored trading-day regime classification for datetime-indexed market data by aggregating per-session closes, classifying on 20 trading-day daily windows, and mapping the resulting regime labels back onto the original bars.
 - Added regression coverage for CPCV leakage, regime short-history / intraday edge cases, flat negative stability surfaces, and validate-command review gaps.
+- Added business-day regression coverage for daily and intraday datetime indexes so regime classification starts after 20 trading sessions and `regime_analysis()` accepts sufficient business-day history.
 
 ### Command Results
 
@@ -218,6 +220,8 @@ uv run pytest --tb=short -v
 - `uv run pytest --tb=short -q` -> `150 passed in 1.34s`
 - `uv run pytest tests/integration/test_validate_cli.py tests/unit/test_cpcv.py tests/unit/test_regime.py tests/unit/test_stability.py -q` -> `42 passed in 1.58s`
 - `uv run pytest --tb=short -q` -> `157 passed in 1.61s`
+- `uv run pytest tests/unit/test_regime.py -q` -> `13 passed in 0.59s`
+- `uv run pytest --tb=short -q` -> `162 passed in 1.86s`
 - `CACHE_DIR=/tmp/quant-smoke-cache uv run python cli.py validate --method cpcv --groups 6 --test-groups 1` -> exited `0`, printed `VERDICT: STRONG`
 - `CACHE_DIR=/tmp/quant-smoke-cache uv run python cli.py validate --method regime` -> exited `0`, printed `VERDICT: CONCENTRATED`
 - `CACHE_DIR=/tmp/quant-smoke-cache uv run python cli.py validate --method stability --perturbation 0.2 --steps 5` -> exited `0`, printed `VERDICT: GOOD`
@@ -230,4 +234,4 @@ uv run pytest --tb=short -v
 ### Follow-ups
 
 - After merge: update CLAUDE.md to reflect overfit defense architecture
-- Review-ready as of `c4ee998`; no additional implementation follow-up remains on issue #12.
+- Review-ready after the business-day regime regression fix closeout commit; no additional implementation follow-up remains on issue #12.

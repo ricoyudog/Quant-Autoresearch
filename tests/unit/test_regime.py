@@ -15,6 +15,13 @@ def make_market_data(returns: list[float]) -> pd.DataFrame:
     return pd.DataFrame({"Close": close, "returns": returns_series}, index=dates)
 
 
+def make_market_data_with_index(index: pd.Index, returns: list[float]) -> pd.DataFrame:
+    """Create deterministic market data aligned to a provided index."""
+    returns_series = pd.Series(returns, index=index)
+    close = 100 * (1 + returns_series).cumprod()
+    return pd.DataFrame({"Close": close, "returns": returns_series}, index=index)
+
+
 def make_strategy_returns(index: pd.Index) -> pd.Series:
     """Create a deterministic strategy return path aligned to market data."""
     values = np.where(np.arange(len(index)) % 3 == 0, 0.01, -0.002)
@@ -105,6 +112,34 @@ def test_regime_intraday_does_not_classify_before_20_days():
     assert regimes.notna().sum() == 0
 
 
+def test_regime_business_day_daily_data_classifies_after_20_trading_days():
+    """Business-day daily data should classify once 20 trading days of history exist."""
+    index = pd.bdate_range("2024-01-01", periods=40)
+    market_data = make_market_data_with_index(index, [0.002] * len(index))
+
+    regimes = classify_market_regimes(market_data)
+
+    assert regimes.first_valid_index() == index[20]
+    assert regimes.notna().sum() == len(index) - 20
+
+
+def test_regime_intraday_multi_day_data_waits_for_20_trading_days():
+    """Intraday data should classify by trading-day count, not 20 calendar days."""
+    daily_index = pd.bdate_range("2024-01-01", periods=25)
+    intraday_index = pd.DatetimeIndex(
+        [
+            timestamp + pd.Timedelta(hours=9, minutes=30 + minute)
+            for timestamp in daily_index
+            for minute in range(3)
+        ]
+    )
+    market_data = make_market_data_with_index(intraday_index, [0.001] * len(intraday_index))
+
+    regimes = classify_market_regimes(market_data)
+
+    assert regimes.first_valid_index().normalize() == daily_index[20]
+
+
 def test_regime_short_history_raises_value_error():
     """regime_analysis should reject data that cannot support 20-day classification."""
     market_data = make_market_data([0.002] * 10)
@@ -112,3 +147,24 @@ def test_regime_short_history_raises_value_error():
 
     with pytest.raises(ValueError, match="insufficient history"):
         regime_analysis(strategy_returns, market_data)
+
+
+def test_regime_business_day_data_starts_after_20_trading_days():
+    """Business-day market data should classify after 20 trading bars, not 20 calendar days."""
+    index = pd.bdate_range("2024-01-01", periods=25)
+    market_data = make_market_data_with_index(index, ([0.01] * 21) + ([-0.01] * 4))
+
+    regimes = classify_market_regimes(market_data)
+
+    assert regimes.first_valid_index() == index[20]
+
+
+def test_regime_analysis_supports_business_day_history():
+    """Business-day daily data with sufficient history should not be rejected."""
+    index = pd.bdate_range("2024-01-01", periods=40)
+    market_data = make_market_data_with_index(index, ([0.01] * 20) + ([-0.01] * 20))
+    strategy_returns = make_strategy_returns(market_data.index)
+
+    results = regime_analysis(strategy_returns, market_data)
+
+    assert results

@@ -11,6 +11,20 @@ REGIME_NAMES = (
 )
 
 
+def _classify_regime_from_daily_series(close: pd.Series, returns: pd.Series) -> pd.Series:
+    """Classify regimes from daily close and return series using 20 trading-day windows."""
+    rolling_return = close.pct_change(20)
+    rolling_volatility = returns.rolling(20).std()
+    volatility_median = rolling_volatility.dropna().median()
+
+    regimes = pd.Series(index=close.index, dtype="object")
+    regimes[(rolling_return > 0) & (rolling_volatility < volatility_median)] = "bull_quiet"
+    regimes[(rolling_return > 0) & (rolling_volatility >= volatility_median)] = "bull_volatile"
+    regimes[(rolling_return <= 0) & (rolling_volatility < volatility_median)] = "bear_quiet"
+    regimes[(rolling_return <= 0) & (rolling_volatility >= volatility_median)] = "bear_volatile"
+    return regimes
+
+
 def classify_market_regimes(market_data: pd.DataFrame) -> pd.Series:
     """Classify each bar into one of four simple market regimes."""
     if market_data.empty:
@@ -20,21 +34,18 @@ def classify_market_regimes(market_data: pd.DataFrame) -> pd.Series:
     if close_column not in market_data.columns:
         raise ValueError("market_data must contain Close or close column")
 
-    returns = market_data["returns"] if "returns" in market_data.columns else market_data[close_column].pct_change()
     if isinstance(market_data.index, pd.DatetimeIndex):
-        rolling_return = market_data[close_column].pct_change(freq="20D")
-        rolling_volatility = returns.rolling("20D", min_periods=20).std()
-    else:
-        rolling_return = market_data[close_column].pct_change(20)
-        rolling_volatility = returns.rolling(20).std()
-    volatility_median = rolling_volatility.dropna().median()
+        session_index = market_data.index.normalize()
+        daily_close = market_data[close_column].groupby(session_index).last()
+        if session_index.nunique() == len(market_data) and "returns" in market_data.columns:
+            daily_returns = pd.Series(market_data["returns"].to_numpy(), index=session_index)
+        else:
+            daily_returns = daily_close.pct_change()
+        daily_regimes = _classify_regime_from_daily_series(daily_close, daily_returns)
+        return pd.Series(daily_regimes.reindex(session_index).to_numpy(), index=market_data.index, dtype="object")
 
-    regimes = pd.Series(index=market_data.index, dtype="object")
-    regimes[(rolling_return > 0) & (rolling_volatility < volatility_median)] = "bull_quiet"
-    regimes[(rolling_return > 0) & (rolling_volatility >= volatility_median)] = "bull_volatile"
-    regimes[(rolling_return <= 0) & (rolling_volatility < volatility_median)] = "bear_quiet"
-    regimes[(rolling_return <= 0) & (rolling_volatility >= volatility_median)] = "bear_volatile"
-    return regimes
+    returns = market_data["returns"] if "returns" in market_data.columns else market_data[close_column].pct_change()
+    return _classify_regime_from_daily_series(market_data[close_column], returns)
 
 
 def regime_analysis(strategy_returns: pd.Series, market_data: pd.DataFrame) -> dict[str, dict[str, float | int]]:
