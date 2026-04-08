@@ -15,13 +15,10 @@ def setup_logging(name="quant_autoresearch", log_file="experiments/logs/run.log"
         file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         console_formatter = logging.Formatter('%(levelname)s: %(message)s')
 
-        log_dir = os.path.dirname(log_file)
-        if log_dir:
-            os.makedirs(log_dir, exist_ok=True)
-
         # File handler (10MB per file, max 5 backups)
-        Path(log_file).parent.mkdir(parents=True, exist_ok=True)
-        file_handler = RotatingFileHandler(log_file, maxBytes=10*1024*1024, backupCount=5)
+        resolved_log_file = os.path.abspath(log_file)
+        Path(resolved_log_file).parent.mkdir(parents=True, exist_ok=True)
+        file_handler = RotatingFileHandler(resolved_log_file, maxBytes=10*1024*1024, backupCount=5)
         file_handler.setFormatter(file_formatter)
         logger.addHandler(file_handler)
 

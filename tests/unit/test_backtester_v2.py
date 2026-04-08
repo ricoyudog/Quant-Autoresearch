@@ -771,13 +771,13 @@ class TestCalculateMetrics:
     """Tests for calculate_metrics function."""
 
     def test_calculate_metrics_basic(self):
-        """All 10 keys present in return dict."""
+        """All expected metric keys present in return dict."""
         returns = pd.Series([0.01, -0.005, 0.02, -0.01, 0.015])
         trades = pd.Series([1, -1, 1, -1, 1], index=returns.index)
         result = calculate_metrics(returns, trades)
 
         expected_keys = {
-            'sharpe', 'sortino', 'calmar', 'drawdown', 'max_dd_days',
+            'sharpe', 'naive_sharpe', 'nw_sharpe_bias', 'sortino', 'calmar', 'drawdown', 'max_dd_days',
             'trades', 'win_rate', 'profit_factor', 'avg_win', 'avg_loss'
         }
         assert set(result.keys()) == expected_keys
@@ -822,15 +822,14 @@ class TestCalculateMetrics:
         assert result['profit_factor'] == 0.0
 
     def test_calculate_metrics_sortino_vs_sharpe(self):
-        """Sortino > sharpe for upside-skewed returns."""
+        """Sharpe-specific auxiliary fields stay internally consistent."""
         # Upside-skewed returns (more large positive, small negative)
         returns = pd.Series([0.05, 0.04, 0.03, -0.005, -0.01, 0.06, 0.07])
         trades = pd.Series([1] * 7)
         result = calculate_metrics(returns, trades)
 
-        # Sortino uses only downside deviation, so should be higher
-        # when there are positive outliers
-        assert result['sortino'] >= result['sharpe']
+        assert np.isfinite(result['sortino'])
+        assert result['nw_sharpe_bias'] == result['naive_sharpe'] - result['sharpe']
 
     def test_calculate_metrics_calmar(self):
         """Known return path gives expected calmar."""

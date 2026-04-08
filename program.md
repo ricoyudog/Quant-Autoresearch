@@ -1,10 +1,10 @@
 # Quant Autoresearch Program
 
-Autonomous quantitative strategy discovery on the V2 local-first data pipeline.
+Autonomous quantitative strategy discovery on the V2 local-first data pipeline with overfit-defense validation.
 
 ## Data Pipeline V2
 
-The project now uses the local `massive-minute-aggs` US equities dataset as the primary data source.
+The project uses the local `massive-minute-aggs` US equities dataset as the primary source.
 Daily bars are materialized into DuckDB at `data/daily_cache.duckdb`, and minute bars are queried on
 demand through the external `minute-aggs` CLI.
 
@@ -41,12 +41,18 @@ uv run python cli.py fetch AAPL --start 2025-11-03 --end 2025-11-05
 # Run a minute-mode walk-forward backtest
 uv run python cli.py backtest --start 2024-01-01 --end 2024-12-31
 uv run python cli.py backtest --strategy src/strategies/active_strategy.py --universe-size 20
+
+# Run overfit-defense validation
+uv run python cli.py validate --method cpcv
+uv run python cli.py validate --method regime
+uv run python cli.py validate --method stability
 ```
 
 Notes:
 
 - `fetch` requires both `--start` and `--end`, or neither.
 - `backtest` accepts `--strategy`, `--start`, `--end`, and `--universe-size`.
+- `validate` accepts `--method cpcv|regime|stability` plus method-specific flags.
 - `setup-data` and `update-data` are the live Typer command names; underscored spellings are not valid CLI commands.
 
 ## Strategy Interface
@@ -68,12 +74,7 @@ Contract details:
 - `generate_signals(minute_data)` receives a dictionary keyed by ticker.
 - Each signal series must align to the source minute-frame index for that ticker.
 - The backtester applies the enforced 1-bar lag. Strategies should emit raw signals and not self-lag.
-
-The default example strategy in `src/strategies/active_strategy.py` currently:
-
-- ranks the top 30 tickers by latest 20-session average volume
-- computes a simple 20-bar momentum signal per ticker
-- returns minute-mode signals as `dict[str, pd.Series]`
+- For validation helpers, `generate_signals(pd.DataFrame)` compatibility is still supported.
 
 ## Backtest Data Flow
 
@@ -93,13 +94,15 @@ Minute-mode backtests print the standard metrics block plus `PER_SYMBOL`:
 
 ```text
 ---
-SCORE: 0.5432
+SCORE: 0.4521
+NAIVE_SHARPE: 0.6832
+NW_SHARPE_BIAS: 0.2311
+DEFLATED_SR: 0.9200
 SORTINO: 0.8100
 CALMAR: 1.2300
 DRAWDOWN: -0.1200
 MAX_DD_DAYS: 45
 TRADES: 120
-P_VALUE: 0.0000
 WIN_RATE: 0.5500
 PROFIT_FACTOR: 1.8500
 AVG_WIN: 0.0120
@@ -110,9 +113,50 @@ PER_SYMBOL:
   AAA: sharpe=0.62 sortino=0.90 dd=-0.10 pf=2.10 trades=35 wr=0.57
 ```
 
+## Decision Rules
+
+**KEEP if:**
+
+- `SCORE > previous best`
+- `SCORE > BASELINE_SHARPE`
+
+**DISCARD if:**
+
+- `SCORE <= previous best`
+- `SCORE <= BASELINE_SHARPE`
+
+**Advisories:**
+
+- If `DEFLATED_SR < 0.5`, treat the result as not robust yet and run deeper validation before trusting it.
+- If `NW_SHARPE_BIAS > 0.3`, serial correlation is materially inflating the naive estimate.
+
+## Overfit Defense Guidance
+
+- `SCORE` is the Newey-West adjusted Sharpe Ratio, not the naive Sharpe.
+- `NAIVE_SHARPE` is retained only as a comparison point.
+- `NW_SHARPE_BIAS = NAIVE_SHARPE - SCORE`; larger values indicate more serial-correlation inflation.
+- Use `validate --method cpcv` after material score improvements, major parameter changes, or before merge.
+- Use `validate --method regime` to check whether profit concentration is regime-dependent.
+- Use `validate --method stability` to detect narrow parameter optima before trusting a change.
+
+Red flags:
+
+- `NW_SHARPE_BIAS > 0.3`
+- `DEFLATED_SR < 0.5`
+- CPCV percent-positive below `0.5`
+- stability score below `0.5`
+
 ## Operational Notes
 
 - The daily cache build is month-batched and can take significant time on the full dataset.
 - `update-data` is append-oriented by default and skips duplicate `(ticker, session_date)` rows.
 - Minute queries are window-scoped to keep memory use bounded.
 - The security gate still blocks dangerous imports, forbidden builtins, and look-ahead patterns such as `.shift(-1)`.
+
+## Experiment Logging
+
+Log experiment outcomes to `experiments/results.tsv` with the header:
+
+```text
+commit	score	naive_sharpe	deflated_sr	sortino	calmar	drawdown	max_dd_days	trades	win_rate	profit_factor	avg_win	avg_loss	baseline_sharpe	nw_bias	status	description
+```

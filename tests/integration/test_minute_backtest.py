@@ -9,12 +9,14 @@ from data.duckdb_connector import calculate_walk_forward_windows
 
 EXPECTED_METRIC_KEYS = {
     "SCORE",
+    "NAIVE_SHARPE",
+    "NW_SHARPE_BIAS",
+    "DEFLATED_SR",
     "SORTINO",
     "CALMAR",
     "DRAWDOWN",
     "MAX_DD_DAYS",
     "TRADES",
-    "P_VALUE",
     "WIN_RATE",
     "PROFIT_FACTOR",
     "AVG_WIN",

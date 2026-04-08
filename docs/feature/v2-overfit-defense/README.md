@@ -16,9 +16,9 @@ Phase 1 (issue #8) must be complete: backtester upgrades (dynamic class loading,
 
 | Issue | Scope | Status |
 | --- | --- | --- |
-| #12 | Umbrella: Session 3 Overfit Defense | pending |
-| Sprint 1 | Newey-West Sharpe + Deflated SR + remove Monte Carlo | pending |
-| Sprint 2 | CPCV CLI + Regime check + Param stability | pending |
+| #12 | Umbrella: Session 3 Overfit Defense | review |
+| Sprint 1 | Newey-West Sharpe + Deflated SR + remove Monte Carlo | complete |
+| Sprint 2 | CPCV CLI + Regime check + Param stability | complete; review fixes and business-day regime regression fix applied |
 
 ## Execution Order
 
@@ -32,11 +32,12 @@ Sprint 2 depends on Sprint 1 (Newey-West Sharpe is used by regime analysis).
 
 - [v2-overfit-defense-development-plan.md](./v2-overfit-defense-development-plan.md) — Main development plan with task detail
 - [v2-overfit-defense-test-plan.md](./v2-overfit-defense-test-plan.md) — Verification and test plan
+- [overfit-defense-knowledge-base.md](./overfit-defense-knowledge-base.md) — Research note for Sprint 2 validation methods
 
 ## Sprint Docs
 
-- [sprint1/sprint1-backend.md](./sprint1/sprint1-backend.md) — Sprint 1: Newey-West Sharpe + Deflated SR + remove Monte Carlo
-- [sprint2/sprint2-backend.md](./sprint2/sprint2-backend.md) — Sprint 2: CPCV CLI + Regime check + Param stability
+- [sprint1/sprint1-backend.md](./sprint1/sprint1-backend.md) — Sprint 1 closeout complete; ready to proceed to Sprint 2
+- [sprint2/sprint2-backend.md](./sprint2/sprint2-backend.md) — Sprint 2 complete; review fixes and business-day regime regression fix synced, ready for review
 
 ## Governing Specs
 

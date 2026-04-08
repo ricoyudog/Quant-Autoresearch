@@ -25,6 +25,8 @@ from data.duckdb_connector import (
     load_daily_data,
     query_minute_data,
 )
+from validation.deflated_sr import deflated_sharpe_ratio
+from validation.newey_west import newey_west_sharpe
 
 CACHE_DIR = os.environ.get("CACHE_DIR", "data/cache")
 DEFAULT_STRATEGY_FILE = "src/strategies/active_strategy.py"
@@ -32,6 +34,90 @@ STRATEGY_FILE = DEFAULT_STRATEGY_FILE
 
 FORBIDDEN_BUILTINS = {"exec", "eval", "open", "getattr", "setattr", "delattr"}
 FORBIDDEN_MODULES = {"socket", "requests", "urllib", "os", "sys", "shutil", "subprocess"}
+RESULTS_TSV_CANDIDATES = ("experiments/results.tsv", "results.tsv")
+
+
+def calculate_naive_sharpe(returns: pd.Series) -> float:
+    """Calculate the minute-bar annualized raw Sharpe Ratio."""
+    clean_returns = pd.Series(returns).dropna()
+    std_ret = clean_returns.std()
+    if len(clean_returns) < 2 or std_ret == 0:
+        return 0.0
+
+    return float((clean_returns.mean() / std_ret) * np.sqrt(252 * 390))
+
+
+def count_experiment_trials() -> int:
+    """Count prior experiment rows, defaulting to the current trial only."""
+    for candidate in RESULTS_TSV_CANDIDATES:
+        if not os.path.exists(candidate):
+            continue
+
+        try:
+            with open(candidate, "r") as handle:
+                non_empty_lines = [line for line in handle if line.strip()]
+        except OSError:
+            return 1
+
+        if len(non_empty_lines) <= 1:
+            return 1
+
+        return len(non_empty_lines)
+
+    return 1
+
+
+def get_results_tsv_path() -> str:
+    """Resolve the preferred results.tsv location for the current workspace."""
+    for candidate in RESULTS_TSV_CANDIDATES:
+        if os.path.exists(candidate):
+            return candidate
+
+    return RESULTS_TSV_CANDIDATES[0]
+
+
+def append_results_tsv(
+    avg_metrics: dict,
+    baseline_sharpe: float,
+) -> None:
+    """Ensure the Sprint 1 results.tsv header exists and append the latest run."""
+    results_path = get_results_tsv_path()
+    parent_dir = os.path.dirname(results_path)
+    if parent_dir:
+        os.makedirs(parent_dir, exist_ok=True)
+
+    header = (
+        "commit\tscore\tnaive_sharpe\tdeflated_sr\tsortino\tcalmar\tdrawdown\tmax_dd_days\t"
+        "trades\twin_rate\tprofit_factor\tavg_win\tavg_loss\tbaseline_sharpe\tnw_bias\tstatus\t"
+        "description"
+    )
+
+    if not os.path.exists(results_path) or os.path.getsize(results_path) == 0:
+        with open(results_path, "w") as handle:
+            handle.write(f"{header}\n")
+
+    row = [
+        os.environ.get("RESULTS_COMMIT", "working"),
+        f"{avg_metrics.get('sharpe', 0.0):.6f}",
+        f"{avg_metrics.get('naive_sharpe', 0.0):.6f}",
+        f"{avg_metrics.get('deflated_sr', 0.5):.6f}",
+        f"{avg_metrics.get('sortino', 0.0):.6f}",
+        f"{avg_metrics.get('calmar', 0.0):.6f}",
+        f"{avg_metrics.get('drawdown', 0.0):.6f}",
+        str(avg_metrics.get("max_dd_days", 0)),
+        str(avg_metrics.get("trades", 0)),
+        f"{avg_metrics.get('win_rate', 0.0):.6f}",
+        f"{avg_metrics.get('profit_factor', 0.0):.6f}",
+        f"{avg_metrics.get('avg_win', 0.0):.6f}",
+        f"{avg_metrics.get('avg_loss', 0.0):.6f}",
+        f"{baseline_sharpe:.6f}",
+        f"{avg_metrics.get('nw_sharpe_bias', 0.0):.6f}",
+        "pending",
+        "",
+    ]
+
+    with open(results_path, "a") as handle:
+        handle.write("\t".join(row) + "\n")
 
 
 def get_strategy_file() -> str:
@@ -284,10 +370,9 @@ def calculate_metrics(
 ) -> dict:
     """Calculate 10 performance metrics from combined returns and trade signals."""
     mean_ret = combined_returns.mean()
-    std_ret = combined_returns.std()
 
-    # Sharpe
-    sharpe = (mean_ret / std_ret) * np.sqrt(252) if std_ret != 0 else 0.0
+    naive_sharpe = calculate_naive_sharpe(combined_returns)
+    sharpe = newey_west_sharpe(combined_returns)
 
     # Sortino — downside deviation only
     downside = combined_returns[combined_returns < 0]
@@ -344,6 +429,8 @@ def calculate_metrics(
 
     return {
         "sharpe": sharpe,
+        "naive_sharpe": naive_sharpe,
+        "nw_sharpe_bias": naive_sharpe - sharpe,
         "sortino": sortino,
         "calmar": calmar,
         "drawdown": max_drawdown,
@@ -365,8 +452,7 @@ def calculate_baseline_sharpe(data: dict) -> float:
     if not all_returns:
         return 0.0
     combined = pd.concat(all_returns).dropna()
-    std = combined.std()
-    return float((combined.mean() / std) * np.sqrt(252)) if std != 0 else 0.0
+    return calculate_naive_sharpe(combined)
 
 
 def run_per_symbol_analysis(strategy_instance, data: dict, start_idx: int, end_idx: int) -> dict:
@@ -397,8 +483,7 @@ def run_per_symbol_analysis(strategy_instance, data: dict, start_idx: int, end_i
         net_returns = daily_returns - costs
 
         # Metrics
-        std = net_returns.std()
-        sharpe = float((net_returns.mean() / std) * np.sqrt(252)) if std != 0 else 0.0
+        sharpe = newey_west_sharpe(net_returns)
 
         downside = net_returns[net_returns < 0]
         downside_std = downside.std() if len(downside) > 0 else 0.0
@@ -494,147 +579,251 @@ def load_data():
     connector = CacheConnector(CACHE_DIR)
     return connector.load_all_cached()
 
+def _coerce_legacy_signals(raw_signals, symbol: str, index: pd.Index) -> pd.Series:
+    """Normalize legacy strategy output for a single-symbol frame."""
+    signal_values = raw_signals
+    if isinstance(raw_signals, dict):
+        signal_values = raw_signals.get(symbol, pd.Series(0.0, index=index))
+
+    if isinstance(signal_values, pd.Series):
+        return signal_values.reindex(index).fillna(0.0).astype(float)
+
+    return pd.Series(signal_values, index=index).fillna(0.0).astype(float)
+
+
+def _compute_legacy_window_returns(
+    strategy_instance,
+    data: dict[str, pd.DataFrame],
+    start_idx: int,
+    end_idx: int,
+) -> tuple[pd.Series, pd.Series, pd.Series]:
+    """Compute combined legacy cached-data returns for one walk-forward window."""
+    total_returns = []
+    position_series = []
+    base_cost = 0.0005
+
+    for symbol, df in data.items():
+        if df is None or df.empty:
+            continue
+
+        history_df = df.iloc[:end_idx].copy()
+        if history_df.empty:
+            continue
+
+        try:
+            raw_signals = strategy_instance.generate_signals(history_df)
+            full_signals = _coerce_legacy_signals(raw_signals, symbol, history_df.index)
+        except Exception as exc:
+            print(f"Error in {symbol} strategy: {exc}", file=sys.stderr)
+            return pd.Series(dtype=float), pd.Series(dtype=float), pd.Series(dtype=float)
+
+        signals = full_signals.shift(1).fillna(0.0).iloc[start_idx:end_idx]
+        test_returns = df.iloc[start_idx:end_idx]["returns"]
+        volatility = df.iloc[start_idx:end_idx].get("volatility", pd.Series(0.0, index=test_returns.index))
+        trades = signals.diff().abs().fillna(0.0)
+        slippage = pd.Series(volatility, index=test_returns.index).fillna(0.0) * 0.1
+        costs = trades * (base_cost + slippage)
+        net_returns = (test_returns * signals) - costs
+
+        total_returns.append(net_returns.rename(symbol))
+        position_series.append(signals.rename(symbol))
+
+    if not total_returns or not position_series:
+        return pd.Series(dtype=float), pd.Series(dtype=float), pd.Series(dtype=float)
+
+    combined_returns = pd.concat(total_returns, axis=1).mean(axis=1).fillna(0.0)
+    combined_positions, combined_trade_activity = build_portfolio_activity(position_series)
+    return combined_returns, combined_positions, combined_trade_activity
+
+
 def run_backtest(strategy_instance, data, start_idx, end_idx):
     """
     Evaluates strategy on a specific window [start_idx:end_idx].
     Warms up indicators by passing the full history up to end_idx.
     """
-    total_returns = []
-    BASE_COST = 0.0005 # 0.05%
-    
-    for symbol, df in data.items():
-        # Provide history up to end_idx for indicator calculation
-        history_df = df.iloc[:end_idx].copy()
-        
-        try:
-            # Agent generates signals for the entire period provided
-            full_signals = strategy_instance.generate_signals(history_df)
-            
-            # Robustness: Force into Series if LLM returned numpy array
-            if not isinstance(full_signals, pd.Series):
-                full_signals = pd.Series(full_signals, index=history_df.index)
-            
-            # Fill NaNs with 0 to prevent downstream crashes
-            full_signals = full_signals.fillna(0)
-            
-            # Slice to only the test window
-            signals = full_signals.iloc[start_idx:end_idx]
-        except Exception as e:
-            print(f"Error in {symbol} strategy: {e}", file=sys.stderr)
-            return -10.0, 0.0, 0
-            
-        # Enforced Lag: Shift signals by 1 to prevent look-ahead bias
-        signals = full_signals.shift(1).fillna(0).iloc[start_idx:end_idx]
-        
-        # Returns for the test window
-        test_returns = df.iloc[start_idx:end_idx]['returns']
-        daily_returns = test_returns * signals
-        
-        # Costs: base cost + volatility slippage
-        trades = signals.diff().abs().fillna(0)
-        vol = df.iloc[start_idx:end_idx]['volatility']
-        slippage = vol * 0.1 
-        costs = trades * (BASE_COST + slippage)
-        
-        net_returns = daily_returns - costs
-        total_returns.append(net_returns)
-        
-    if not total_returns:
+    combined_returns, combined_positions, combined_trade_activity = _compute_legacy_window_returns(
+        strategy_instance,
+        data,
+        start_idx,
+        end_idx,
+    )
+    if combined_returns.empty:
         return -10.0, 0.0, 0
-        
-    combined_returns = pd.concat(total_returns, axis=1).mean(axis=1)
-    
-    # Sharpe Ratio (Annualized)
-    if combined_returns.std() == 0:
-        sharpe = 0.0
-    else:
-        sharpe = (combined_returns.mean() / combined_returns.std()) * np.sqrt(252)
-    
-    # Max Drawdown
+
+    sharpe = newey_west_sharpe(combined_returns)
     cum_returns = (1 + combined_returns).cumprod()
     running_max = cum_returns.cummax()
     drawdown = (cum_returns - running_max) / running_max
-    max_drawdown = drawdown.min()
-    
-    # Total Trades (rough estimate sum across symbols)
-    total_trades = 0
-    for symbol, df in data.items():
-        history_df = df.iloc[:end_idx].copy()
-        try:
-            full_signals = strategy_instance.generate_signals(history_df)
-            signals = full_signals.iloc[start_idx:end_idx]
-            total_trades += signals.diff().abs().sum()
-        except:
-            pass
+    max_drawdown = float(drawdown.min())
 
-    return sharpe, max_drawdown, total_trades
+    total_trades = int(combined_trade_activity[combined_trade_activity > 0].sum()) if not combined_trade_activity.empty else 0
+    return float(sharpe), max_drawdown, total_trades
 
-def walk_forward_validation(strategy_file: str | None = None):
+
+def _load_strategy_instance(strategy_file: str) -> tuple[type, object]:
+    """Load the strategy class and instantiate it in the restricted runtime."""
     try:
-        start_date_override, end_date_override, universe_size_override = get_backtest_runtime_config()
-    except ValueError as exc:
-        print(f"DATA ERROR: {exc}")
-        sys.exit(1)
+        with open(strategy_file, "r", encoding="utf-8") as handle:
+            strategy_lines = handle.readlines()
 
-    strategy_file = strategy_file or get_strategy_file()
-
-    is_safe, msg = security_check(strategy_file)
-    if not is_safe:
-        print(f"SECURITY ERROR: {msg}")
-        sys.exit(1)
-        
-    # Load Strategy via RestrictedPython Sandbox
-    try:
-        with open(strategy_file, "r") as f:
-            strategy_lines = f.readlines()
-        
-        # Strip import statements for restricted execution
         sanitized_code = []
         for line in strategy_lines:
             if not (line.strip().startswith("import ") or line.strip().startswith("from ")):
                 sanitized_code.append(line)
-        strategy_code = "".join(sanitized_code)
-        
-        # Define the restricted environment
+
         safe_globals = {
-            '__builtins__': safe_builtins,
-            '_getattr_': safer_getattr,
-            '_write_': lambda x: x,
-            '_getiter_': default_guarded_getiter,
-            '_getitem_': default_guarded_getitem,
-            '_iter_unpack_sequence_': guarded_iter_unpack_sequence,
-            '_unpack_sequence_': guarded_unpack_sequence,
-            '__name__': 'sandbox',
-            '__metaclass__': type,
-            'dict': dict,
-            'list': list,
-            'set': set,
-            'pd': pd,
-            'np': np,
+            "__builtins__": safe_builtins,
+            "_getattr_": safer_getattr,
+            "_write_": lambda value: value,
+            "_getiter_": default_guarded_getiter,
+            "_getitem_": default_guarded_getitem,
+            "_iter_unpack_sequence_": guarded_iter_unpack_sequence,
+            "_unpack_sequence_": guarded_unpack_sequence,
+            "__name__": "sandbox",
+            "__metaclass__": type,
+            "dict": dict,
+            "list": list,
+            "set": set,
+            "pd": pd,
+            "np": np,
         }
-        
-        # Compile the code in restricted mode
-        byte_code = compile_restricted(strategy_code, filename='strategy.py', mode='exec')
-        
-        # Execute in safe scope
+
+        byte_code = compile_restricted("".join(sanitized_code), filename="strategy.py", mode="exec")
         sandbox_locals = {}
         exec(byte_code, safe_globals, sandbox_locals)
-        
+
         strategy_class, _ = find_strategy_class(sandbox_locals)
         if not strategy_class:
             print("STRATEGY ERROR: No class with generate_signals found in strategy.py")
             sys.exit(1)
-            
-        strategy_instance = strategy_class()
-    except Exception as e:
-        print(f"STRATEGY LOAD ERROR (Restricted): {e}")
+
+        return strategy_class, strategy_class()
+    except SystemExit:
+        raise
+    except Exception as exc:
+        print(f"STRATEGY LOAD ERROR (Restricted): {exc}")
         sys.exit(1)
 
-    daily_data = load_daily_data(start_date=start_date_override, end_date=end_date_override)
-    if daily_data is None or daily_data.empty:
-        print("DATA ERROR: No daily DuckDB data found.")
+
+def _average_metrics(all_metrics: list[dict[str, float]]) -> dict[str, float]:
+    """Average metric dictionaries across completed windows."""
+    avg_metrics = {}
+    for key in all_metrics[0]:
+        avg_metrics[key] = float(np.mean([metrics.get(key, 0.0) for metrics in all_metrics]))
+    return avg_metrics
+
+
+def _build_per_symbol_summary(
+    per_symbol_returns: dict[str, list[pd.Series]],
+    per_symbol_signals: dict[str, list[pd.Series]],
+) -> dict[str, dict[str, float | int]]:
+    """Summarize per-symbol metrics from accumulated window returns."""
+    per_symbol = {}
+    for ticker in sorted(per_symbol_returns):
+        symbol_returns = pd.concat(per_symbol_returns[ticker], ignore_index=True)
+        symbol_signals = pd.concat(per_symbol_signals.get(ticker, []), ignore_index=True)
+        metrics = calculate_metrics(symbol_returns, symbol_signals)
+        per_symbol[ticker] = {
+            "sharpe": float(metrics.get("sharpe", 0.0)),
+            "sortino": float(metrics.get("sortino", 0.0)),
+            "dd": float(metrics.get("drawdown", 0.0)),
+            "pf": float(metrics.get("profit_factor", 0.0)),
+            "trades": int(metrics.get("trades", 0)),
+            "wr": float(metrics.get("win_rate", 0.0)),
+        }
+    return per_symbol
+
+
+def _print_metrics_output(
+    avg_metrics: dict[str, float],
+    baseline_sharpe: float,
+    per_symbol: dict[str, dict[str, float | int]],
+) -> None:
+    """Print the unified metrics block for both backtest runtimes."""
+    print("---")
+    print(f"SCORE: {avg_metrics.get('sharpe', 0.0):.4f}")
+    print(f"NAIVE_SHARPE: {avg_metrics.get('naive_sharpe', 0.0):.4f}")
+    nw_bias = avg_metrics.get(
+        "nw_sharpe_bias",
+        avg_metrics.get("naive_sharpe", 0.0) - avg_metrics.get("sharpe", 0.0),
+    )
+    print(f"NW_SHARPE_BIAS: {nw_bias:.4f}")
+    print(f"DEFLATED_SR: {avg_metrics.get('deflated_sr', 0.5):.4f}")
+    print(f"SORTINO: {avg_metrics.get('sortino', 0.0):.4f}")
+    print(f"CALMAR: {avg_metrics.get('calmar', 0.0):.4f}")
+    print(f"DRAWDOWN: {avg_metrics.get('drawdown', 0.0):.4f}")
+    print(f"MAX_DD_DAYS: {int(avg_metrics.get('max_dd_days', 0))}")
+    print(f"TRADES: {int(avg_metrics.get('trades', 0))}")
+    print(f"WIN_RATE: {avg_metrics.get('win_rate', 0.0):.4f}")
+    print(f"PROFIT_FACTOR: {avg_metrics.get('profit_factor', 0.0):.4f}")
+    print(f"AVG_WIN: {avg_metrics.get('avg_win', 0.0):.4f}")
+    print(f"AVG_LOSS: {avg_metrics.get('avg_loss', 0.0):.4f}")
+    print(f"BASELINE_SHARPE: {baseline_sharpe:.4f}")
+    print("---")
+    print("PER_SYMBOL:")
+    for symbol, sym_metrics in per_symbol.items():
+        print(
+            f"  {symbol}: sharpe={float(sym_metrics['sharpe']):.2f} "
+            f"sortino={float(sym_metrics['sortino']):.2f} "
+            f"dd={float(sym_metrics['dd']):.2f} pf={float(sym_metrics['pf']):.2f} "
+            f"trades={int(sym_metrics['trades'])} wr={float(sym_metrics['wr']):.2f}"
+        )
+
+
+def _legacy_walk_forward_validation(strategy_instance) -> None:
+    """Fallback walk-forward runtime for legacy cache-based validation tests."""
+    data = {
+        symbol: df for symbol, df in load_data().items()
+        if df is not None and not df.empty
+    }
+    if not data:
+        print("DATA ERROR: No cached data found.")
         sys.exit(1)
 
+    min_length = min(len(df) for df in data.values())
+    window_size = min_length // 5
+    if window_size < 1:
+        print("DATA ERROR: Not enough cached data for walk-forward validation.")
+        sys.exit(1)
+
+    all_metrics = []
+    n_trials = count_experiment_trials()
+    last_test_start = 0
+    last_test_end = 0
+
+    for window_index in range(5):
+        test_end = (window_index + 1) * window_size
+        test_start = int(test_end * 0.7)
+        last_test_start = test_start
+        last_test_end = test_end
+
+        combined_returns, combined_positions, combined_trade_activity = _compute_legacy_window_returns(
+            strategy_instance,
+            data,
+            test_start,
+            test_end,
+        )
+        if combined_returns.empty:
+            print("ERROR: No valid windows produced results")
+            sys.exit(1)
+
+        metrics = calculate_metrics(combined_returns, combined_positions, combined_trade_activity)
+        metrics["deflated_sr"] = deflated_sharpe_ratio(combined_returns, n_trials)
+        all_metrics.append(metrics)
+
+    avg_metrics = _average_metrics(all_metrics)
+    baseline_sharpe = calculate_baseline_sharpe(data)
+    append_results_tsv(avg_metrics, baseline_sharpe)
+    per_symbol = run_per_symbol_analysis(strategy_instance, data, last_test_start, last_test_end)
+    _print_metrics_output(avg_metrics, baseline_sharpe, per_symbol)
+
+
+def _minute_pipeline_walk_forward_validation(
+    strategy_instance,
+    daily_data: pd.DataFrame,
+    universe_size_override: int | None,
+) -> None:
+    """Primary V2 minute-pipeline walk-forward runtime."""
     if "session_date" not in daily_data.columns:
         print("DATA ERROR: Daily DuckDB data must include session_date.")
         sys.exit(1)
@@ -669,6 +858,7 @@ def walk_forward_validation(strategy_file: str | None = None):
     baseline_frames: dict[str, list[pd.DataFrame]] = {}
     per_symbol_returns: dict[str, list[pd.Series]] = {}
     per_symbol_signals: dict[str, list[pd.Series]] = {}
+    n_trials = count_experiment_trials()
 
     for window in windows:
         try:
@@ -710,9 +900,10 @@ def walk_forward_validation(strategy_file: str | None = None):
             per_symbol_signals.setdefault(ticker, []).append(signals)
 
         if window_returns:
-            combined = pd.concat(window_returns, axis=1).mean(axis=1)
+            combined = pd.concat(window_returns, axis=1).mean(axis=1).fillna(0.0)
             combined_positions, combined_trade_activity = build_portfolio_activity(window_positions)
             metrics = calculate_metrics(combined, combined_positions, combined_trade_activity)
+            metrics["deflated_sr"] = deflated_sharpe_ratio(combined, n_trials)
             all_metrics.append(metrics)
 
     if not all_metrics:
@@ -723,51 +914,47 @@ def walk_forward_validation(strategy_file: str | None = None):
         print(f"DATA ERROR: Expected {len(windows)} completed windows, got {len(all_metrics)}.")
         sys.exit(1)
 
-    # Average metrics across all windows
-    avg_metrics = {}
-    for key in all_metrics[0]:
-        avg_metrics[key] = float(np.mean([m[key] for m in all_metrics]))
-
+    avg_metrics = _average_metrics(all_metrics)
     baseline_data = {
         ticker: pd.concat(frames, ignore_index=True)
         for ticker, frames in baseline_frames.items()
     }
     baseline_sharpe = calculate_baseline_sharpe(baseline_data)
+    append_results_tsv(avg_metrics, baseline_sharpe)
+    per_symbol = _build_per_symbol_summary(per_symbol_returns, per_symbol_signals)
+    _print_metrics_output(avg_metrics, baseline_sharpe, per_symbol)
 
-    per_symbol = {}
-    for ticker in sorted(per_symbol_returns):
-        symbol_returns = pd.concat(per_symbol_returns[ticker], ignore_index=True)
-        symbol_signals = pd.concat(per_symbol_signals[ticker], ignore_index=True)
-        metrics = calculate_metrics(symbol_returns, symbol_signals)
-        per_symbol[ticker] = {
-            "sharpe": metrics["sharpe"],
-            "sortino": metrics["sortino"],
-            "dd": metrics["drawdown"],
-            "pf": metrics["profit_factor"],
-            "trades": metrics["trades"],
-            "wr": metrics["win_rate"],
-        }
 
-    # Output YAML-like format
-    print("---")
-    print(f"SCORE: {avg_metrics['sharpe']:.4f}")
-    print(f"SORTINO: {avg_metrics['sortino']:.4f}")
-    print(f"CALMAR: {avg_metrics['calmar']:.4f}")
-    print(f"DRAWDOWN: {avg_metrics['drawdown']:.4f}")
-    print(f"MAX_DD_DAYS: {avg_metrics['max_dd_days']}")
-    print(f"TRADES: {avg_metrics['trades']}")
-    print(f"P_VALUE: {format_p_value(None)}")
-    print(f"WIN_RATE: {avg_metrics['win_rate']:.4f}")
-    print(f"PROFIT_FACTOR: {avg_metrics['profit_factor']:.4f}")
-    print(f"AVG_WIN: {avg_metrics['avg_win']:.4f}")
-    print(f"AVG_LOSS: {avg_metrics['avg_loss']:.4f}")
-    print(f"BASELINE_SHARPE: {baseline_sharpe:.4f}")
-    print("---")
-    print("PER_SYMBOL:")
-    for symbol, sym_metrics in per_symbol.items():
-        print(f"  {symbol}: sharpe={sym_metrics['sharpe']:.2f} sortino={sym_metrics['sortino']:.2f} "
-              f"dd={sym_metrics['dd']:.2f} pf={sym_metrics['pf']:.2f} "
-              f"trades={sym_metrics['trades']} wr={sym_metrics['wr']:.2f}")
+def walk_forward_validation(strategy_file: str | None = None):
+    try:
+        start_date_override, end_date_override, universe_size_override = get_backtest_runtime_config()
+    except ValueError as exc:
+        print(f"DATA ERROR: {exc}")
+        sys.exit(1)
+
+    strategy_file = strategy_file or get_strategy_file()
+
+    is_safe, msg = security_check(strategy_file)
+    if not is_safe:
+        print(f"SECURITY ERROR: {msg}")
+        sys.exit(1)
+
+    _, strategy_instance = _load_strategy_instance(strategy_file)
+
+    try:
+        daily_data = load_daily_data(start_date=start_date_override, end_date=end_date_override)
+    except Exception:
+        daily_data = pd.DataFrame()
+
+    if daily_data is not None and not daily_data.empty:
+        _minute_pipeline_walk_forward_validation(
+            strategy_instance,
+            daily_data,
+            universe_size_override,
+        )
+        return
+
+    _legacy_walk_forward_validation(strategy_instance)
 
 if __name__ == "__main__":
     walk_forward_validation()

@@ -64,6 +64,12 @@ class TestCommandRegistration:
         assert "--end" in result.stdout
         assert "--universe-size" in result.stdout
 
+    def test_validate_command_exists(self):
+        """Verify validate is registered."""
+        result = runner.invoke(app, ["--help"])
+        assert result.exit_code == 0
+        assert "validate" in result.stdout
+
     def test_run_command_removed(self):
         """Verify run is NOT a registered command."""
         result = runner.invoke(app, ["--help"])

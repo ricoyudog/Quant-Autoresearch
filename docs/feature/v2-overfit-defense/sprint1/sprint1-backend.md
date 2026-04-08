@@ -3,7 +3,7 @@
 > Feature: `v2-overfit-defense`
 > Role: Backend
 > Derived from: #12 (Umbrella: Session 3 Overfit Defense) — Layer 1 built-in defense
-> Last Updated: 2026-04-02
+> Last Updated: 2026-04-05 (Sprint 1 closeout)
 
 ## 0) Governing Specs
 
@@ -39,74 +39,74 @@ Replace the backtester's raw Sharpe Ratio with Newey-West adjusted Sharpe (corre
 ## 3) Step-by-Step Plan
 
 ### Step 1 — Create feature branch + verify Phase 1 dependency
-- [ ] `git checkout -b feature/v2-overfit-defense main` (or from Phase 1 branch)
-- [ ] Verify Phase 1 (issue #8) is complete: backtester has dynamic loading, multi-metric output, walk-forward 5 windows
-- [ ] Run `pytest --tb=short -q` and record test count as baseline
-- [ ] Verify `src/core/backtester.py` has `calculate_metrics()`, `calculate_baseline_sharpe()`, `run_per_symbol_analysis()` functions
+- [x] `git checkout -b feature/v2-overfit-defense main` (or from Phase 1 branch)
+- [x] Verify Phase 1 (issue #8) is complete: backtester has dynamic loading, multi-metric output, walk-forward 5 windows
+- [x] Run `pytest --tb=short -q` and record test count as baseline
+- [x] Verify `src/core/backtester.py` has `calculate_metrics()`, `calculate_baseline_sharpe()`, `run_per_symbol_analysis()` functions
 
 ### Step 2 — Create validation module with Newey-West Sharpe (NW-02)
-- [ ] Create `src/validation/__init__.py`
-- [ ] Create `src/validation/newey_west.py` implementing `newey_west_sharpe(returns, max_lag=None)`
+- [x] Create `src/validation/__init__.py`
+- [x] Create `src/validation/newey_west.py` implementing `newey_west_sharpe(returns, max_lag=None)`
   - Use Bartlett kernel weights: `w_j = 1 - j / (max_lag + 1)`
   - Default lag: `floor(T^(1/3))`
   - Annualization: `sqrt(252 * 390)` for minute bars
   - Floor variance at `1e-10` to prevent negative values
-- [ ] Write `tests/unit/test_newey_west.py` with test cases from test plan
-- [ ] Verify: `pytest tests/unit/test_newey_west.py -v`
+- [x] Write `tests/unit/test_newey_west.py` with test cases from test plan
+- [x] Verify: `pytest tests/unit/test_newey_west.py -v`
 
 ### Step 3 — Create Deflated Sharpe Ratio module (NW-03)
-- [ ] Create `src/validation/deflated_sr.py` implementing `deflated_sharpe_ratio(returns, n_trials, skew=None, kurtosis=None)`
+- [x] Create `src/validation/deflated_sr.py` implementing `deflated_sharpe_ratio(returns, n_trials, skew=None, kurtosis=None)`
   - Use `scipy.stats.norm` for CDF computation
   - Gumbel approximation for expected maximum Sharpe under null
   - Return DSR in [0, 1] range
-- [ ] Write `tests/unit/test_deflated_sr.py` with test cases from test plan
-- [ ] Verify: `pytest tests/unit/test_deflated_sr.py -v`
-- [ ] Ensure `scipy` is in pyproject.toml dependencies; add if missing
+- [x] Write `tests/unit/test_deflated_sr.py` with test cases from test plan
+- [x] Verify: `pytest tests/unit/test_deflated_sr.py -v`
+- [x] Ensure `scipy` is in pyproject.toml dependencies; add if missing
 
 ### Step 4 — Replace raw Sharpe in backtester with Newey-West (NW-04)
-- [ ] Open `src/core/backtester.py`, locate the Sharpe calculation in `calculate_metrics()` (or equivalent)
-- [ ] Add import: `from src.validation.newey_west import newey_west_sharpe`
-- [ ] Replace raw Sharpe calculation with `newey_west_sharpe(returns)`
-- [ ] Store raw Sharpe separately as `naive_sharpe` for output comparison
-- [ ] Update the SCORE output to report Newey-West Sharpe
-- [ ] Add NAIVE_SHARPE to output format
-- [ ] Compute NW_SHARPE_BIAS = NAIVE_SHARPE - SCORE (showing adjustment magnitude)
+- [x] Open `src/core/backtester.py`, locate the Sharpe calculation in `calculate_metrics()` (or equivalent)
+- [x] Add import: `from src.validation.newey_west import newey_west_sharpe`
+- [x] Replace raw Sharpe calculation with `newey_west_sharpe(returns)`
+- [x] Store raw Sharpe separately as `naive_sharpe` for output comparison
+- [x] Update the SCORE output to report Newey-West Sharpe
+- [x] Add NAIVE_SHARPE to output format
+- [x] Compute NW_SHARPE_BIAS = NAIVE_SHARPE - SCORE (showing adjustment magnitude)
 
 ### Step 5 — Integrate Deflated SR into backtester output (NW-05)
-- [ ] Add import: `from src.validation.deflated_sr import deflated_sharpe_ratio`
-- [ ] Count `n_trials` from results.tsv (number of existing rows + 1 for current experiment)
-- [ ] If results.tsv does not exist or is empty, default `n_trials = 1`
-- [ ] Add DEFLATED_SR to output format after SCORE/NAIVE_SHARPE/NW_SHARPE_BIAS lines
-- [ ] Pass strategy returns and n_trials to `deflated_sharpe_ratio()`
+- [x] Add import: `from src.validation.deflated_sr import deflated_sharpe_ratio`
+- [x] Count `n_trials` from results.tsv (number of existing rows + 1 for current experiment)
+- [x] If results.tsv does not exist or is empty, default `n_trials = 1`
+- [x] Add DEFLATED_SR to output format after SCORE/NAIVE_SHARPE/NW_SHARPE_BIAS lines
+- [x] Pass strategy returns and n_trials to `deflated_sharpe_ratio()`
 
 ### Step 6 — Remove Monte Carlo permutation test (NW-06)
-- [ ] Locate `monte_carlo_permutation_test` function in `src/core/backtester.py`
-- [ ] Delete the entire function
-- [ ] Remove P_VALUE from output format
-- [ ] Remove P_VALUE from results.tsv columns
-- [ ] Remove P_VALUE from decision logic (hard constraints)
-- [ ] Search for all references: `grep -rn "monte_carlo\|p_value\|P_VALUE\|permutation" src/core/backtester.py`
-- [ ] Clean any remaining references in cli.py or other files
-- [ ] Verify: `grep -rn "monte_carlo_permutation_test" src/ cli.py` returns 0 hits
+- [x] Locate `monte_carlo_permutation_test` function in `src/core/backtester.py`
+- [x] Delete the entire function
+- [x] Remove P_VALUE from output format
+- [x] Remove P_VALUE from results.tsv columns
+- [x] Remove P_VALUE from decision logic (hard constraints)
+- [x] Search for all references: `grep -rn "monte_carlo\|p_value\|P_VALUE\|permutation" src/core/backtester.py`
+- [x] Clean any remaining references in cli.py or other files
+- [x] Verify: `grep -rn "monte_carlo_permutation_test" src/ cli.py` returns 0 hits
 
 ### Step 7 — Update results.tsv format (NW-07)
-- [ ] Update results.tsv header to: `commit	score	naive_sharpe	deflated_sr	sortino	calmar	drawdown	max_dd_days	trades	win_rate	profit_factor	avg_win	avg_loss	baseline_sharpe	nw_bias	status	description`
-- [ ] Update the backtester's TSV writing logic to output new columns
-- [ ] Remove p_value column from TSV output
+- [x] Update results.tsv header to: `commit	score	naive_sharpe	deflated_sr	sortino	calmar	drawdown	max_dd_days	trades	win_rate	profit_factor	avg_win	avg_loss	baseline_sharpe	nw_bias	status	description`
+- [x] Update the backtester's TSV writing logic to output new columns
+- [x] Remove p_value column from TSV output
 
 ### Step 8 — Update hard constraints in program.md (NW-08, NW-09)
-- [ ] Remove P_VALUE constraint from decision rules
-- [ ] Retain: `if SCORE < BASELINE_SHARPE → DISCARD`
-- [ ] Add advisory: `if DEFLATED_SR < 0.5 → strategy may not be significant, proceed with caution`
-- [ ] Add advisory: `if NW_SHARPE_BIAS > 0.3 → serial correlation bias is large, investigate`
-- [ ] Add overfitting defense guidance section:
+- [x] Remove P_VALUE constraint from decision rules
+- [x] Retain: `if SCORE < BASELINE_SHARPE → DISCARD`
+- [x] Add advisory: `if DEFLATED_SR < 0.5 → strategy may not be significant, proceed with caution`
+- [x] Add advisory: `if NW_SHARPE_BIAS > 0.3 → serial correlation bias is large, investigate`
+- [x] Add overfitting defense guidance section:
   - SCORE interpretation (NW-adjusted, usually lower than naive)
   - NW_SHARPE_BIAS meaning
   - When to use advanced validation (SCORE improvement > 0.05, parameter changes, every 5-10 experiments)
   - Red flags (NW_SHARPE_BIAS > 0.3, DSR < 0.5, CPCV % Positive < 50%, stability < 0.5)
 
 ### Step 9 — Write Sprint 1 tests (NW-10)
-- [ ] Write `tests/unit/test_backtester_overfit.py`:
+- [x] Write `tests/unit/test_backtester_overfit.py`:
   - `test_output_contains_naive_sharpe`
   - `test_output_contains_deflated_sr`
   - `test_output_contains_nw_bias`
@@ -116,24 +116,24 @@ Replace the backtester's raw Sharpe Ratio with Newey-West adjusted Sharpe (corre
   - `test_results_tsv_new_columns`
   - `test_nw_bias_calculation`
   - `test_baseline_constraint_retained`
-- [ ] Verify: `pytest tests/unit/test_backtester_overfit.py -v`
+- [x] Verify: `pytest tests/unit/test_backtester_overfit.py -v`
 
 ### Step 10 — Commit sprint 1 changes
-- [ ] `git add src/validation/ tests/unit/test_newey_west.py tests/unit/test_deflated_sr.py tests/unit/test_backtester_overfit.py`
-- [ ] `git add src/core/backtester.py cli.py` (if modified)
-- [ ] `git add program.md` (or `src/prompts/program.md` if that is the location)
-- [ ] `git commit -m "feat(overfit): add Newey-West Sharpe, Deflated SR, remove Monte Carlo"`
+- [x] `git add src/validation/ tests/unit/test_newey_west.py tests/unit/test_deflated_sr.py tests/unit/test_backtester_overfit.py`
+- [x] `git add src/core/backtester.py cli.py` (if modified)
+- [x] `git add program.md` (or `src/prompts/program.md` if that is the location)
+- [x] `git commit -m "feat(overfit): add Newey-West Sharpe, Deflated SR, remove Monte Carlo"`
 
 ## 4) Test Plan
 
-- [ ] After Step 2: `pytest tests/unit/test_newey_west.py -v` — all NW Sharpe tests pass
-- [ ] After Step 3: `pytest tests/unit/test_deflated_sr.py -v` — all DSR tests pass
-- [ ] After Step 6: verify Monte Carlo fully removed:
+- [x] After Step 2: `pytest tests/unit/test_newey_west.py -v` — all NW Sharpe tests pass
+- [x] After Step 3: `pytest tests/unit/test_deflated_sr.py -v` — all DSR tests pass
+- [x] After Step 6: verify Monte Carlo fully removed:
   ```bash
   grep -rn "monte_carlo_permutation_test\|P_VALUE" src/core/backtester.py || echo "CLEAN"
   ```
-- [ ] After Step 9: `pytest tests/unit/test_newey_west.py tests/unit/test_deflated_sr.py tests/unit/test_backtester_overfit.py -v`
-- [ ] Full test suite: `pytest --tb=short -v`
+- [x] After Step 9: `pytest tests/unit/test_newey_west.py tests/unit/test_deflated_sr.py tests/unit/test_backtester_overfit.py -v`
+- [x] Full test suite: `pytest --tb=short -v`
 
 ## 5) Verification Commands
 
@@ -162,15 +162,29 @@ pytest --tb=short -v
 
 ### Completed Work
 
-*(To be filled during implementation)*
+- Added `src/validation/newey_west.py` with `newey_west_sharpe()` and `src/validation/deflated_sr.py` with `deflated_sharpe_ratio()`
+- Migrated `src/core/backtester.py` to report Newey-West `SCORE`, `NAIVE_SHARPE`, `NW_SHARPE_BIAS`, and `DEFLATED_SR`
+- Removed the Monte Carlo placeholder output and any `P_VALUE` / permutation references from the backtester contract
+- Added `experiments/results.tsv` initialization and append logic with the Sprint 1 column layout
+- Updated `program.md` to reflect the new decision rules, advisories, and experiment-output paths
+- Added Sprint 1 QA coverage in `tests/unit/test_newey_west.py`, `tests/unit/test_deflated_sr.py`, `tests/unit/test_backtester_overfit.py`, and the logger/worktree regression in `tests/unit/test_logger_setup.py`
+- Adjusted existing backtester expectations in `tests/unit/test_backtester_v2.py` to the new Sharpe contract
 
 ### Command Results
 
-*(To be filled during implementation)*
+- `uv run pytest tests/unit/test_newey_west.py tests/unit/test_deflated_sr.py tests/unit/test_backtester_overfit.py -q` -> `23 passed in 0.69s`
+- `uv run pytest --tb=short -q` -> `115 passed in 1.35s`
+- `grep -rn "monte_carlo_permutation_test\\|P_VALUE" src/core/backtester.py || echo CLEAN` -> `CLEAN`
+- `grep -n "NAIVE_SHARPE\\|DEFLATED_SR\\|NW_SHARPE_BIAS" src/core/backtester.py` -> lines `507-509`
+- `ls src/validation/__init__.py src/validation/newey_west.py src/validation/deflated_sr.py` -> all expected Sprint 1 validation files present
+- Implementation commit: `b910ac2`
+- Sprint checklist sync commit: `ae58d3c`
 
 ### Blockers / Deviations
 
-*(To be filled during implementation)*
+- `utils.logger` originally failed in clean worktrees because `experiments/logs/` was not created before `RotatingFileHandler` initialization; fixed in Sprint 1 because it blocked all QA collection
+- `results.tsv` pathing was inconsistent across older docs (`results.tsv`) and the current runtime layout (`experiments/results.tsv`); Sprint 1 standardized on `experiments/results.tsv`
+- Live issue-body / note / board updates are blocked in this workspace because `glab` is unavailable and the configured remotes do not expose issue `#12`
 
 ### Follow-ups
 
