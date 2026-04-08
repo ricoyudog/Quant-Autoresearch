@@ -1,3 +1,1 @@
-"""
-Memory components for Quant Autoresearch
-"""
+"""Vault-native memory surfaces for Quant Autoresearch."""

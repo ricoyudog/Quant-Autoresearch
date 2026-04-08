@@ -3,7 +3,7 @@
 > Feature branch: `feature/v2-research`
 > Umbrella issue: #13
 > Last updated: 2026-04-08
-> Planning status: verification design complete; execution evidence pending
+> Planning status: verification complete; execution evidence recorded
 
 ## Objective
 
@@ -123,15 +123,15 @@ explained or resolved.
 
 ## Merge Gate Checklist
 
-- [ ] Baseline test result recorded before feature work
-- [ ] `tests/unit/test_vault_config.py` and `tests/unit/test_vault_writer.py` pass
-- [ ] `tests/unit/test_playbook_memory.py` is removed and no surviving import references Playbook
-- [ ] `tests/unit/test_cli.py` matches the new registered commands
-- [ ] `tests/unit/test_technical.py`, `tests/unit/test_regime.py`, and `tests/unit/test_market_context.py` pass
-- [ ] `tests/unit/test_cli_research.py`, `tests/unit/test_cli_analyze.py`, and `tests/unit/test_cli_setup_vault.py` pass
-- [ ] `tests/integration/test_research_pipeline.py` and `tests/integration/test_analyze_pipeline.py` pass or have an explicitly documented guarded-smoke replacement
-- [ ] `program.md` contains the final research and memory guidance sections
-- [ ] `pytest --tb=short -v` passes
-- [ ] `uv run python cli.py setup_vault` works end to end
-- [ ] `uv run python cli.py research ...` works end to end
-- [ ] `uv run python cli.py analyze ...` works end to end
+- [x] Baseline test result recorded before feature work
+- [x] `tests/unit/test_vault_config.py` and `tests/unit/test_vault_writer.py` pass
+- [x] `tests/unit/test_playbook_memory.py` is removed and no surviving import references Playbook
+- [x] `tests/unit/test_cli.py` matches the new registered commands
+- [x] `tests/unit/test_technical.py`, `tests/unit/test_regime.py`, and `tests/unit/test_market_context.py` pass
+- [x] `tests/unit/test_cli_research.py`, `tests/unit/test_cli_analyze.py`, and `tests/unit/test_cli_setup_vault.py` pass
+- [x] `tests/integration/test_research_pipeline.py` and `tests/integration/test_analyze_pipeline.py` pass or have an explicitly documented guarded-smoke replacement
+- [x] `program.md` contains the final research and memory guidance sections
+- [x] `pytest --tb=short -v` passes
+- [x] `uv run python cli.py setup_vault` works end to end
+- [x] `uv run python cli.py research ...` works end to end
+- [x] `uv run python cli.py analyze ...` works end to end

@@ -1,14 +1,91 @@
 import arxiv
 import bm25s
+from datetime import datetime
 import json
 import os
+from pathlib import Path
 import re
 import requests
-from typing import Dict, List, Any, Optional
-from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import yaml
+
+from config.vault import ensure_vault_directories, get_vault_paths
 
 CACHE_FILE = "experiments/results/research_cache.json"
 WEB_CACHE_FILE = "experiments/results/web_research_cache.json"
+KNOWLEDGE_NOTES = {
+    "overfit-defense.md": """---
+note_type: knowledge
+topic: overfit-defense
+tags:
+  - knowledge
+  - overfitting
+  - statistics
+---
+
+# Overfit Defense Reference
+
+## Why Overfitting Happens
+- repeated backtest iteration can turn noise into seemingly stable alpha
+- significance and out-of-sample discipline matter more than headline Sharpe alone
+
+## Built-in Defenses
+- use walk-forward validation and baseline comparisons
+- prefer statistically significant improvements
+- treat drawdown and profit factor as first-class checks
+""",
+    "market-microstructure.md": """---
+note_type: knowledge
+topic: market-microstructure
+tags:
+  - knowledge
+  - microstructure
+  - liquidity
+---
+
+# Market Microstructure Notes
+
+## Practical Reminders
+- liquidity, spread, and participation matter as much as signal quality
+- volume spikes can change slippage and execution behavior
+- regime changes often appear in volatility and volume before price trends stabilize
+""",
+    "strategy-pattern-catalog.md": """---
+note_type: knowledge
+topic: strategy-pattern-catalog
+tags:
+  - knowledge
+  - strategy-patterns
+---
+
+# Strategy Pattern Catalog
+
+## Reference Patterns
+- momentum
+- mean reversion
+- breakout
+- regime-filtered combinations
+
+Use these notes as prompts for new hypotheses, not as hard-coded strategy templates.
+""",
+    "experiment-methodology.md": """---
+note_type: knowledge
+topic: experiment-methodology
+tags:
+  - knowledge
+  - experimentation
+---
+
+# Experiment Methodology
+
+## Workflow
+1. capture a falsifiable hypothesis
+2. run the baseline before editing
+3. keep only statistically stronger results
+4. log findings in the vault and in `results.tsv`
+""",
+}
 
 def load_cache():
     if os.path.exists(CACHE_FILE):
@@ -288,6 +365,184 @@ def get_research_context(hypothesis, max_papers=3):
             context += f"URL: {p['url']}\n\n"
     
     return context
+
+
+def slugify(value: str) -> str:
+    slug = re.sub(r"[^a-zA-Z0-9]+", "-", value.strip().lower())
+    return slug.strip("-") or "research"
+
+
+def titleize_query(query: str) -> str:
+    return " ".join(word.capitalize() for word in query.split())
+
+
+def build_research_frontmatter(
+    query: str,
+    depth: str,
+    generated_at: datetime,
+    sources_count: int,
+) -> Dict[str, Any]:
+    return {
+        "note_type": "research",
+        "research_type": "literature",
+        "query": query,
+        "date": generated_at.strftime("%Y-%m-%d"),
+        "depth": depth,
+        "sources_count": sources_count,
+        "tags": ["research", depth],
+    }
+
+
+def format_research_report(
+    query: str,
+    papers: List[Dict[str, Any]],
+    web_results: Optional[List[Dict[str, Any]]] = None,
+    generated_at: Optional[datetime] = None,
+    depth: str = "shallow",
+) -> str:
+    generated_at = generated_at or datetime.now()
+    web_results = web_results or []
+    frontmatter = build_research_frontmatter(
+        query=query,
+        depth=depth,
+        generated_at=generated_at,
+        sources_count=len(papers) + len(web_results),
+    )
+    frontmatter_text = yaml.safe_dump(frontmatter, sort_keys=False, allow_unicode=True).strip()
+
+    lines = [
+        "---",
+        frontmatter_text,
+        "---",
+        "",
+        f"# Research: {titleize_query(query)}",
+        "",
+        "## Academic Papers",
+        "",
+    ]
+
+    if not papers:
+        lines.append("No specific academic papers found for this hypothesis.")
+        lines.append("")
+    else:
+        for index, paper in enumerate(papers, start=1):
+            lines.extend(
+                [
+                    f"### Paper {index}: {paper.get('title', 'Untitled')}",
+                    f"- **Source**: ArXiv",
+                    f"- **URL**: {paper.get('url', 'N/A')}",
+                    f"- **Published**: {paper.get('published', 'N/A')}",
+                    f"- **Summary**: {paper.get('summary', 'N/A')}",
+                    "",
+                ]
+            )
+
+    if web_results:
+        lines.extend(["## Web Resources", ""])
+        for result in web_results:
+            lines.extend(
+                [
+                    f"### [{result.get('title', 'Untitled')}]({result.get('url', '')})",
+                    f"- **Source**: {result.get('source', 'web')}",
+                    f"- **Snippet**: {result.get('snippet', 'N/A')}",
+                    "",
+                ]
+            )
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def read_frontmatter(note_path: str | Path) -> Dict[str, Any]:
+    text = Path(note_path).read_text()
+    if not text.startswith("---\n"):
+        return {}
+
+    _, frontmatter_block, _ = text.split("---", 2)
+    parsed = yaml.safe_load(frontmatter_block) or {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def _tokenize_query(query: str) -> set[str]:
+    return set(re.findall(r"[a-z0-9]+", query.lower()))
+
+
+def find_existing_research_note(query: str, research_dir: str | Path) -> Optional[Path]:
+    research_path = Path(research_dir)
+    if not research_path.exists():
+        return None
+
+    query_tokens = _tokenize_query(query)
+    if not query_tokens:
+        return None
+
+    for note_path in sorted(research_path.glob("*.md")):
+        existing_query = str(read_frontmatter(note_path).get("query", ""))
+        existing_tokens = _tokenize_query(existing_query)
+        if not existing_tokens:
+            continue
+        overlap = len(query_tokens & existing_tokens) / len(query_tokens)
+        if overlap >= 0.6:
+            return note_path
+
+    return None
+
+
+def write_research_report(
+    query: str,
+    report: str,
+    generated_at: Optional[datetime] = None,
+) -> tuple[Path, bool]:
+    generated_at = generated_at or datetime.now()
+    ensure_vault_directories()
+    paths = get_vault_paths()
+    existing_note = find_existing_research_note(query, paths.research)
+    if existing_note is not None:
+        return existing_note, True
+
+    note_path = paths.research / f"{generated_at.strftime('%Y-%m-%d')}-{slugify(query)}.md"
+    note_path.write_text(report)
+    return note_path, False
+
+
+def render_research_report(
+    query: str,
+    papers: List[Dict[str, Any]],
+    web_results: Optional[List[Dict[str, Any]]] = None,
+    output: str = "vault",
+    generated_at: Optional[datetime] = None,
+    depth: str = "shallow",
+) -> tuple[str, Optional[Path], bool]:
+    report = format_research_report(
+        query=query,
+        papers=papers,
+        web_results=web_results,
+        generated_at=generated_at,
+        depth=depth,
+    )
+
+    if output == "stdout":
+        return report, None, False
+
+    note_path, reused_existing = write_research_report(
+        query=query,
+        report=report,
+        generated_at=generated_at,
+    )
+    return report, note_path, reused_existing
+
+
+def ensure_knowledge_notes() -> list[Path]:
+    ensure_vault_directories()
+    paths = get_vault_paths()
+    written_paths: list[Path] = []
+
+    for filename, content in KNOWLEDGE_NOTES.items():
+        note_path = paths.knowledge / filename
+        if not note_path.exists():
+            note_path.write_text(content)
+        written_paths.append(note_path)
+
+    return written_paths
 
 if __name__ == "__main__":
     # Test

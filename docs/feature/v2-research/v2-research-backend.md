@@ -60,11 +60,11 @@ step plans.
 
 ## Backend Acceptance
 
-- [ ] Vault config is centralized in `config/vault.py`
-- [ ] Playbook files and imports are fully removed
-- [ ] `research` writes vault-native Markdown notes with stable metadata
-- [ ] `analyze` produces deterministic structured reports from the new helper modules
-- [ ] `program.md` describes the implemented research and memory workflow accurately
+- [x] Vault config is centralized in `config/vault.py`
+- [x] Playbook files and imports are fully removed
+- [x] `research` writes vault-native Markdown notes with stable metadata
+- [x] `analyze` produces deterministic structured reports from the new helper modules
+- [x] `program.md` describes the implemented research and memory workflow accurately
 
 ## Backend Risks
 

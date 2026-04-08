@@ -39,41 +39,41 @@ suite.
 ## 3) Step-by-Step Plan
 
 ### Step 1 -- Lock the research API fallback behavior
-- [ ] Check the presence or absence of `EXA_API_KEY` and `SERPAPI_KEY` on the implementation
+- [x] Check the presence or absence of `EXA_API_KEY` and `SERPAPI_KEY` on the implementation
       machine.
-- [ ] Define and verify what `research --depth shallow` does when deep-web credentials are missing.
-- [ ] Define and verify what `research --depth deep` does when credentials are missing, partial, or
+- [x] Define and verify what `research --depth shallow` does when deep-web credentials are missing.
+- [x] Define and verify what `research --depth deep` does when credentials are missing, partial, or
       available.
-- [ ] Record the operator guidance needed to enable deep mode intentionally.
+- [x] Record the operator guidance needed to enable deep mode intentionally.
 
 ### Step 2 -- Validate the `analyze` runtime data prerequisite
-- [ ] Identify the exact local data surface used by `analyze`.
-- [ ] Validate that the required data path, cache, or connector input is present on the current
+- [x] Identify the exact local data surface used by `analyze`.
+- [x] Validate that the required data path, cache, or connector input is present on the current
       machine.
-- [ ] Record the clear error behavior that should be surfaced if the data prerequisite is missing.
-- [ ] Update any stale assumption in docs or evidence notes before closeout if the actual runtime
+- [x] Record the clear error behavior that should be surfaced if the data prerequisite is missing.
+- [x] Update any stale assumption in docs or evidence notes before closeout if the actual runtime
       surface differs from the earlier draft.
 
 ### Step 3 -- Capture Sprint 2 smoke evidence
-- [ ] Run `uv run python cli.py research ...` in shallow mode and capture the output.
-- [ ] Run deep mode only if the required credentials are intentionally available.
-- [ ] Run `uv run python cli.py analyze ...` and capture the output or the clear missing-data error
+- [x] Run `uv run python cli.py research ...` in shallow mode and capture the output.
+- [x] Run deep mode only if the required credentials are intentionally available.
+- [x] Run `uv run python cli.py analyze ...` and capture the output or the clear missing-data error
       behavior.
-- [ ] Confirm any vault outputs land in the expected location and are easy to reference later.
+- [x] Confirm any vault outputs land in the expected location and are easy to reference later.
 
 ### Step 4 -- Prepare closeout-ready runtime notes
-- [ ] Record smoke results in the update space with enough detail for review.
-- [ ] Note any unresolved infra follow-ups that should not be hidden inside backend tasks.
-- [ ] Link the final smoke evidence back to the umbrella issue or PR summary.
+- [x] Record smoke results in the update space with enough detail for review.
+- [x] Note any unresolved infra follow-ups that should not be hidden inside backend tasks.
+- [x] Link the final smoke evidence back to the umbrella issue or PR summary.
 
 ## 4) Test Plan
 
-- [ ] Shallow `research` behavior works without deep-web credentials.
-- [ ] Deep `research` behavior has an explicit, documented outcome when credentials are missing or
+- [x] Shallow `research` behavior works without deep-web credentials.
+- [x] Deep `research` behavior has an explicit, documented outcome when credentials are missing or
       available.
-- [ ] The exact `analyze` data prerequisite is validated and recorded.
-- [ ] Sprint 2 smoke commands produce reviewable evidence for stdout or vault output.
-- [ ] Any runtime blockers are recorded explicitly instead of being treated as implicit assumptions.
+- [x] The exact `analyze` data prerequisite is validated and recorded.
+- [x] Sprint 2 smoke commands produce reviewable evidence for stdout or vault output.
+- [x] Any runtime blockers are recorded explicitly instead of being treated as implicit assumptions.
 
 ## 5) Verification Commands
 
@@ -93,16 +93,41 @@ uv run python cli.py analyze SPY --start 2025-01-01 --output stdout
 
 ### Completed Work
 
-- leave blank until implemented
+- Confirmed the current machine is missing both `EXA_API_KEY` and `SERPAPI_KEY`.
+- Verified `research --depth shallow` still returns a report successfully without deep-web
+  credentials.
+- Verified `research --depth deep` now prints an explicit fallback message and returns an ArXiv-only
+  report when deep-web credentials are unavailable.
+- Validated that `analyze` currently depends on cached local market data exposed through
+  `DataConnector.load_symbol(...)` and `data/cache`.
+- Confirmed `data/cache/SPY.parquet` already exists on this machine and verified a successful
+  `analyze` smoke run against that cached dataset.
+- Confirmed the knowledge-note files land under the expected vault path and remain easy to inspect.
 
 ### Command Results
 
-- leave blank until implemented
+- `python3 - <<'PY' ...` -> `EXA_API_KEY=missing`, `SERPAPI_KEY=missing`
+- `uv run python cli.py research "intraday momentum strategy minute bars" --depth shallow --output stdout`
+  -> rendered a report successfully from local BM25 / ArXiv sources
+- `uv run python cli.py research "intraday momentum strategy minute bars" --depth deep --output stdout`
+  -> printed `Deep web search skipped: EXA_API_KEY / SERPAPI_KEY missing. Returning ArXiv-only report.`
+- `python3 - <<'PY' ... Path('data/cache').glob('*') ...`
+  -> confirmed `data/cache/SPY.parquet` exists before the smoke run
+- `uv run python cli.py analyze SPY --start 2025-01-01 --output stdout`
+  -> rendered a deterministic stock-analysis report using cached local market data
+- `python3 - <<'PY' ... get_vault_paths().knowledge ...` -> confirmed all four knowledge notes in
+  `/Users/chunsingyu/Documents/Obsidian Vault/quant-autoresearch/knowledge`
 
 ### Blockers / Deviations
 
-- leave blank until implemented
+- The implementation machine still lacks `EXA_API_KEY` and `SERPAPI_KEY`, so deep mode remains a
+  documented fallback path rather than an end-to-end external-web smoke pass.
+- `analyze` is wired to cached market data in `data/cache`; successful smoke evidence now depends
+  on that local cache being populated first.
 
 ### Follow-ups
 
-- leave blank until implemented
+- Closeout evidence should explicitly call out `data/cache` as the active analyze prerequisite until
+  a different runtime surface is intentionally introduced.
+- If review is repeated on a fresh machine, populate `data/cache/SPY*` first or document the clear
+  missing-data path before judging the `analyze` smoke.

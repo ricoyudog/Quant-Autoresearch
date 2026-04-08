@@ -94,6 +94,31 @@ Log to `results.tsv` (tab-separated, do NOT commit):
 commit  sharpe  sortino  calmar  drawdown  max_dd_days  trades  win_rate  profit_factor  p_value  baseline_sharpe  status  description
 ```
 
+## Research Capabilities
+
+Use the vault-native research CLI when you need external context before changing a strategy.
+
+- `uv run python cli.py setup_vault` prepares `quant-autoresearch/{experiments,research,knowledge}/` inside the configured Obsidian vault.
+- `uv run python cli.py research "<query>" --depth shallow --output stdout|vault` searches ArXiv first and can reuse or write vault-native research notes.
+- `uv run python cli.py analyze <ticker> --start <date> --output stdout|vault` builds a deterministic stock-analysis report from cached local market data.
+- `research --depth shallow` must stay usable without `EXA_API_KEY` or `SERPAPI_KEY`; deep mode is optional and should say clearly when web search is skipped.
+- `analyze` requires cached data under `data/cache`; if missing, fetch it first with `uv run python cli.py fetch <ticker>` or `uv run python cli.py setup_data`.
+
+## Memory Access Patterns
+
+Use the four memory layers consistently during research and experimentation:
+
+1. **Session context** — current Codex conversation, active branch state, and the immediate task.
+2. **Working memory** — recent experiment notes, `run.log`, and in-flight observations from the current research loop.
+3. **Persistent vault knowledge** — `quant-autoresearch/research/`, `quant-autoresearch/knowledge/`, and existing Obsidian strategy notes that can inform new hypotheses.
+4. **Long-term score tracking** — `results.tsv`, which remains the cross-session ledger of the best validated outcomes.
+
+When using the research surface:
+- read existing strategy and knowledge notes before inventing a new hypothesis
+- reuse existing research notes when the query already exists
+- write new experiment notes after each validated run
+- keep `results.tsv` aligned with any experiment that beats the baseline and passes the statistical gates
+
 ## Obsidian experiment notes
 
 After each experiment, write a note to `experiments/notes/<NNN>-<slug>.md`.

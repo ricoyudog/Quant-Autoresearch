@@ -44,68 +44,68 @@ notes, and deletes the Playbook module and its dedicated tests without leaving s
 ## 3) Step-by-Step Plan
 
 ### Step 1 -- Activate the branch and capture the backend baseline
-- [ ] Confirm `feature/v2-research` is the active branch before coding starts.
-- [ ] Run `uv sync --all-extras --dev` and record any environment drift before changing code.
-- [ ] Run `pytest --tb=short` and record the baseline result in the update space.
-- [ ] Re-read `sprint1-infra.md` and note any vault-path constraints that affect the implementation.
+- [x] Confirm `feature/v2-research` is the active branch before coding starts.
+- [x] Run `uv sync --all-extras --dev` and record any environment drift before changing code.
+- [x] Run `pytest --tb=short` and record the baseline result in the update space.
+- [x] Re-read `sprint1-infra.md` and note any vault-path constraints that affect the implementation.
 
 ### Step 2 -- Add the vault configuration module
-- [ ] Create `config/vault.py`.
-- [ ] Implement vault-root resolution with `OBSIDIAN_VAULT_PATH` overriding the default
+- [x] Create `config/vault.py`.
+- [x] Implement vault-root resolution with `OBSIDIAN_VAULT_PATH` overriding the default
       `~/Documents/Obsidian Vault`.
-- [ ] Expose helpers that return the planned `root`, `experiments`, `research`, and `knowledge`
+- [x] Expose helpers that return the planned `root`, `experiments`, `research`, and `knowledge`
       paths.
-- [ ] Implement idempotent directory creation so the CLI can call it safely more than once.
-- [ ] Keep path formatting and write logic importable so they can be covered directly in unit tests.
+- [x] Implement idempotent directory creation so the CLI can call it safely more than once.
+- [x] Keep path formatting and write logic importable so they can be covered directly in unit tests.
 
 ### Step 3 -- Add `setup_vault` to the CLI
-- [ ] Add a `setup_vault` command to `cli.py`.
-- [ ] Print the resolved vault target and whether each directory was created or already existed.
-- [ ] Fail clearly when the root cannot be created or written.
-- [ ] Keep the command thin by delegating path and write behavior to helper functions.
+- [x] Add a `setup_vault` command to `cli.py`.
+- [x] Print the resolved vault target and whether each directory was created or already existed.
+- [x] Fail clearly when the root cannot be created or written.
+- [x] Keep the command thin by delegating path and write behavior to helper functions.
 
 ### Step 4 -- Remove the Playbook surface cleanly
-- [ ] Delete `src/memory/playbook.py`.
-- [ ] Remove or simplify `src/memory/__init__.py` so surviving imports stay valid.
-- [ ] Delete `tests/unit/test_playbook_memory.py`.
-- [ ] Search `src/`, `tests/`, and `cli.py` for `Playbook` imports or references and clean them.
-- [ ] Verify no surviving runtime or test surface still depends on the removed module.
+- [x] Delete `src/memory/playbook.py`.
+- [x] Remove or simplify `src/memory/__init__.py` so surviving imports stay valid.
+- [x] Delete `tests/unit/test_playbook_memory.py`.
+- [x] Search `src/`, `tests/`, and `cli.py` for `Playbook` imports or references and clean them.
+- [x] Verify no surviving runtime or test surface still depends on the removed module.
 
 ### Step 5 -- Refactor `src/core/research.py` for vault-native output
-- [ ] Keep the existing search and cache helpers (`search_arxiv`, optional web search, cache load /
+- [x] Keep the existing search and cache helpers (`search_arxiv`, optional web search, cache load /
       save) reusable.
-- [ ] Add Markdown report formatting with YAML frontmatter for research notes.
-- [ ] Add a dedup helper that can detect previously written notes before repeating expensive work.
-- [ ] Add write helpers that support both vault output and stdout output.
-- [ ] Remove any remaining Playbook-era logic or assumptions from the research surface.
+- [x] Add Markdown report formatting with YAML frontmatter for research notes.
+- [x] Add a dedup helper that can detect previously written notes before repeating expensive work.
+- [x] Add write helpers that support both vault output and stdout output.
+- [x] Remove any remaining Playbook-era logic or assumptions from the research surface.
 
 ### Step 6 -- Add Sprint 1 test coverage and update stale expectations
-- [ ] Create `tests/unit/test_vault_config.py` for path resolution, env overrides, and idempotent
+- [x] Create `tests/unit/test_vault_config.py` for path resolution, env overrides, and idempotent
       directory creation.
-- [ ] Create `tests/unit/test_vault_writer.py` for frontmatter, report formatting, and vault-file
+- [x] Create `tests/unit/test_vault_writer.py` for frontmatter, report formatting, and vault-file
       creation.
-- [ ] Update `tests/unit/test_cli.py` so it validates the Sprint 1 CLI surface without hard-coding
+- [x] Update `tests/unit/test_cli.py` so it validates the Sprint 1 CLI surface without hard-coding
       future `research` / `analyze` removal assumptions.
-- [ ] Expand `tests/unit/test_research.py` around the new formatting, dedup, and write helpers.
+- [x] Expand `tests/unit/test_research.py` around the new formatting, dedup, and write helpers.
 
 ### Step 7 -- Verify Sprint 1 and prepare the handoff
-- [ ] Run the targeted Sprint 1 tests after the code changes land.
-- [ ] Run a Playbook-import grep scan and save the result in the update space.
-- [ ] Run `uv run python cli.py setup_vault` and capture the smoke output.
-- [ ] Run `pytest --tb=short -v` before calling Sprint 1 ready.
-- [ ] Record any constraints that Sprint 2 backend must inherit from the final Sprint 1 shape.
+- [x] Run the targeted Sprint 1 tests after the code changes land.
+- [x] Run a Playbook-import grep scan and save the result in the update space.
+- [x] Run `uv run python cli.py setup_vault` and capture the smoke output.
+- [x] Run `pytest --tb=short -v` before calling Sprint 1 ready.
+- [x] Record any constraints that Sprint 2 backend must inherit from the final Sprint 1 shape.
 
 ## 4) Test Plan
 
-- [ ] `tests/unit/test_vault_config.py` covers default path, env override, and idempotent directory
+- [x] `tests/unit/test_vault_config.py` covers default path, env override, and idempotent directory
       creation.
-- [ ] `tests/unit/test_vault_writer.py` covers frontmatter, markdown structure, and file creation.
-- [ ] `tests/unit/test_cli.py` reflects the Sprint 1 command surface instead of stale legacy
+- [x] `tests/unit/test_vault_writer.py` covers frontmatter, markdown structure, and file creation.
+- [x] `tests/unit/test_cli.py` reflects the Sprint 1 command surface instead of stale legacy
       assumptions.
-- [ ] `tests/unit/test_research.py` covers vault formatting, dedup, and write behavior.
-- [ ] A global grep confirms no surviving `Playbook` imports remain.
-- [ ] `uv run python cli.py setup_vault` succeeds and the created paths match the config helper.
-- [ ] `pytest --tb=short -v` passes before Sprint 1 is marked complete.
+- [x] `tests/unit/test_research.py` covers vault formatting, dedup, and write behavior.
+- [x] A global grep confirms no surviving `Playbook` imports remain.
+- [x] `uv run python cli.py setup_vault` succeeds and the created paths match the config helper.
+- [x] `pytest --tb=short -v` passes before Sprint 1 is marked complete.
 
 ## 5) Verification Commands
 
@@ -126,16 +126,40 @@ pytest --tb=short -v
 
 ### Completed Work
 
-- leave blank until implemented
+- Captured the clean Sprint 1 baseline on the dedicated `feature/v2-research` worktree after
+  fixing a pre-existing logger directory bug that blocked test collection.
+- Added `config/vault.py` with `OBSIDIAN_VAULT_PATH` support, path helpers, and idempotent
+  directory creation.
+- Added the `setup_vault` CLI command with explicit resolved-root and per-directory status output.
+- Removed the legacy Playbook module and its dedicated unit test, then verified the repo is free of
+  surviving `Playbook` imports.
+- Refactored `src/core/research.py` to format vault-native Markdown reports with YAML frontmatter,
+  note dedup, vault writes, and stdout rendering helpers.
+- Added Sprint 1 unit coverage for vault config, vault writing, CLI registration/behavior, and the
+  logger import regression.
 
 ### Command Results
 
-- leave blank until implemented
+- `git branch --show-current` -> `feature/v2-research`
+- `uv sync --all-extras --dev` -> succeeded; clean environment created in `.venv`
+- `uv run pytest --tb=short` (baseline after logger fix) -> `95 passed`
+- `uv run python -m pytest tests/unit/test_vault_config.py tests/unit/test_vault_writer.py tests/unit/test_cli.py tests/unit/test_research.py tests/unit/test_logger_setup.py -q` -> `25 passed`
+- `rg -n "from src.memory.playbook|from memory.playbook|Playbook" src tests cli.py -S` -> no matches
+- `uv run python cli.py setup_vault` -> created the real vault directories under
+  `/Users/chunsingyu/Documents/Obsidian Vault/quant-autoresearch`
+- `uv run pytest --tb=short -v` -> `95 passed`
 
 ### Blockers / Deviations
 
-- leave blank until implemented
+- The initial baseline failed because `src/utils/logger.py` created a rotating file handler before
+  ensuring `experiments/logs/` existed. The fix is now covered by `tests/unit/test_logger_setup.py`
+  and the baseline gate is green again.
+- Typer auto-kebab-cased `setup_vault` to `setup-vault`; the CLI command name was explicitly pinned
+  back to `setup_vault` so the runtime command matches the issue docs and verification commands.
 
 ### Follow-ups
 
-- leave blank until implemented
+- Sprint 2 should reuse `render_research_report(...)` instead of rebuilding frontmatter, dedup, or
+  vault-write logic in the new CLI command.
+- Sprint 2 should continue using `config.vault` as the only path-resolution surface; do not inline
+  vault paths in `cli.py`, `program.md`, or the future analysis helpers.

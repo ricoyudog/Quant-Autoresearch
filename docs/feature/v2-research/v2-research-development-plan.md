@@ -133,32 +133,32 @@ repo's current V2 naming convention.
 
 | Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
 | --- | --- | --- | --- | --- | --- | --- |
-| INFRA-01 | Validate vault root, env override, directory permissions, and the current market-data prerequisite for `analyze` | Infra | Phase 0 complete | 0.1d | pending | commands confirm the vault root is writable and the chosen data source is present or explicitly documented |
-| VAULT-01 | Create or switch to `feature/v2-research` and capture the pre-change baseline | Backend | Phase 0 complete | 0.1d | pending | branch is active and baseline `uv sync --all-extras --dev` plus `pytest --tb=short` evidence is recorded |
-| VAULT-02 | Add `config/vault.py` with path resolution, env override, and idempotent directory creation | Backend | VAULT-01, INFRA-01 | 0.3d | pending | helper module imports cleanly and creates the planned directory tree |
-| VAULT-03 | Add `setup_vault` to `cli.py` and expose clear operator output | Backend | VAULT-02 | 0.2d | pending | `uv run python cli.py setup_vault` creates the directories and reports the target paths |
-| CLEAN-01 | Remove Playbook source files and their dedicated tests, then clean surviving imports | Backend + QA | VAULT-01 | 0.2d | pending | no surviving file imports `Playbook` and the removed test/module paths are gone |
-| RES-01 | Refactor `src/core/research.py` to write vault-native research notes while preserving cache reuse and optional web search | Backend | VAULT-02, VAULT-03, CLEAN-01 | 0.5d | pending | research reports render with frontmatter, dedup works, and vault writes succeed |
-| QA-01 | Add vault-config / vault-writer coverage and replace stale CLI expectations that still assert `research` is removed | QA | VAULT-02, VAULT-03, RES-01 | 0.3d | pending | new vault tests pass and `tests/unit/test_cli.py` matches the intended CLI surface |
+| INFRA-01 | Validate vault root, env override, directory permissions, and the current market-data prerequisite for `analyze` | Infra | Phase 0 complete | 0.1d | completed | commands confirm the vault root is writable and the chosen data source is present or explicitly documented |
+| VAULT-01 | Create or switch to `feature/v2-research` and capture the pre-change baseline | Backend | Phase 0 complete | 0.1d | completed | branch is active and baseline `uv sync --all-extras --dev` plus `pytest --tb=short` evidence is recorded |
+| VAULT-02 | Add `config/vault.py` with path resolution, env override, and idempotent directory creation | Backend | VAULT-01, INFRA-01 | 0.3d | completed | helper module imports cleanly and creates the planned directory tree |
+| VAULT-03 | Add `setup_vault` to `cli.py` and expose clear operator output | Backend | VAULT-02 | 0.2d | completed | `uv run python cli.py setup_vault` creates the directories and reports the target paths |
+| CLEAN-01 | Remove Playbook source files and their dedicated tests, then clean surviving imports | Backend + QA | VAULT-01 | 0.2d | completed | no surviving file imports `Playbook` and the removed test/module paths are gone |
+| RES-01 | Refactor `src/core/research.py` to write vault-native research notes while preserving cache reuse and optional web search | Backend | VAULT-02, VAULT-03, CLEAN-01 | 0.5d | completed | research reports render with frontmatter, dedup works, and vault writes succeed |
+| QA-01 | Add vault-config / vault-writer coverage and replace stale CLI expectations that still assert `research` is removed | QA | VAULT-02, VAULT-03, RES-01 | 0.3d | completed | new vault tests pass and `tests/unit/test_cli.py` matches the intended CLI surface |
 
 ### Sprint 2 -- Research CLI + Analysis + Knowledge
 
 | Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
 | --- | --- | --- | --- | --- | --- | --- |
-| INFRA-02 | Define fallback behavior for missing `EXA_API_KEY` / `SERPAPI_KEY` and document the `analyze` data prerequisite | Infra | Sprint 1 complete | 0.1d | pending | runtime docs explain what still works without API keys and what local data the analysis flow needs |
-| ANA-01 | Create the `src/analysis/` helpers for technical, regime, and market-context calculations | Backend | Sprint 1 complete | 0.5d | pending | helper modules import cleanly and return stable structured outputs |
-| CLI-01 | Add the `research` command to `cli.py` with depth and output controls | Backend | RES-01, INFRA-02 | 0.3d | pending | `cli.py research "<query>"` supports stdout or vault output and uses the refactored research writer |
-| CLI-02 | Add the `analyze` command to `cli.py` using the new analysis helpers | Backend | ANA-01, INFRA-02 | 0.4d | pending | `cli.py analyze <ticker>` produces a structured report without requiring an LLM runtime |
-| KB-01 | Create the four knowledge notes and add `program.md` guidance for research and 4-layer memory access | Backend | CLI-01, CLI-02 | 0.3d | pending | vault knowledge notes exist and `program.md` documents how the agent should use them |
-| QA-02 | Add analysis-helper, CLI, and integration coverage for research and analyze flows | QA | ANA-01, CLI-01, CLI-02, KB-01 | 0.5d | pending | targeted suites pass and the new integration tests prove vault writes and report shapes |
+| INFRA-02 | Define fallback behavior for missing `EXA_API_KEY` / `SERPAPI_KEY` and document the `analyze` data prerequisite | Infra | Sprint 1 complete | 0.1d | completed | runtime docs explain what still works without API keys and what local data the analysis flow needs |
+| ANA-01 | Create the `src/analysis/` helpers for technical, regime, and market-context calculations | Backend | Sprint 1 complete | 0.5d | completed | helper modules import cleanly and return stable structured outputs |
+| CLI-01 | Add the `research` command to `cli.py` with depth and output controls | Backend | RES-01, INFRA-02 | 0.3d | completed | `cli.py research "<query>"` supports stdout or vault output and uses the refactored research writer |
+| CLI-02 | Add the `analyze` command to `cli.py` using the new analysis helpers | Backend | ANA-01, INFRA-02 | 0.4d | completed | `cli.py analyze <ticker>` produces a structured report without requiring an LLM runtime |
+| KB-01 | Create the four knowledge notes and add `program.md` guidance for research and 4-layer memory access | Backend | CLI-01, CLI-02 | 0.3d | completed | vault knowledge notes exist and `program.md` documents how the agent should use them |
+| QA-02 | Add analysis-helper, CLI, and integration coverage for research and analyze flows | QA | ANA-01, CLI-01, CLI-02, KB-01 | 0.5d | completed | targeted suites pass and the new integration tests prove vault writes and report shapes |
 
 ### Phase 3 -- Verification + Closeout
 
 | Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
 | --- | --- | --- | --- | --- | --- | --- |
-| VER-01 | Run dependency sync, targeted suites, and the full `pytest` gate | QA | Sprint 2 complete | 0.2d | pending | `uv sync --all-extras --dev` and `pytest --tb=short -v` pass without unresolved failures |
-| VER-02 | Run CLI smoke tests for `setup_vault`, `research`, and `analyze` | Infra | VER-01 | 0.2d | pending | smoke commands succeed and their outputs are captured as review evidence |
-| VER-03 | Update the umbrella issue or PR with evidence, remaining risks, and review notes | Planning | VER-01, VER-02 | 0.1d | pending | review-ready summary links to docs, commands, and residual risks |
+| VER-01 | Run dependency sync, targeted suites, and the full `pytest` gate | QA | Sprint 2 complete | 0.2d | completed | `uv sync --all-extras --dev` and `pytest --tb=short -v` pass without unresolved failures |
+| VER-02 | Run CLI smoke tests for `setup_vault`, `research`, and `analyze` | Infra | VER-01 | 0.2d | completed | smoke commands succeed and their outputs are captured as review evidence |
+| VER-03 | Update the umbrella issue or PR with evidence, remaining risks, and review notes | Planning | VER-01, VER-02 | 0.1d | completed | review-ready summary links to docs, commands, and residual risks |
 
 ## 9. Execution Handoff
 
@@ -183,13 +183,13 @@ expected before a sprint can be considered complete.
 - [x] The workspace has a local index, a main development plan, backend lane doc, infra lane doc,
       and a refreshed test plan
 - [x] Issue `#13` is defined as the umbrella index rather than the execution queue
-- [ ] `config/vault.py` exists and `setup_vault` creates the planned directory tree
-- [ ] `src/memory/playbook.py` and `tests/unit/test_playbook_memory.py` are removed with no stale
+- [x] `config/vault.py` exists and `setup_vault` creates the planned directory tree
+- [x] `src/memory/playbook.py` and `tests/unit/test_playbook_memory.py` are removed with no stale
       imports
-- [ ] `src/core/research.py` writes vault-native research notes with frontmatter and dedup behavior
-- [ ] `research` and `analyze` CLI commands exist and work as documented
-- [ ] The four knowledge notes exist and `program.md` documents the research / memory workflow
-- [ ] Unit, integration, and full regression gates pass with recorded evidence
+- [x] `src/core/research.py` writes vault-native research notes with frontmatter and dedup behavior
+- [x] `research` and `analyze` CLI commands exist and work as documented
+- [x] The four knowledge notes exist and `program.md` documents the research / memory workflow
+- [x] Unit, integration, and full regression gates pass with recorded evidence
 
 ## 11. Verification And Evidence Expectations
 

@@ -1,8 +1,14 @@
-import pytest
 import os
 import json
+from datetime import datetime
 from unittest.mock import MagicMock, patch
-from core.research import get_research_context, search_arxiv, CACHE_FILE
+from core.research import (
+    CACHE_FILE,
+    get_research_context,
+    read_frontmatter,
+    render_research_report,
+    search_arxiv,
+)
 
 def test_search_arxiv_mock(tmp_path, monkeypatch):
     """Verifies that search_arxiv correctly handles ArXiv results and caching."""
@@ -76,3 +82,33 @@ def test_local_bm25_search(tmp_path, monkeypatch):
     results2 = local_bm25_search("trend following")
     assert len(results2) > 0
     assert "Momentum" in results2[0]["title"]
+
+
+def test_render_research_report_supports_stdout_output():
+    report, output_path, reused_existing = render_research_report(
+        query="test hypothesis",
+        papers=[],
+        web_results=[],
+        output="stdout",
+        generated_at=datetime(2026, 4, 8, 8, 0, 0),
+    )
+
+    assert report.startswith("---\n")
+    assert output_path is None
+    assert reused_existing is False
+    assert "No specific academic papers found" in report
+
+
+def test_read_frontmatter_returns_query(tmp_path):
+    note_path = tmp_path / "note.md"
+    note_path.write_text(
+        "---\n"
+        "note_type: research\n"
+        "query: mean reversion setup\n"
+        "---\n\n"
+        "# Research\n"
+    )
+
+    frontmatter = read_frontmatter(note_path)
+
+    assert frontmatter["query"] == "mean reversion setup"

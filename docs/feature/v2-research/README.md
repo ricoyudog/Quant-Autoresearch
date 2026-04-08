@@ -17,6 +17,7 @@ replaces Playbook-era memory with vault-native notes plus `results.tsv`.
 - Upstream dependency issues `#8`, `#9`, `#11`, and `#12` were confirmed closed on 2026-04-08
 - The issue-level phase table is the umbrella summary only; execution belongs in the referenced
   `sprintN/` docs
+- Sprint 1, Sprint 2, and Phase 3 verification were completed on 2026-04-08
 
 ## Canonical Decisions
 
@@ -35,8 +36,9 @@ replaces Playbook-era memory with vault-native notes plus `results.tsv`.
 - [#11](https://github.com/ricoyudog/Quant-Autoresearch/issues/11) -- confirmed closed on 2026-04-08
 - [#12](https://github.com/ricoyudog/Quant-Autoresearch/issues/12) -- confirmed closed on 2026-04-08
 
-Execution is no longer blocked by those umbrella dependencies. The next implementation step is to
-create or switch to `feature/v2-research`, capture the baseline, and start Sprint 1.
+Execution is no longer blocked by those umbrella dependencies. The current branch state includes
+completed Sprint 1 + Sprint 2 implementation, fresh regression evidence, and an updated issue note
+capturing the closeout summary.
 
 ## Docs Workspace
 

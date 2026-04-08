@@ -3,14 +3,16 @@ Unit tests for CLI commands.
 
 Tests verify:
 1. Which commands are registered
-2. Which legacy commands are removed
+2. Which legacy commands remain removed
 3. Command behavior with mocked dependencies
 """
+import re
+import sys
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
 import pytest
 from typer.testing import CliRunner
-from unittest.mock import patch, MagicMock
-from pathlib import Path
-import sys
 
 # Add root to path for imports
 root_dir = Path(__file__).parent.parent
@@ -20,6 +22,12 @@ sys.path.append(str(root_dir / "src"))
 from cli import app
 
 runner = CliRunner()
+
+
+def help_registers_command(help_text: str, command_name: str) -> bool:
+    """Return True when Typer help lists the command in the Commands table."""
+    pattern = rf"^│\s+{re.escape(command_name)}\s"
+    return re.search(pattern, help_text, re.MULTILINE) is not None
 
 
 class TestCommandRegistration:
@@ -49,12 +57,30 @@ class TestCommandRegistration:
         assert result.exit_code == 0
         assert "backtest" in result.stdout
 
+    def test_setup_vault_command_exists(self):
+        """Verify setup_vault is registered."""
+        result = runner.invoke(app, ["--help"])
+        assert result.exit_code == 0
+        assert "setup_vault" in result.stdout
+
+    def test_research_command_exists(self):
+        """Verify research is registered."""
+        result = runner.invoke(app, ["--help"])
+        assert result.exit_code == 0
+        assert "research" in result.stdout
+
+    def test_analyze_command_exists(self):
+        """Verify analyze is registered."""
+        result = runner.invoke(app, ["--help"])
+        assert result.exit_code == 0
+        assert "analyze" in result.stdout
+
     def test_run_command_removed(self):
         """Verify run is NOT a registered command."""
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
         # The run command from the old research loop should not exist
-        assert " run " not in result.stdout  # spaces to avoid partial matches
+        assert not help_registers_command(result.stdout, "run")
         # Also verify it can't be invoked
         result = runner.invoke(app, ["run"])
         assert result.exit_code != 0
@@ -63,7 +89,7 @@ class TestCommandRegistration:
         """Verify status is NOT a registered command."""
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert " status " not in result.stdout
+        assert not help_registers_command(result.stdout, "status")
         result = runner.invoke(app, ["status"])
         assert result.exit_code != 0
 
@@ -71,7 +97,7 @@ class TestCommandRegistration:
         """Verify report is NOT a registered command."""
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert " report " not in result.stdout
+        assert not help_registers_command(result.stdout, "report")
         result = runner.invoke(app, ["report"])
         assert result.exit_code != 0
 
@@ -79,18 +105,9 @@ class TestCommandRegistration:
         """Verify ingest is NOT a registered command."""
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert " ingest " not in result.stdout
+        assert not help_registers_command(result.stdout, "ingest")
         result = runner.invoke(app, ["ingest"])
         assert result.exit_code != 0
-
-    def test_research_command_removed(self):
-        """Verify research is NOT a registered command."""
-        result = runner.invoke(app, ["--help"])
-        assert result.exit_code == 0
-        assert " research " not in result.stdout
-        result = runner.invoke(app, ["research"])
-        assert result.exit_code != 0
-
 
 class TestBacktestCommandBehavior:
     """Tests for backtest command behavior with mocked dependencies."""
@@ -164,3 +181,34 @@ class TestFetchCommandBehavior:
 
         assert result.exit_code == 0
         assert "Failed" in result.stdout
+
+
+class TestSetupVaultCommandBehavior:
+    """Tests for setup_vault behavior with mocked helpers."""
+
+    @patch("cli.ensure_vault_directories")
+    @patch("cli.get_vault_paths")
+    def test_setup_vault_reports_directory_status(self, mock_get_vault_paths, mock_ensure_vault_directories):
+        from config.vault import DirectoryStatus, VaultPaths
+
+        paths = VaultPaths(
+            vault_root=Path("/tmp/vault"),
+            project_root=Path("/tmp/vault/quant-autoresearch"),
+            experiments=Path("/tmp/vault/quant-autoresearch/experiments"),
+            research=Path("/tmp/vault/quant-autoresearch/research"),
+            knowledge=Path("/tmp/vault/quant-autoresearch/knowledge"),
+        )
+        mock_get_vault_paths.return_value = paths
+        mock_ensure_vault_directories.return_value = [
+            DirectoryStatus("project_root", paths.project_root, True),
+            DirectoryStatus("experiments", paths.experiments, True),
+            DirectoryStatus("research", paths.research, False),
+            DirectoryStatus("knowledge", paths.knowledge, False),
+        ]
+
+        result = runner.invoke(app, ["setup_vault"])
+
+        assert result.exit_code == 0
+        assert "Resolved vault root: /tmp/vault" in result.stdout
+        assert "project_root: created" in result.stdout
+        assert "research: already existed" in result.stdout
