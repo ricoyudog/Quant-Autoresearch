@@ -2,137 +2,123 @@
 
 > Feature: `v2-research`
 > Role: Backend
-> Derived from: #13 (Research capabilities redesign) -- foundation + Playbook removal
-> Last Updated: 2026-04-02
+> Derived from: `#13` -- vault foundation + Playbook removal
+> Last Updated: 2026-04-08
 
 ## 0) Governing Specs
 
-1. `docs/research-capabilities-v2.md` -- V2 research design (Sections 1, 6, 8)
-2. `docs/upgrade-plan-v2.md` -- V2 upgrade plan (Section 6, items 11-13)
-3. `docs/feature/v2-research/v2-research-development-plan.md` -- Task table Sprint 1
+1. `docs/research-capabilities-v2.md` -- Sections 1-2 for vault layout, research outputs, and note
+   structure
+2. `docs/upgrade-plan-v2.md` -- V2 decisions 11-13 and 17 for Playbook retirement and CLI scope
+3. `docs/feature/v2-research/v2-research-development-plan.md` -- Sprint 1 task table and
+   verification expectations
+4. `docs/feature/v2-research/v2-research-backend.md` -- cross-sprint backend contract
+5. `docs/feature/v2-research/sprint1/sprint1-infra.md` -- runtime prerequisites for vault path and
+   `setup_vault` smoke validation
 
 ## 1) Sprint Mission
 
-Build the Obsidian vault integration foundation and remove the SQLite Playbook. This sprint creates the `quant-autoresearch/` vault subdirectory structure, implements vault path configuration, removes the SQLite-based Playbook and its test file, updates research.py to write to Obsidian instead of SQLite, and cleans all Playbook references from surviving files.
+Build the vault foundation for the V2 research workflow and remove the legacy SQLite Playbook
+surface. This sprint creates the `quant-autoresearch/` directory contract, adds a testable
+`setup_vault` CLI surface, refactors `src/core/research.py` so it can format and write vault-native
+notes, and deletes the Playbook module and its dedicated tests without leaving stale imports behind.
 
 ## 2) Scope / Out of Scope
 
 **Scope**
-- Create `config/vault.py` with path configuration and `ensure_dirs()`
-- Create Obsidian vault subdirectories: `quant-autoresearch/{experiments,research,knowledge}/`
-- Add `setup_vault` CLI subcommand to `cli.py`
-- Remove `src/memory/playbook.py`
-- Remove `src/memory/__init__.py` (if empty after playbook removal)
-- Delete `tests/unit/test_playbook_memory.py`
-- Update `src/core/research.py` to output to Obsidian vault instead of SQLite
-- Clean all Playbook imports in surviving files (cli.py, engine.py if exists, conftest.py)
-- Write `tests/unit/test_vault_config.py` and `tests/unit/test_vault_writer.py`
+- Create `config/vault.py` with path resolution, env override support, and idempotent directory
+  creation
+- Add `setup_vault` to `cli.py`
+- Remove `src/memory/playbook.py`, simplify `src/memory/__init__.py` as needed, and delete
+  `tests/unit/test_playbook_memory.py`
+- Refactor `src/core/research.py` so it can format Markdown reports, deduplicate existing notes, and
+  write to the vault or stdout
+- Add Sprint 1 vault and research-writer test coverage
 
 **Out of Scope**
-- Multi-agent stock analysis CLI (`analyze` command) -- Sprint 2
-- Static knowledge base notes creation -- Sprint 2
-- `program.md` research guidance section -- Sprint 2
-- 4-layer memory documentation -- Sprint 2
+- The `analyze` command and `src/analysis/` helpers
+- Knowledge-note creation
+- `program.md` research-guidance updates beyond what is required to keep Sprint 1 code coherent
+- Final API-fallback and analysis-runtime validation, which belongs to Sprint 2 infra
 
 ## 3) Step-by-Step Plan
 
-### Step 1 -- Create feature branch + baseline
-- [ ] `git checkout -b feature/v2-research main` (or from feature/v2-cleanup if dependency)
-- [ ] Run `pytest --tb=short -q` and record test count as baseline
-- [ ] Record baseline results
+### Step 1 -- Activate the branch and capture the backend baseline
+- [ ] Confirm `feature/v2-research` is the active branch before coding starts.
+- [ ] Run `uv sync --all-extras --dev` and record any environment drift before changing code.
+- [ ] Run `pytest --tb=short` and record the baseline result in the update space.
+- [ ] Re-read `sprint1-infra.md` and note any vault-path constraints that affect the implementation.
 
-### Step 2 -- Create config/vault.py (RES-02)
-- [ ] Create `config/` directory if not exists
-- [ ] Write `config/vault.py` with:
-  - `VAULT_ROOT` = `os.path.expanduser("~/Documents/Obsidian Vault")`
-  - `QUANT_DIR` = `f"{VAULT_ROOT}/quant-autoresearch"`
-  - `get_vault_paths()` returning dict with keys: root, experiments, research, knowledge, strategies
-  - `ensure_dirs()` creating all subdirectories with `os.makedirs(path, exist_ok=True)`
-  - `get_vault_path()` reading from env var `OBSIDIAN_VAULT_PATH` if set, else default
-- [ ] Verify: `python -c "from config.vault import get_vault_paths, ensure_dirs; print('OK')"`
+### Step 2 -- Add the vault configuration module
+- [ ] Create `config/vault.py`.
+- [ ] Implement vault-root resolution with `OBSIDIAN_VAULT_PATH` overriding the default
+      `~/Documents/Obsidian Vault`.
+- [ ] Expose helpers that return the planned `root`, `experiments`, `research`, and `knowledge`
+      paths.
+- [ ] Implement idempotent directory creation so the CLI can call it safely more than once.
+- [ ] Keep path formatting and write logic importable so they can be covered directly in unit tests.
 
-### Step 3 -- Create setup_vault CLI subcommand (RES-03, RES-14)
-- [ ] Add `setup_vault` subcommand to `cli.py`
-- [ ] Command should call `ensure_dirs()` and print created directories
-- [ ] Verify: `uv run python cli.py setup_vault` creates dirs under vault root
-- [ ] Verify: directories exist: `ls ~/Documents/Obsidian\ Vault/quant-autoresearch/`
+### Step 3 -- Add `setup_vault` to the CLI
+- [ ] Add a `setup_vault` command to `cli.py`.
+- [ ] Print the resolved vault target and whether each directory was created or already existed.
+- [ ] Fail clearly when the root cannot be created or written.
+- [ ] Keep the command thin by delegating path and write behavior to helper functions.
 
-### Step 4 -- Remove playbook.py (RES-04)
-- [ ] `git rm src/memory/playbook.py`
-- [ ] Check if `src/memory/` only has `__init__.py`: `ls src/memory/`
-- [ ] If only `__init__.py`: `git rm src/memory/__init__.py && rmdir src/memory/`
-- [ ] Search for references: `grep -rn "Playbook\|from src.memory.playbook\|from memory.playbook" src/ tests/ cli.py`
-- [ ] Clean any imports found in surviving files
-- [ ] Verify: `grep -rn "Playbook" src/ cli.py` returns 0 hits (excluding comments)
+### Step 4 -- Remove the Playbook surface cleanly
+- [ ] Delete `src/memory/playbook.py`.
+- [ ] Remove or simplify `src/memory/__init__.py` so surviving imports stay valid.
+- [ ] Delete `tests/unit/test_playbook_memory.py`.
+- [ ] Search `src/`, `tests/`, and `cli.py` for `Playbook` imports or references and clean them.
+- [ ] Verify no surviving runtime or test surface still depends on the removed module.
 
-### Step 5 -- Delete playbook test (RES-07)
-- [ ] `git rm tests/unit/test_playbook_memory.py`
-- [ ] Verify: `test ! -f tests/unit/test_playbook_memory.py`
+### Step 5 -- Refactor `src/core/research.py` for vault-native output
+- [ ] Keep the existing search and cache helpers (`search_arxiv`, optional web search, cache load /
+      save) reusable.
+- [ ] Add Markdown report formatting with YAML frontmatter for research notes.
+- [ ] Add a dedup helper that can detect previously written notes before repeating expensive work.
+- [ ] Add write helpers that support both vault output and stdout output.
+- [ ] Remove any remaining Playbook-era logic or assumptions from the research surface.
 
-### Step 6 -- Clean conftest.py
-- [ ] `grep -n "playbook\|Playbook" tests/conftest.py`
-- [ ] Remove any Playbook fixtures or imports if present
-- [ ] Verify: conftest.py has no Playbook references
+### Step 6 -- Add Sprint 1 test coverage and update stale expectations
+- [ ] Create `tests/unit/test_vault_config.py` for path resolution, env overrides, and idempotent
+      directory creation.
+- [ ] Create `tests/unit/test_vault_writer.py` for frontmatter, report formatting, and vault-file
+      creation.
+- [ ] Update `tests/unit/test_cli.py` so it validates the Sprint 1 CLI surface without hard-coding
+      future `research` / `analyze` removal assumptions.
+- [ ] Expand `tests/unit/test_research.py` around the new formatting, dedup, and write helpers.
 
-### Step 7 -- Update research.py for vault output (RES-06)
-- [ ] Add import of `config.vault` to `src/core/research.py`
-- [ ] Modify research output functions to write Markdown files to vault `research/` directory
-- [ ] Add YAML frontmatter to output (note_type, research_type, query, date, tags)
-- [ ] Add dedup: `check_existing_research()` before searching
-- [ ] Keep JSON cache mechanism for API responses (research_cache.json, web_research_cache.json)
-- [ ] Remove any Playbook-related logic from research.py
-- [ ] Verify: `python -c "from src.core.research import *; print('OK')"`
-
-### Step 8 -- Write vault config tests
-- [ ] Create `tests/unit/test_vault_config.py`:
-  - `test_get_vault_paths_returns_all_keys`
-  - `test_ensure_dirs_creates_all_directories` (using tmp_path)
-  - `test_ensure_dirs_idempotent`
-  - `test_vault_path_env_override` (tests OBSIDIAN_VAULT_PATH env var)
-- [ ] Create `tests/unit/test_vault_writer.py`:
-  - `test_format_research_report_has_frontmatter`
-  - `test_format_research_report_has_header`
-  - `test_write_to_vault_creates_file` (using tmp_path)
-
-### Step 9 -- Verify surviving tests pass (RES-08)
-- [ ] `pytest --tb=short -v`
-- [ ] All tests pass, 0 failures, 0 errors
-
-### Step 10 -- Commit sprint 1 changes
-- [ ] `git add -A && git commit -m "feat(v2-research): add Obsidian vault integration, remove SQLite Playbook"`
+### Step 7 -- Verify Sprint 1 and prepare the handoff
+- [ ] Run the targeted Sprint 1 tests after the code changes land.
+- [ ] Run a Playbook-import grep scan and save the result in the update space.
+- [ ] Run `uv run python cli.py setup_vault` and capture the smoke output.
+- [ ] Run `pytest --tb=short -v` before calling Sprint 1 ready.
+- [ ] Record any constraints that Sprint 2 backend must inherit from the final Sprint 1 shape.
 
 ## 4) Test Plan
 
-- [ ] After Step 2: `python -c "from config.vault import get_vault_paths, ensure_dirs"` succeeds
-- [ ] After Step 3: `uv run python cli.py setup_vault` runs without error, dirs created
-- [ ] After Step 4: `grep -rn "Playbook" src/ cli.py` returns 0 hits
-- [ ] After Step 5: `test ! -f tests/unit/test_playbook_memory.py` succeeds
-- [ ] After Step 6: conftest.py has no Playbook references
-- [ ] After Step 7: research.py imports cleanly, vault write logic works
-- [ ] After Step 8: new vault tests pass
-- [ ] After Step 9: full pytest green
+- [ ] `tests/unit/test_vault_config.py` covers default path, env override, and idempotent directory
+      creation.
+- [ ] `tests/unit/test_vault_writer.py` covers frontmatter, markdown structure, and file creation.
+- [ ] `tests/unit/test_cli.py` reflects the Sprint 1 command surface instead of stale legacy
+      assumptions.
+- [ ] `tests/unit/test_research.py` covers vault formatting, dedup, and write behavior.
+- [ ] A global grep confirms no surviving `Playbook` imports remain.
+- [ ] `uv run python cli.py setup_vault` succeeds and the created paths match the config helper.
+- [ ] `pytest --tb=short -v` passes before Sprint 1 is marked complete.
 
 ## 5) Verification Commands
 
 ```bash
-# Confirm Playbook removal
-test ! -f src/memory/playbook.py && echo "playbook.py GONE"
-test ! -f tests/unit/test_playbook_memory.py && echo "test_playbook_memory.py GONE"
-test ! -d src/memory && echo "memory/ GONE" || ls src/memory/
+uv sync --all-extras --dev
 
-# Import cleanliness
-grep -rn "from src.memory.playbook\|import.*Playbook\|Playbook(" src/ cli.py || echo "ALL CLEAN"
+pytest tests/unit/test_vault_config.py tests/unit/test_vault_writer.py -v
+pytest tests/unit/test_cli.py tests/unit/test_research.py -v
 
-# Vault config works
-python -c "from config.vault import get_vault_paths, ensure_dirs; print('VAULT CONFIG OK')"
+grep -rn "from src.memory.playbook\|from memory.playbook\|Playbook" src/ tests/ cli.py || echo "CLEAN"
 
-# Vault setup command
 uv run python cli.py setup_vault
 
-# Research module still imports
-python -c "from src.core.research import *; print('RESEARCH OK')"
-
-# Full test run
 pytest --tb=short -v
 ```
 
@@ -140,16 +126,16 @@ pytest --tb=short -v
 
 ### Completed Work
 
-*(to be filled during implementation)*
+- leave blank until implemented
 
 ### Command Results
 
-*(to be filled during implementation)*
+- leave blank until implemented
 
 ### Blockers / Deviations
 
-*(to be filled during implementation)*
+- leave blank until implemented
 
 ### Follow-ups
 
-- Sprint 2: multi-agent research CLI, knowledge base notes, program.md research guidance
+- leave blank until implemented
