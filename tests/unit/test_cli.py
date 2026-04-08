@@ -18,6 +18,13 @@ from cli import app
 runner = CliRunner()
 
 
+def help_registers_command(help_text: str, command_name: str) -> bool:
+    return any(
+        line.strip().startswith("│") and line.strip().strip("│").strip().startswith(f"{command_name} ")
+        for line in help_text.splitlines()
+    )
+
+
 class TestCommandRegistration:
     """Tests for verifying which commands are registered in the CLI."""
 
@@ -75,7 +82,7 @@ class TestCommandRegistration:
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
         # The run command from the old research loop should not exist
-        assert " run " not in result.stdout  # spaces to avoid partial matches
+        assert not help_registers_command(result.stdout, "run")
         # Also verify it can't be invoked
         result = runner.invoke(app, ["run"])
         assert result.exit_code != 0
@@ -84,7 +91,7 @@ class TestCommandRegistration:
         """Verify status is NOT a registered command."""
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert " status " not in result.stdout
+        assert not help_registers_command(result.stdout, "status")
         result = runner.invoke(app, ["status"])
         assert result.exit_code != 0
 
@@ -92,7 +99,7 @@ class TestCommandRegistration:
         """Verify report is NOT a registered command."""
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert " report " not in result.stdout
+        assert not help_registers_command(result.stdout, "report")
         result = runner.invoke(app, ["report"])
         assert result.exit_code != 0
 
@@ -100,17 +107,27 @@ class TestCommandRegistration:
         """Verify ingest is NOT a registered command."""
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert " ingest " not in result.stdout
+        assert not help_registers_command(result.stdout, "ingest")
         result = runner.invoke(app, ["ingest"])
         assert result.exit_code != 0
 
-    def test_research_command_removed(self):
-        """Verify research is NOT a registered command."""
+    def test_setup_vault_command_exists(self):
+        """Verify setup_vault is registered."""
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert " research " not in result.stdout
-        result = runner.invoke(app, ["research"])
-        assert result.exit_code != 0
+        assert "setup_vault" in result.stdout
+
+    def test_research_command_exists(self):
+        """Verify research is registered."""
+        result = runner.invoke(app, ["--help"])
+        assert result.exit_code == 0
+        assert "research" in result.stdout
+
+    def test_analyze_command_exists(self):
+        """Verify analyze is registered."""
+        result = runner.invoke(app, ["--help"])
+        assert result.exit_code == 0
+        assert "analyze" in result.stdout
 
 
 class TestBacktestCommandBehavior:

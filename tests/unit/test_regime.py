@@ -168,3 +168,16 @@ def test_regime_analysis_supports_business_day_history():
     results = regime_analysis(strategy_returns, market_data)
 
     assert results
+
+from analysis.regime import classify_regime
+
+
+def test_analysis_classify_regime_smoke():
+    dates = pd.date_range("2025-01-01", periods=100, freq="D")
+    close = pd.Series([100 + i * 0.5 for i in range(100)], index=dates, dtype=float)
+    result = classify_regime(pd.DataFrame({"Close": close}))
+
+    assert result["current"] in {"bull_quiet", "bull_volatile", "bear_quiet", "bear_volatile"}
+    assert "distribution" in result
+    assert sum(result["distribution"].values()) > 0
+

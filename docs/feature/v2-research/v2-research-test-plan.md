@@ -2,213 +2,136 @@
 
 > Feature branch: `feature/v2-research`
 > Umbrella issue: #13
+> Last updated: 2026-04-08
+> Planning status: verification complete; execution evidence recorded
 
 ## Objective
 
-Verify that SQLite Playbook is cleanly removed, Obsidian vault integration works correctly, research CLI outputs to vault, stock analysis CLI produces valid reports, and all new modules pass tests.
+Verify that the V2 research surface works end to end: vault configuration is correct, the Playbook
+surface is removed cleanly, `research` and `analyze` generate the planned reports, knowledge notes
+and memory guidance exist, and the surviving test suite stays green while the new coverage lands.
 
-## Pre-removal Baseline
+## Evidence Expectations
 
-Before any changes, confirm the current state is green:
+- Record the pre-change baseline before Sprint 1 starts
+- Treat Playbook-import scans and CLI smoke runs as hard release gates, not optional spot checks
+- Capture vault-write evidence separately from unit-test output when commands touch local paths
+- Store merge-ready evidence in the issue or PR summary with links back to this workspace
+
+## Coverage Matrix
+
+| Phase | Lane | Surface | Commands / Evidence | Exit Criteria |
+| --- | --- | --- | --- | --- |
+| Phase 0 | QA | Repo baseline | `uv sync --all-extras --dev`, `pytest --tb=short` | baseline result recorded before branch work starts |
+| Sprint 1 | QA + Infra | vault config, setup CLI, Playbook removal, research-writer surface | vault unit tests, `uv run python cli.py setup_vault`, grep scan | directories create cleanly, Playbook imports are gone, vault writer works |
+| Sprint 2 | QA | analysis helpers, `research`, `analyze`, knowledge / memory docs | helper unit tests, CLI tests, integration tests, `program.md` diff | commands and helpers match the planned runtime surface |
+| Phase 3 | QA + Infra | full regression and merge gate | `pytest --tb=short -v`, CLI smoke runs, issue evidence update | review-ready evidence exists with no unresolved regressions |
+
+## Planned Test Files
+
+### New Coverage
+
+| Test File | Surface | Key Cases |
+| --- | --- | --- |
+| `tests/unit/test_vault_config.py` | `config/vault.py` | path resolution, env override, idempotent directory creation |
+| `tests/unit/test_vault_writer.py` | research / analysis report writer | frontmatter, markdown structure, file creation |
+| `tests/unit/test_technical.py` | `src/analysis/technical.py` | momentum, volatility, volume, key-level calculations |
+| `tests/unit/test_regime.py` | `src/analysis/regime.py` | bull / bear and quiet / volatile classification outputs |
+| `tests/unit/test_market_context.py` | `src/analysis/market_context.py` | SPY correlation, MA distance, structured output shape |
+| `tests/unit/test_cli_research.py` | `cli.py research` | shallow mode, frontmatter, stdout vs vault output, dedup behavior |
+| `tests/unit/test_cli_analyze.py` | `cli.py analyze` | report sections, output mode, graceful handling of bad ticker or missing data |
+| `tests/unit/test_cli_setup_vault.py` | `cli.py setup_vault` | directory creation and idempotency |
+| `tests/integration/test_research_pipeline.py` | full research flow | query -> markdown report -> vault write -> file exists |
+| `tests/integration/test_analyze_pipeline.py` | full analysis flow | ticker -> report -> vault write -> file exists |
+
+### Existing Files To Expand
+
+| Test File | Planned Change |
+| --- | --- |
+| `tests/unit/test_cli.py` | replace the "research command removed" assertion with the new command-registration contract |
+| `tests/unit/test_research.py` | expand around report formatting, dedup, and cache / vault interactions |
+| `tests/conftest.py` | add vault tmp-path fixtures and sample data for analysis helpers |
+
+### Existing Tests To Remove Or Retire
+
+| Test File | Planned Change |
+| --- | --- |
+| `tests/unit/test_playbook_memory.py` | delete once `src/memory/playbook.py` is removed |
+
+### Existing Tests To Keep Green
+
+| Test File | Surface |
+| --- | --- |
+| `tests/unit/test_backtester_v2.py` | backtester runtime |
+| `tests/unit/test_data.py` | current data-loading helpers until the analysis path replaces or reuses them |
+| `tests/unit/test_retry_logic.py` | retry helpers |
+| `tests/unit/test_runner.py` | runner flow |
+| `tests/unit/test_security.py` | backtester sandbox and security rules |
+| `tests/unit/test_strategy_interface.py` | strategy interface |
+| `tests/unit/test_telemetry_wandb.py` | telemetry |
+| `tests/unit/test_tracker_metrics.py` | iteration tracking |
+| `tests/regression/test_determinism.py` | deterministic behavior |
+| `tests/security/test_adversarial.py` | adversarial security coverage |
+
+## Phase Gates
+
+### Phase 0 -- Baseline
 
 ```bash
 uv sync --all-extras --dev
 pytest --tb=short
 ```
 
-Record the test count and result as baseline.
+Record total tests, pass / fail count, and any existing skips before feature work starts.
 
-## Test Removal Matrix
+### Sprint 1 -- Vault Foundation + Playbook Removal
 
-### Files to delete (unit tests)
-| Test File | Module Under Test | Delete? |
-| --- | --- | --- |
-| `tests/unit/test_playbook_memory.py` | memory/playbook.py | YES |
-
-### Files to keep (must survive)
-| Test File | Module Under Test | Keep? |
-| --- | --- | --- |
-| `tests/unit/test_data.py` | data/connector.py | YES |
-| `tests/unit/test_security.py` | backtester security | YES |
-| `tests/unit/test_research.py` | core/research.py | YES -- may need updates |
-| `tests/unit/test_retry_logic.py` | utils/retries.py | YES |
-| `tests/unit/test_runner.py` | runner | YES |
-| `tests/unit/test_telemetry_wandb.py` | utils/telemetry.py | YES |
-| `tests/unit/test_tracker_metrics.py` | utils/iteration_tracker.py | YES |
-| `tests/regression/test_determinism.py` | determinism | YES |
-| `tests/conftest.py` | shared fixtures | CLEAN -- remove Playbook fixtures |
-
-## New Test Files
-
-### Sprint 1 tests
-| Test File | Tests |
-| --- | --- |
-| `tests/unit/test_vault_config.py` | `config/vault.py`: path resolution, dir creation, `ensure_dirs()` |
-| `tests/unit/test_vault_writer.py` | Vault write operations: Markdown formatting, frontmatter, file output |
-
-### Sprint 2 tests
-| Test File | Tests |
-| --- | --- |
-| `tests/unit/test_technical.py` | `src/analysis/technical.py`: momentum, volatility, volume, price levels |
-| `tests/unit/test_regime.py` | `src/analysis/regime.py`: regime classification, vol percentile |
-| `tests/unit/test_market_context.py` | `src/analysis/market_context.py`: SPY correlation, MA distance |
-| `tests/unit/test_cli_research.py` | CLI research subcommand: query parsing, output format, vault write |
-| `tests/unit/test_cli_analyze.py` | CLI analyze subcommand: ticker parsing, report generation, vault write |
-| `tests/unit/test_cli_setup_vault.py` | CLI setup_vault subcommand: dir creation, idempotency |
-| `tests/integration/test_research_pipeline.py` | End-to-end: research query -> vault write -> file exists |
-| `tests/integration/test_analyze_pipeline.py` | End-to-end: analyze ticker -> vault write -> file exists |
-
-## Test Specifications
-
-### test_vault_config.py
-
-```
-test_get_vault_paths_returns_all_keys
-  - Assert returns dict with keys: root, experiments, research, knowledge, strategies
-
-test_ensure_dirs_creates_all_directories
-  - Call ensure_dirs() with temp dir
-  - Assert all 4 subdirectories exist
-
-test_ensure_dirs_idempotent
-  - Call ensure_dirs() twice
-  - No error on second call
-```
-
-### test_technical.py
-
-```
-test_calc_momentum_basic
-  - Given DataFrame with 60+ rows of close prices
-  - Assert returns dict with roc_5d, roc_20d, roc_60d
-  - Assert values are correct floats
-
-test_calc_momentum_short_data
-  - Given DataFrame with 3 rows
-  - Assert roc_5d is None, roc_20d is None
-
-test_calc_volatility
-  - Given DataFrame with close prices
-  - Assert returns dict with vol_5d, vol_20d, vol_60d (annualized)
-
-test_analyze_volume
-  - Given DataFrame with volume column
-  - Assert returns relative_volume, volume_trend
-```
-
-### test_regime.py
-
-```
-test_classify_regime_bull_quiet
-  - Construct data with positive returns, low vol
-  - Assert regime is 'bull_quiet'
-
-test_classify_regime_bear_volatile
-  - Construct data with negative returns, high vol
-  - Assert regime is 'bear_volatile'
-
-test_classify_regime_returns_vol_percentile
-  - Assert result dict has 'vol_percentile' key
-  - Assert value is between 0 and 1
-```
-
-### test_market_context.py
-
-```
-test_calc_market_context_correlation
-  - Given ticker data + SPY data
-  - Assert returns correlation float between -1 and 1
-
-test_calc_market_context_ma_distance
-  - Assert returns dict with distance from 50d and 200d MA
-```
-
-### test_cli_research.py
-
-```
-test_research_command_shallow
-  - Run: cli.py research "test query" --depth shallow --output stdout
-  - Assert output contains "# Research:" header
-
-test_research_command_outputs_yaml_frontmatter
-  - Assert output starts with "---"
-  - Assert contains note_type: research
-
-test_research_command_writes_to_vault
-  - Run with --output vault (or default)
-  - Assert file created in vault research/ directory
-```
-
-### test_cli_analyze.py
-
-```
-test_analyze_command_single_ticker
-  - Run: cli.py analyze SPY --output stdout --start 2025-01-01
-  - Assert output contains "# Stock Analysis:" header
-
-test_analyze_command_includes_all_sections
-  - Assert output contains: Momentum, Volatility, Regime, Price Structure, Market Context
-
-test_analyze_command_writes_to_vault
-  - Assert file created in vault research/ directory
-```
-
-## Verification Steps
-
-### Step 1: After Playbook removal (Sprint 1)
-```bash
-# Verify playbook files gone
-test ! -f src/memory/playbook.py && echo "playbook.py GONE"
-test ! -f tests/unit/test_playbook_memory.py && echo "test_playbook_memory.py GONE"
-
-# No Playbook references
-grep -rn "from src.memory.playbook\|import.*Playbook\|Playbook(" src/ tests/ cli.py || echo "CLEAN"
-
-# Existing tests still pass
-pytest --tb=short
-```
-
-### Step 2: After vault config tests (Sprint 1)
 ```bash
 pytest tests/unit/test_vault_config.py tests/unit/test_vault_writer.py -v
+
+uv run python cli.py setup_vault
+
+test ! -f src/memory/playbook.py
+test ! -f tests/unit/test_playbook_memory.py
+grep -rn "from src.memory.playbook\|from memory.playbook\|Playbook" src/ tests/ cli.py || echo "CLEAN"
+
+pytest tests/unit/test_cli.py tests/unit/test_research.py -v
 ```
 
-### Step 3: After analysis module tests (Sprint 2)
+### Sprint 2 -- Research CLI + Analysis + Knowledge
+
 ```bash
 pytest tests/unit/test_technical.py tests/unit/test_regime.py tests/unit/test_market_context.py -v
-```
-
-### Step 4: After CLI tests (Sprint 2)
-```bash
 pytest tests/unit/test_cli_research.py tests/unit/test_cli_analyze.py tests/unit/test_cli_setup_vault.py -v
-```
-
-### Step 5: Integration tests (Sprint 2)
-```bash
 pytest tests/integration/test_research_pipeline.py tests/integration/test_analyze_pipeline.py -v
+
+grep -n "Research Capabilities" program.md
+grep -n "Memory Access Patterns" program.md
 ```
 
-### Step 6: Full test run (final gate)
+### Phase 3 -- Full Regression
+
 ```bash
 pytest --tb=short -v
-```
-All tests must pass.
 
-### Step 7: CLI smoke tests
-```bash
-uv run python cli.py setup_vault
-uv run python cli.py research "mean reversion" --depth shallow --output stdout
+uv run python cli.py research "intraday momentum strategy minute bars" --depth shallow --output stdout
 uv run python cli.py analyze SPY --start 2025-01-01 --output stdout
 ```
-All commands must run without error.
 
-## Acceptance Criteria
+Any failures in surviving tests outside the research scope still block closeout until they are
+explained or resolved.
 
-- [ ] `tests/unit/test_playbook_memory.py` is deleted
-- [ ] `tests/conftest.py` has no fixtures for Playbook
-- [ ] No remaining test file imports from `src.memory.playbook`
-- [ ] All new test files (9 files) exist and pass
-- [ ] `pytest` passes with 0 failures
-- [ ] `cli.py setup_vault` runs without error
-- [ ] `cli.py research` runs without error
-- [ ] `cli.py analyze` runs without error
+## Merge Gate Checklist
+
+- [x] Baseline test result recorded before feature work
+- [x] `tests/unit/test_vault_config.py` and `tests/unit/test_vault_writer.py` pass
+- [x] `tests/unit/test_playbook_memory.py` is removed and no surviving import references Playbook
+- [x] `tests/unit/test_cli.py` matches the new registered commands
+- [x] `tests/unit/test_technical.py`, `tests/unit/test_regime.py`, and `tests/unit/test_market_context.py` pass
+- [x] `tests/unit/test_cli_research.py`, `tests/unit/test_cli_analyze.py`, and `tests/unit/test_cli_setup_vault.py` pass
+- [x] `tests/integration/test_research_pipeline.py` and `tests/integration/test_analyze_pipeline.py` pass or have an explicitly documented guarded-smoke replacement
+- [x] `program.md` contains the final research and memory guidance sections
+- [x] `pytest --tb=short -v` passes
+- [x] `uv run python cli.py setup_vault` works end to end
+- [x] `uv run python cli.py research ...` works end to end
+- [x] `uv run python cli.py analyze ...` works end to end

@@ -3,169 +3,232 @@
 > Feature branch: `feature/v2-research`
 > Umbrella issue: #13
 > Canonical root: `docs/feature/v2-research/`
+> Last updated: 2026-04-08
+> Planning status: Phase 0 complete; execution ready to start on the feature branch
 
-## Context
+## 1. Context
 
-The V2 architecture replaces the Python-controlled OPENDEV loop with a program.md-driven approach. This issue redesigns the research capabilities:
+The V2 architecture already moved the autonomous experiment loop out of the old Python OPENDEV
+controller and into `program.md`. Issue #13 now owns the research capabilities around that loop:
 
-- **Remove** SQLite Playbook (`src/memory/playbook.py`) -- replaced by Obsidian Markdown notes + results.tsv
-- **Create** Obsidian vault subdirectory structure under `quant-autoresearch/`
-- **Refactor** research.py to output to Obsidian vault instead of SQLite
-- **Add** multi-agent stock analysis CLI (TradingAgents style, pure computation)
-- **Add** static knowledge base notes (overfit defense, strategy patterns, microstructure, methodology)
-- **Implement** 4-layer memory architecture (short/working/persistent/long-term)
+- remove the SQLite Playbook and replace it with vault-native notes plus `results.tsv`
+- formalize Obsidian vault configuration and directory creation
+- expose research and analysis flows through the CLI
+- add the static knowledge notes and memory guidance that the agent can consume during research
 
-## Files to Remove
+The governing designs for this work already exist in `docs/research-capabilities-v2.md` and
+`docs/upgrade-plan-v2.md`. On 2026-04-08, the upstream V2 dependency issues `#8`, `#9`, `#11`, and
+`#12` were confirmed closed on the live umbrella repo, so the remaining blocker for implementation
+is feature-branch setup plus baseline capture.
 
-| File | Size estimate | Key references to clean |
+## 2. Root And Branch Decision
+
+- Active docs root: `docs/`
+- Canonical workspace: `docs/feature/v2-research/`
+- Canonical branch: `feature/v2-research`
+
+Repo drift note: the generic planning skill expects `docs/beta/` and `docs/dev/` roots, but the
+current repository snapshot does not contain those trees. Planning granularity therefore follows the
+live V2 workspace precedents under `docs/feature/` plus the governing specs in
+`docs/research-capabilities-v2.md` and `docs/upgrade-plan-v2.md`.
+
+`docs/feature/v2-research/` is the right root instead of `docs/issue/13/` because this work is a
+persistent feature-scoped V2 session, not a one-off issue-local hotfix. The branch name keeps the
+repo's current V2 naming convention.
+
+## 3. Scope
+
+- Add `config/vault.py` and a stable vault-directory contract for
+  `quant-autoresearch/{experiments,research,knowledge}/`
+- Add a `setup_vault` CLI command and refactor the research surface to write Markdown reports to the
+  vault
+- Remove `src/memory/playbook.py`, its exports, and its dedicated unit tests
+- Add `src/analysis/` helpers for momentum, volatility, regime, and market-context analysis
+- Add `research` and `analyze` CLI flows aligned with the V2 research spec
+- Add the static knowledge notes plus `program.md` memory / research guidance
+- Add unit and integration coverage for the new vault, CLI, and analysis surfaces
+
+## 4. Out Of Scope
+
+- Reworking the backtester foundation, strategy interface, or `program.md` loop semantics from `#8`
+- Reopening the CLI simplification and experiment-note integration work from `#9`
+- Re-scoping the data-pipeline architecture from `#11`
+- Re-implementing the overfit-defense session itself from `#12`
+- Building a true multi-LLM orchestration runtime; the planned stock-analysis flow is
+  TradingAgents-style in structure, but remains a deterministic CLI surface unless later specs say
+  otherwise
+
+## 5. Lane Ownership
+
+| Lane | Responsibility | Primary Docs | Runtime Surface |
+| --- | --- | --- | --- |
+| Planning | Keep the umbrella issue and workspace aligned | this plan, README | issue #13, docs workspace |
+| Backend | Deliver vault config, Playbook removal, research / analyze CLI, and knowledge / memory hooks | `v2-research-backend.md`, sprint backend docs | `config/`, `src/core/`, `src/analysis/`, `cli.py`, `program.md` |
+| Infra | Validate vault path, env overrides, API fallbacks, data prerequisites, and smoke commands | `v2-research-infra.md` | local vault, env vars, CLI runtime |
+| QA | Define baseline, unit, integration, and merge gates | `v2-research-test-plan.md` | `tests/`, CLI smoke runs, final issue evidence |
+
+## 6. Delivery Surface
+
+### Files To Create
+
+| File | Lane | Purpose |
 | --- | --- | --- |
-| `src/memory/playbook.py` | ~550 LOC | `Playbook` class, TF-IDF similarity, SQLite |
-| `src/memory/__init__.py` | ~10 LOC | module exports |
-| `tests/unit/test_playbook_memory.py` | ~70 LOC | tests for Playbook |
+| `config/vault.py` | Backend | vault-path resolution, env override, and directory bootstrap helpers |
+| `src/analysis/__init__.py` | Backend | public exports for the analysis helpers |
+| `src/analysis/technical.py` | Backend | momentum, volatility, volume, and key-level helpers |
+| `src/analysis/regime.py` | Backend | market-regime classification helpers |
+| `src/analysis/market_context.py` | Backend | SPY correlation and moving-average context helpers |
+| `tests/unit/test_vault_config.py` | QA | unit coverage for vault-path and directory helpers |
+| `tests/unit/test_vault_writer.py` | QA | unit coverage for report formatting and vault writes |
+| `tests/unit/test_technical.py` | QA | unit coverage for technical-analysis helpers |
+| `tests/unit/test_regime.py` | QA | unit coverage for regime classification |
+| `tests/unit/test_market_context.py` | QA | unit coverage for market-context helpers |
+| `tests/unit/test_cli_research.py` | QA | CLI-level coverage for the `research` command |
+| `tests/unit/test_cli_analyze.py` | QA | CLI-level coverage for the `analyze` command |
+| `tests/unit/test_cli_setup_vault.py` | QA | CLI-level coverage for the `setup_vault` command |
+| `tests/integration/test_research_pipeline.py` | QA | end-to-end vault-write coverage for research flow |
+| `tests/integration/test_analyze_pipeline.py` | QA | end-to-end vault-write coverage for analysis flow |
 
-## Files to Create
+### Files To Modify
 
-### Obsidian vault structure (directory creation, not versioned)
+| File | Lane | Change |
+| --- | --- | --- |
+| `cli.py` | Backend | add `setup_vault`, `research`, and `analyze` commands; retire legacy "research removed" expectations |
+| `src/core/research.py` | Backend | keep cache and search helpers, add vault-output formatting, dedup, and report writing |
+| `program.md` | Backend | add research-capability guidance and memory-access patterns once behavior is implemented |
+| `tests/unit/test_cli.py` | QA | replace "command removed" assertions with the new command contract |
+| `tests/unit/test_research.py` | QA | expand around vault-writing helpers and dedup behavior |
+| `tests/conftest.py` | QA | add vault tmp-path fixtures and any analysis-input fixtures |
+| `CLAUDE.md` | Planning | update repo-runtime notes if implementation meaningfully changes the documented operator flow |
 
-| Path | Purpose |
-| --- | --- |
-| `quant-autoresearch/experiments/` | Experiment notes (one per backtest run) |
-| `quant-autoresearch/research/` | Research results (CLI generated) |
-| `quant-autoresearch/knowledge/` | Static knowledge base notes |
+### Files To Remove
 
-### New source modules
+| File | Lane | Reason |
+| --- | --- | --- |
+| `src/memory/playbook.py` | Backend | replaced by vault-native notes and persistent markdown artifacts |
+| `src/memory/__init__.py` | Backend | remove or simplify exports after Playbook retirement |
+| `tests/unit/test_playbook_memory.py` | QA | dedicated Playbook coverage is invalid once the module is removed |
 
-| File | Purpose |
-| --- | --- |
-| `config/vault.py` | Vault path configuration + directory initialization |
-| `src/analysis/__init__.py` | Stock analysis module |
-| `src/analysis/technical.py` | Technical indicator calculations |
-| `src/analysis/regime.py` | Regime classification (reuses validation logic) |
-| `src/analysis/market_context.py` | Market context analysis (SPY correlation, sector) |
+## 7. Phase Plan
 
-### Knowledge base notes (written to vault)
-
-| File | Purpose |
-| --- | --- |
-| `knowledge/overfit-defense.md` | Overfit defense reference for agent |
-| `knowledge/market-microstructure.md` | Minute-level data characteristics |
-| `knowledge/strategy-pattern-catalog.md` | Strategy pattern catalog with vault wikilinks |
-| `knowledge/experiment-methodology.md` | Experiment design methodology |
-
-## Files to Modify
-
-| File | Changes |
-| --- | --- |
-| `src/core/research.py` | Refactor: output to Obsidian vault, add vault writer, add dedup |
-| `cli.py` | Add subcommands: `research`, `analyze`, `setup_vault` |
-| `program.md` | Add research capabilities guidance section |
-| `src/core/engine.py` (if exists) | Clean Playbook references |
-| Any surviving file importing Playbook | Remove imports, replace with vault reads |
-
-## Files that MUST survive
-
-- `src/core/backtester.py` -- V2 evaluation harness
-- `src/core/research.py` -- refactored, not deleted
-- `src/data/connector.py` -- data loading
-- `src/data/preprocessor.py` -- data preprocessing
-- `src/strategies/active_strategy.py` -- the strategy file
-- `src/utils/logger.py` -- logging
-- `src/utils/telemetry.py` -- W&B telemetry
-- `src/utils/iteration_tracker.py` -- iteration tracking
-- `src/utils/retries.py` -- retry logic
-- `cli.py` -- CLI entry point (modified, not deleted)
-
-## Sprint Plan
-
-| Sprint | Goal | Deliverables | Status | Next Step |
+| Phase | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
-| Sprint 1 | Obsidian vault structure + Playbook removal | vault dirs created, playbook.py deleted, imports cleaned, test deleted | pending | Sprint 2 |
-| Sprint 2 | Multi-agent research CLI + knowledge base | research/analyze CLI, knowledge notes, 4-layer memory | pending | merge readiness |
+| Phase 0 -- Spec Alignment + Baseline | Confirm docs root, branch convention, dependency state, and umbrella references | refreshed workspace index, lane docs, test plan, rewritten issue card | completed | create or switch to `feature/v2-research` and capture the baseline |
+| Sprint 1 -- Vault Foundation + Playbook Removal | Add vault config, setup CLI support, and remove the legacy Playbook surface | `config/vault.py`, updated `cli.py`, updated `src/core/research.py`, deleted Playbook files, vault tests | pending | start once the branch baseline is recorded |
+| Sprint 2 -- Research CLI + Analysis + Knowledge | Add research / analyze CLI flows, analysis helpers, knowledge notes, and memory guidance | `src/analysis/`, CLI commands, knowledge notes, `program.md` updates, new unit + integration coverage | pending | start after Sprint 1 verification |
+| Phase 3 -- Verification + Closeout | Run the full gate and prepare review evidence | green dependency sync, green tests, CLI smoke results, issue or PR evidence update | pending | execute after Sprint 2 implementation finishes |
 
-## Task Table
+## 8. Task Tables
 
-### Sprint 1 tasks
+### Phase 0 -- Planning And Spec Alignment
 
-| Task ID | Task | Dependency | Effort | Acceptance |
-| --- | --- | --- | --- | --- |
-| RES-01 | Create `feature/v2-research` branch from `feature/v2-cleanup` | v2-cleanup complete | 0.1d | branch exists |
-| RES-02 | Create `config/vault.py` with path configuration and `ensure_dirs()` | RES-01 | 0.2d | module imports, dirs created |
-| RES-03 | Create Obsidian vault subdirectories via `setup_vault` command | RES-02 | 0.1d | `quant-autoresearch/{experiments,research,knowledge}/` exist |
-| RES-04 | Remove `src/memory/playbook.py` | RES-01 | 0.1d | file deleted |
-| RES-05 | Clean all Playbook imports in surviving files | RES-04 | 0.1d | zero references to Playbook class |
-| RES-06 | Update `research.py` to output to Obsidian vault | RES-03, RES-04 | 0.3d | research results written to vault |
-| RES-07 | Delete `tests/unit/test_playbook_memory.py` | RES-04 | 0.05d | file deleted |
-| RES-08 | Verify surviving tests pass | RES-07 | 0.1d | pytest green |
+| Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| PLAN-01 | Confirm the live docs root and keep `docs/feature/v2-research/` as the single canonical workspace | Planning | none | 0.1d | completed | no new planning root is introduced under `docs/issue/13/` or legacy paths |
+| PLAN-02 | Preserve the repo's V2 branch convention and record the closed dependency set on issues `#8`, `#9`, `#11`, and `#12` | Planning | PLAN-01 | 0.05d | completed | branch name and dependency status appear in the README, plan, and issue |
+| PLAN-03 | Expand the workspace with backend, infra, and QA planning surfaces | Planning | PLAN-01 | 0.1d | completed | lane docs and refreshed test plan are linked from the workspace index |
+| PLAN-04 | Rewrite issue `#13` as the umbrella index card | Planning | PLAN-02, PLAN-03 | 0.1d | completed | issue contains the required sections, a phase table with status, and workspace references |
 
-### Sprint 2 tasks
+### Sprint 1 -- Vault Foundation + Playbook Removal
 
-| Task ID | Task | Dependency | Effort | Acceptance |
-| --- | --- | --- | --- | --- |
-| RES-09 | Create `src/analysis/` module with technical indicators | RES-03 | 0.3d | module imports, functions work |
-| RES-10 | Implement regime classification in `src/analysis/regime.py` | RES-09 | 0.2d | regime classification produces valid results |
-| RES-11 | Implement market context analysis | RES-09 | 0.2d | SPY correlation, sector analysis works |
-| RES-12 | Add `research` CLI subcommand to `cli.py` | RES-06 | 0.2d | `cli.py research "query"` works |
-| RES-13 | Add `analyze` CLI subcommand to `cli.py` | RES-09 | 0.3d | `cli.py analyze AAPL` works |
-| RES-14 | Add `setup_vault` CLI subcommand to `cli.py` | RES-02 | 0.1d | `cli.py setup_vault` creates dirs |
-| RES-15 | Create static knowledge base notes (4 files) | RES-03 | 0.3d | knowledge/*.md written to vault |
-| RES-16 | Implement 4-layer memory architecture documentation | RES-15 | 0.2d | memory access patterns documented in program.md |
-| RES-17 | Update `program.md` with research capabilities guidance | RES-12, RES-13 | 0.2d | program.md has research section |
-| RES-18 | Write tests for all new modules | RES-09 through RES-13 | 0.4d | all new tests pass |
-| RES-19 | Full integration test | RES-18 | 0.2d | end-to-end: research + analyze + vault write |
+| Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| INFRA-01 | Validate vault root, env override, directory permissions, and the current market-data prerequisite for `analyze` | Infra | Phase 0 complete | 0.1d | completed | commands confirm the vault root is writable and the chosen data source is present or explicitly documented |
+| VAULT-01 | Create or switch to `feature/v2-research` and capture the pre-change baseline | Backend | Phase 0 complete | 0.1d | completed | branch is active and baseline `uv sync --all-extras --dev` plus `pytest --tb=short` evidence is recorded |
+| VAULT-02 | Add `config/vault.py` with path resolution, env override, and idempotent directory creation | Backend | VAULT-01, INFRA-01 | 0.3d | completed | helper module imports cleanly and creates the planned directory tree |
+| VAULT-03 | Add `setup_vault` to `cli.py` and expose clear operator output | Backend | VAULT-02 | 0.2d | completed | `uv run python cli.py setup_vault` creates the directories and reports the target paths |
+| CLEAN-01 | Remove Playbook source files and their dedicated tests, then clean surviving imports | Backend + QA | VAULT-01 | 0.2d | completed | no surviving file imports `Playbook` and the removed test/module paths are gone |
+| RES-01 | Refactor `src/core/research.py` to write vault-native research notes while preserving cache reuse and optional web search | Backend | VAULT-02, VAULT-03, CLEAN-01 | 0.5d | completed | research reports render with frontmatter, dedup works, and vault writes succeed |
+| QA-01 | Add vault-config / vault-writer coverage and replace stale CLI expectations that still assert `research` is removed | QA | VAULT-02, VAULT-03, RES-01 | 0.3d | completed | new vault tests pass and `tests/unit/test_cli.py` matches the intended CLI surface |
 
-## Acceptance Criteria
+### Sprint 2 -- Research CLI + Analysis + Knowledge
 
-- [ ] `feature/v2-research` branch exists
-- [ ] `src/memory/playbook.py` is deleted
-- [ ] `tests/unit/test_playbook_memory.py` is deleted
-- [ ] No surviving file imports from `src.memory.playbook`
-- [ ] Obsidian vault has `quant-autoresearch/{experiments,research,knowledge}/` directories
-- [ ] `cli.py setup_vault` creates vault structure
-- [ ] `cli.py research "query"` writes results to vault
-- [ ] `cli.py analyze AAPL` produces structured analysis report
-- [ ] 4 knowledge base notes exist in vault
-- [ ] `program.md` has research capabilities guidance section
-- [ ] `uv sync` succeeds
-- [ ] `pytest` passes with 0 failures
-- [ ] No surviving file imports from removed modules
+| Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| INFRA-02 | Define fallback behavior for missing `EXA_API_KEY` / `SERPAPI_KEY` and document the `analyze` data prerequisite | Infra | Sprint 1 complete | 0.1d | completed | runtime docs explain what still works without API keys and what local data the analysis flow needs |
+| ANA-01 | Create the `src/analysis/` helpers for technical, regime, and market-context calculations | Backend | Sprint 1 complete | 0.5d | completed | helper modules import cleanly and return stable structured outputs |
+| CLI-01 | Add the `research` command to `cli.py` with depth and output controls | Backend | RES-01, INFRA-02 | 0.3d | completed | `cli.py research "<query>"` supports stdout or vault output and uses the refactored research writer |
+| CLI-02 | Add the `analyze` command to `cli.py` using the new analysis helpers | Backend | ANA-01, INFRA-02 | 0.4d | completed | `cli.py analyze <ticker>` produces a structured report without requiring an LLM runtime |
+| KB-01 | Create the four knowledge notes and add `program.md` guidance for research and 4-layer memory access | Backend | CLI-01, CLI-02 | 0.3d | completed | vault knowledge notes exist and `program.md` documents how the agent should use them |
+| QA-02 | Add analysis-helper, CLI, and integration coverage for research and analyze flows | QA | ANA-01, CLI-01, CLI-02, KB-01 | 0.5d | completed | targeted suites pass and the new integration tests prove vault writes and report shapes |
 
-## Verification Commands
+### Phase 3 -- Verification + Closeout
+
+| Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| VER-01 | Run dependency sync, targeted suites, and the full `pytest` gate | QA | Sprint 2 complete | 0.2d | completed | `uv sync --all-extras --dev` and `pytest --tb=short -v` pass without unresolved failures |
+| VER-02 | Run CLI smoke tests for `setup_vault`, `research`, and `analyze` | Infra | VER-01 | 0.2d | completed | smoke commands succeed and their outputs are captured as review evidence |
+| VER-03 | Update the umbrella issue or PR with evidence, remaining risks, and review notes | Planning | VER-01, VER-02 | 0.1d | completed | review-ready summary links to docs, commands, and residual risks |
+
+## 9. Execution Handoff
+
+This document is the planning-layer summary. Execution must move through the sprint docs instead of
+turning the umbrella issue into the task queue:
+
+- `sprint1/sprint1-backend.md` for vault config, Playbook removal, and research-output migration
+- `sprint1/sprint1-infra.md` for vault path validation, env override checks, and `setup_vault`
+  smoke evidence
+- `sprint2/sprint2-backend.md` for `research`, `analyze`, knowledge-note creation, and memory docs
+- `sprint2/sprint2-infra.md` for API fallback rules, analysis data prerequisites, and final smoke
+  evidence
+
+The backend and infra lane docs define cross-sprint contracts. The test plan defines the evidence
+expected before a sprint can be considered complete.
+
+## 10. Acceptance Criteria
+
+- [x] The live docs root is confirmed as `docs/` and reused consistently
+- [x] The canonical workspace choice is explicit: `docs/feature/v2-research/`
+- [x] The feature branch is explicitly named as `feature/v2-research`
+- [x] The workspace has a local index, a main development plan, backend lane doc, infra lane doc,
+      and a refreshed test plan
+- [x] Issue `#13` is defined as the umbrella index rather than the execution queue
+- [x] `config/vault.py` exists and `setup_vault` creates the planned directory tree
+- [x] `src/memory/playbook.py` and `tests/unit/test_playbook_memory.py` are removed with no stale
+      imports
+- [x] `src/core/research.py` writes vault-native research notes with frontmatter and dedup behavior
+- [x] `research` and `analyze` CLI commands exist and work as documented
+- [x] The four knowledge notes exist and `program.md` documents the research / memory workflow
+- [x] Unit, integration, and full regression gates pass with recorded evidence
+
+## 11. Verification And Evidence Expectations
+
+The detailed gate list lives in `v2-research-test-plan.md`. The minimum verification families are:
 
 ```bash
-# Verify Playbook removal
-test ! -f src/memory/playbook.py && echo "playbook.py GONE"
-grep -rn "from src.memory.playbook\|import.*Playbook" src/ tests/ cli.py || echo "PLAYBOOK REFS CLEAN"
+# Baseline / dependency sync
+uv sync --all-extras --dev
+pytest --tb=short
 
-# Verify vault structure
+# Vault surface
 uv run python cli.py setup_vault
-ls ~/Documents/Obsidian\ Vault/quant-autoresearch/experiments/ && echo "EXPERIMENTS DIR OK"
-ls ~/Documents/Obsidian\ Vault/quant-autoresearch/research/ && echo "RESEARCH DIR OK"
-ls ~/Documents/Obsidian\ Vault/quant-autoresearch/knowledge/ && echo "KNOWLEDGE DIR OK"
-
-# Verify new CLI commands
-uv run python cli.py research "test query" --depth shallow
-uv run python cli.py analyze SPY --start 2025-01-01
-
-# Verify tests
-pytest --tb=short -v
-
-# Verify no broken imports
 python -c "
-from config.vault import get_vault_paths, ensure_dirs
-from src.analysis.technical import calc_momentum
-from src.analysis.regime import classify_regime
-from src.analysis.market_context import calc_market_context
-print('ALL NEW IMPORTS OK')
+from config.vault import get_vault_paths
+print(get_vault_paths())
 "
+
+# Playbook cleanup
+test ! -f src/memory/playbook.py
+test ! -f tests/unit/test_playbook_memory.py
+grep -rn "from src.memory.playbook\|from memory.playbook\|Playbook" src/ tests/ cli.py || echo "CLEAN"
+
+# Feature-specific tests
+pytest tests/unit/test_vault_config.py tests/unit/test_vault_writer.py -v
+pytest tests/unit/test_technical.py tests/unit/test_regime.py tests/unit/test_market_context.py -v
+pytest tests/unit/test_cli_research.py tests/unit/test_cli_analyze.py tests/unit/test_cli_setup_vault.py -v
+pytest tests/integration/test_research_pipeline.py tests/integration/test_analyze_pipeline.py -v
+
+# CLI smoke
+uv run python cli.py research "intraday momentum strategy minute bars" --depth shallow --output stdout
+uv run python cli.py analyze SPY --start 2025-01-01 --output stdout
 ```
 
-## Risks
+## 12. Dependencies / Risks
 
 | Risk | Mitigation |
 | --- | --- |
-| Vault path does not exist on machine | `setup_vault` creates dirs; path configurable via env var |
-| research.py has BM25 dependency (`bm25s`) | Keep BM25 for local search; only remove SQLite Playbook |
-| `openai` package needed for research web search | Evaluate during Sprint 1; keep if research.py uses it |
-| `arxiv` package still needed | Keep -- research.py ArXiv search preserved |
-| Playbook referenced in surviving engine.py code | Sprint 1 will clean all references |
-| Knowledge notes duplicate vault strategy content | Notes are curated summaries with wikilinks to full notes |
+| The checked-out repo remote and the live umbrella issue repo are different | Keep issue updates pointed at `ricoyudog/Quant-Autoresearch#13` unless repo governance changes |
+| The local vault path is absent or differs from the default | make `OBSIDIAN_VAULT_PATH` the documented override and validate path permissions in `INFRA-01` |
+| Deep web research requires credentials that may be missing on some machines | document graceful fallback to ArXiv-only mode and make the fallback visible in CLI output |
+| The analysis CLI may depend on data-surface assumptions that differ from the final Session 2 runtime | capture the actual dependency in `INFRA-01` / `INFRA-02` before implementation proceeds |
+| Old CLI tests still assert that `research` is intentionally removed | treat `tests/unit/test_cli.py` as a planned update, not as a fixed legacy contract |

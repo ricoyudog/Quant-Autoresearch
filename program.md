@@ -160,3 +160,29 @@ Log experiment outcomes to `experiments/results.tsv` with the header:
 ```text
 commit	score	naive_sharpe	deflated_sr	sortino	calmar	drawdown	max_dd_days	trades	win_rate	profit_factor	avg_win	avg_loss	baseline_sharpe	nw_bias	status	description
 ```
+
+## Research Capabilities
+
+Use the vault-native research CLI when you need external context before changing a strategy.
+
+- `uv run python cli.py setup_vault` prepares `quant-autoresearch/{experiments,research,knowledge}/` inside the configured Obsidian vault.
+- `uv run python cli.py research "<query>" --depth shallow --output stdout|vault` searches ArXiv first and can reuse or write vault-native research notes.
+- `uv run python cli.py analyze <ticker> --start <date> --output stdout|vault` builds a deterministic stock-analysis report from cached local market data.
+- `research --depth shallow` stays usable without `EXA_API_KEY` or `SERPAPI_KEY`; deep mode should clearly report when web search is skipped.
+- `analyze` currently reads cached local symbol data from `data/cache`; fetch or cache the symbol first when needed.
+
+## Memory Access Patterns
+
+Use the four memory layers consistently during research and experimentation:
+
+1. **Session context** — current Codex conversation, active branch state, and the immediate task.
+2. **Working memory** — recent experiment notes, `run.log`, and in-flight observations from the current research loop.
+3. **Persistent vault knowledge** — `quant-autoresearch/research/`, `quant-autoresearch/knowledge/`, and existing Obsidian strategy notes that can inform new hypotheses.
+4. **Long-term score tracking** — `results.tsv`, which remains the cross-session ledger of the best validated outcomes.
+
+When using the research surface:
+- read existing strategy and knowledge notes before inventing a new hypothesis
+- reuse existing shallow research notes when appropriate, but allow deep runs to refresh them
+- write new experiment notes after each validated run
+- keep `results.tsv` aligned with any experiment that beats the baseline and passes the statistical gates
+

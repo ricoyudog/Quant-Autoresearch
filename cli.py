@@ -20,6 +20,28 @@ from data.duckdb_connector import (
     refresh_daily_cache,
 )
 
+from datetime import datetime
+
+from analysis import (
+    analyze_volume,
+    calculate_market_context,
+    calculate_momentum,
+    calculate_summary_stats,
+    calculate_volatility,
+    classify_regime,
+    find_key_levels,
+    render_analysis_report,
+)
+from config.vault import ensure_vault_directories, get_vault_paths
+from core.research import (
+    ensure_knowledge_notes,
+    find_reusable_research_note,
+    render_research_report,
+    search_arxiv,
+    search_web,
+)
+from data.cache_connector import CacheConnector
+
 app = typer.Typer(help="Quant Autoresearch")
 
 
@@ -249,6 +271,168 @@ def setup_data(force: bool = typer.Option(False, "--force", help="Rebuild the da
 
     build_daily_cache(output_path=cache_path, progress_callback=_echo_build_progress)
     typer.echo(f"Daily cache ready at {cache_path}")
+
+
+def _slice_date_range(frame, start: Optional[str], end: Optional[str]):
+    sliced = frame.sort_index()
+    if start:
+        sliced = sliced.loc[sliced.index >= start]
+    if end:
+        sliced = sliced.loc[sliced.index <= end]
+    return sliced
+
+
+def _clean_cached_market_frame(frame):
+    cleaned = frame.sort_index()
+    ohlc_columns = [column for column in ("Open", "High", "Low", "Close") if column in cleaned.columns]
+    if ohlc_columns:
+        cleaned = cleaned.dropna(subset=ohlc_columns, how="any")
+    return cleaned
+
+
+def _run_quietly(func, *args, **kwargs):
+    from contextlib import redirect_stderr, redirect_stdout
+    from io import StringIO
+
+    sink = StringIO()
+    with redirect_stdout(sink), redirect_stderr(sink):
+        return func(*args, **kwargs)
+
+
+@app.command("setup_vault")
+def setup_vault():
+    """Create the quant-autoresearch vault directory tree."""
+    try:
+        paths = get_vault_paths()
+        statuses = ensure_vault_directories()
+    except OSError as exc:
+        typer.echo(f"Failed to prepare vault directories: {exc}")
+        raise typer.Exit(code=1)
+
+    typer.echo(f"Resolved vault root: {paths.vault_root}")
+    typer.echo(f"Project root: {paths.project_root}")
+    for status in statuses:
+        state = "created" if status.created else "already existed"
+        typer.echo(f"{status.name}: {state} -> {status.path}")
+
+
+@app.command()
+def research(
+    query: str,
+    depth: str = typer.Option("shallow", "--depth", help="Research depth: shallow or deep"),
+    output: str = typer.Option("vault", "--output", help="Output target: vault or stdout"),
+):
+    """Run research and format the result as a vault-native note."""
+    depth = depth.lower()
+    output = output.lower()
+    if depth not in {"shallow", "deep"}:
+        typer.echo("Depth must be one of: shallow, deep")
+        raise typer.Exit(code=1)
+    if output not in {"vault", "stdout"}:
+        typer.echo("Output must be one of: vault, stdout")
+        raise typer.Exit(code=1)
+
+    ensure_knowledge_notes()
+    if output == "vault":
+        existing_note = find_reusable_research_note(query, get_vault_paths().research, depth=depth)
+        if existing_note is not None:
+            typer.echo(f"Reused existing research note: {existing_note}")
+            raise typer.Exit(code=0)
+
+    papers = _run_quietly(search_arxiv, query) if output == "stdout" else search_arxiv(query)
+    web_results = []
+    if depth == "deep":
+        if os.getenv("EXA_API_KEY") or os.getenv("SERPAPI_KEY"):
+            web_results = _run_quietly(search_web, query) if output == "stdout" else search_web(query)
+        else:
+            typer.echo("Deep web search skipped: EXA_API_KEY / SERPAPI_KEY missing. Returning ArXiv-only report.")
+
+    report, output_path, reused_existing = render_research_report(
+        query=query,
+        papers=papers,
+        web_results=web_results,
+        output=output,
+        depth=depth,
+    )
+    if output == "stdout":
+        typer.echo(report)
+        raise typer.Exit(code=0)
+
+    if reused_existing and output_path is not None:
+        typer.echo(f"Reused existing research note: {output_path}")
+    elif output_path is not None:
+        typer.echo(f"Wrote research note: {output_path}")
+
+
+@app.command()
+def analyze(
+    tickers: list[str] = typer.Argument(..., help="One or more tickers to analyze"),
+    start: Optional[str] = typer.Option(None, "--start", help="Inclusive start date"),
+    end: Optional[str] = typer.Option(None, "--end", help="Inclusive end date"),
+    output: str = typer.Option("vault", "--output", help="Output target: vault or stdout"),
+):
+    """Generate a deterministic stock-analysis report from cached market data."""
+    output = output.lower()
+    if output not in {"vault", "stdout"}:
+        typer.echo("Output must be one of: vault, stdout")
+        raise typer.Exit(code=1)
+
+    connector = CacheConnector()
+    frames = {}
+    for ticker in tickers:
+        frame = connector.load_symbol(ticker)
+        if frame is None or frame.empty:
+            typer.echo(
+                f"No cached data found for {ticker} in data/cache. "
+                "Run 'uv run python cli.py fetch "
+                f"{ticker}' or 'uv run python cli.py setup_data' first."
+            )
+            raise typer.Exit(code=1)
+        cleaned = _clean_cached_market_frame(frame)
+        sliced = _slice_date_range(cleaned, start, end)
+        if sliced.empty:
+            typer.echo(f"No data available for {ticker} in the requested date range.")
+            raise typer.Exit(code=1)
+        frames[ticker] = sliced
+
+    benchmark = frames.get("SPY")
+    if benchmark is None:
+        benchmark = connector.load_symbol("SPY")
+    if benchmark is not None and not benchmark.empty:
+        benchmark = _slice_date_range(_clean_cached_market_frame(benchmark), start, end)
+        if benchmark.empty:
+            benchmark = None
+
+    analyses = {}
+    for ticker, frame in frames.items():
+        analyses[ticker] = {
+            "momentum": calculate_momentum(frame),
+            "volatility": calculate_volatility(frame),
+            "volume": analyze_volume(frame),
+            "price_structure": find_key_levels(frame),
+            "regime": classify_regime(frame),
+            "market_context": calculate_market_context(frame, benchmark),
+            "statistics": calculate_summary_stats(frame),
+        }
+
+    ensure_knowledge_notes()
+    effective_start = start or frames[tickers[0]].index.min().strftime("%Y-%m-%d")
+    effective_end = end or frames[tickers[0]].index.max().strftime("%Y-%m-%d")
+    report, output_path = render_analysis_report(
+        tickers=tickers,
+        analyses=analyses,
+        start=effective_start,
+        end=effective_end,
+        output=output,
+        generated_at=datetime.now(),
+    )
+
+    if output == "stdout":
+        typer.echo(report)
+        raise typer.Exit(code=0)
+
+    if output_path is not None:
+        typer.echo(f"Wrote analysis note: {output_path}")
 
 
 @app.command()
