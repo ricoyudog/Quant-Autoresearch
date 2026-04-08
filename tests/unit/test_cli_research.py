@@ -28,6 +28,31 @@ def test_research_shallow_stdout_uses_arxiv_only(mock_search_arxiv):
     mock_search_arxiv.assert_called_once()
 
 
+@patch("cli.search_arxiv")
+def test_research_stdout_suppresses_helper_noise(mock_search_arxiv):
+    def noisy_search(query):
+        print("  [Research] Local BM25 hit: Found 2 relevant papers.")
+        return [
+            {
+                "title": "Momentum Paper",
+                "summary": "Summary",
+                "url": "https://example.com/paper",
+                "published": "2026-01-01",
+            }
+        ]
+
+    mock_search_arxiv.side_effect = noisy_search
+
+    result = runner.invoke(
+        app,
+        ["research", "intraday momentum", "--depth", "shallow", "--output", "stdout"],
+    )
+
+    assert result.exit_code == 0
+    assert result.stdout.startswith("---\n")
+    assert "[Research]" not in result.stdout
+
+
 @patch("cli.search_web")
 @patch("cli.search_arxiv")
 def test_research_deep_without_credentials_reports_skip(mock_search_arxiv, mock_search_web, monkeypatch):

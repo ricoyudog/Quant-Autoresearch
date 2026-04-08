@@ -38,9 +38,10 @@ class TradingStrategy:
         # If it crashes, it should be caught higher up in agent_runner
         pass
 
-def test_security_check_bypass_attempts():
+def test_security_check_bypass_attempts(tmp_path, monkeypatch):
     from core.backtester import security_check
-    
+
+    monkeypatch.chdir(tmp_path)
     bypass_code = """
 class TradingStrategy:
     def generate_signals(self, data):

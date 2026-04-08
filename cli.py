@@ -4,7 +4,9 @@ Quant Autoresearch CLI
 """
 import os
 import sys
+from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime
+from io import StringIO
 from pathlib import Path
 from typing import Optional
 
@@ -95,11 +97,17 @@ def research(
             typer.echo(f"Reused existing research note: {existing_note}")
             raise typer.Exit(code=0)
 
-    papers = search_arxiv(query)
+    if output == "stdout":
+        papers = _run_quietly(search_arxiv, query)
+    else:
+        papers = search_arxiv(query)
     web_results = []
     if depth == "deep":
         if os.getenv("EXA_API_KEY") or os.getenv("SERPAPI_KEY"):
-            web_results = search_web(query)
+            if output == "stdout":
+                web_results = _run_quietly(search_web, query)
+            else:
+                web_results = search_web(query)
         else:
             typer.echo("Deep web search skipped: EXA_API_KEY / SERPAPI_KEY missing. Returning ArXiv-only report.")
 
@@ -129,6 +137,20 @@ def _slice_date_range(frame, start: Optional[str], end: Optional[str]):
     return sliced
 
 
+def _clean_cached_market_frame(frame):
+    cleaned = frame.sort_index()
+    ohlc_columns = [column for column in ("Open", "High", "Low", "Close") if column in cleaned.columns]
+    if ohlc_columns:
+        cleaned = cleaned.dropna(subset=ohlc_columns, how="any")
+    return cleaned
+
+
+def _run_quietly(func, *args, **kwargs):
+    sink = StringIO()
+    with redirect_stdout(sink), redirect_stderr(sink):
+        return func(*args, **kwargs)
+
+
 @app.command()
 def analyze(
     tickers: list[str] = typer.Argument(..., help="One or more tickers to analyze"),
@@ -153,7 +175,8 @@ def analyze(
                 f"{ticker}' or 'uv run python cli.py setup_data' first."
             )
             raise typer.Exit(code=1)
-        sliced = _slice_date_range(frame, start, end)
+        cleaned = _clean_cached_market_frame(frame)
+        sliced = _slice_date_range(cleaned, start, end)
         if sliced.empty:
             typer.echo(f"No data available for {ticker} in the requested date range.")
             raise typer.Exit(code=1)
@@ -163,7 +186,9 @@ def analyze(
     if benchmark is None:
         benchmark = connector.load_symbol("SPY")
     if benchmark is not None and not benchmark.empty:
-        benchmark = _slice_date_range(benchmark, start, end)
+        benchmark = _slice_date_range(_clean_cached_market_frame(benchmark), start, end)
+        if benchmark.empty:
+            benchmark = None
 
     analyses = {}
     for ticker, frame in frames.items():

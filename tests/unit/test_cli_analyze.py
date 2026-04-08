@@ -79,6 +79,26 @@ def test_analyze_without_cached_spy_does_not_fabricate_market_context(monkeypatc
     assert "Correlation to SPY: 1.00" not in result.stdout
 
 
+def test_analyze_ignores_trailing_nan_ohlc_rows(monkeypatch):
+    frame = build_symbol_frame()
+    frame.loc[frame.index[-1], ["Open", "High", "Low", "Close"]] = float("nan")
+
+    class StubConnector:
+        def load_symbol(self, symbol):
+            return frame
+
+    monkeypatch.setattr("cli.DataConnector", lambda: StubConnector())
+
+    result = runner.invoke(
+        app,
+        ["analyze", "SPY", "--start", "2025-01-01", "--output", "stdout"],
+    )
+
+    assert result.exit_code == 0
+    assert "- **Price**: N/A" not in result.stdout
+    assert "- **Momentum (20d)**: N/A" not in result.stdout
+
+
 def test_format_analysis_report_renders_nan_values_as_na():
     report = format_analysis_report(
         tickers=["SPY"],

@@ -7,7 +7,8 @@ def create_strategy_file(content):
     with open("strategy.py", "w") as f:
         f.write(content)
 
-def test_security_check_safe_strategy():
+def test_security_check_safe_strategy(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     safe_code = """
 import pandas as pd
 class TradingStrategy:
@@ -19,7 +20,8 @@ class TradingStrategy:
     assert is_safe
     assert msg == ""
 
-def test_security_check_forbidden_builtin():
+def test_security_check_forbidden_builtin(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     evil_code = """
 class TradingStrategy:
     def generate_signals(self, data):
@@ -31,7 +33,8 @@ class TradingStrategy:
     assert not is_safe
     assert "Forbidden builtin function found: exec" in msg
 
-def test_security_check_forbidden_import():
+def test_security_check_forbidden_import(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     evil_code = """
 import socket
 class TradingStrategy:
@@ -43,7 +46,8 @@ class TradingStrategy:
     assert not is_safe
     assert "Forbidden module import found: socket" in msg
 
-def test_security_check_lookahead_bias():
+def test_security_check_lookahead_bias(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     evil_codes = [
         "data.shift(-1)",
         "data.shift(periods=-2)",
@@ -60,7 +64,8 @@ class TradingStrategy:
         assert not is_safe
         assert "Look-ahead bias detected" in msg
 
-def test_security_check_from_import():
+def test_security_check_from_import(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     evil_code = """
 from os import system
 class TradingStrategy:
