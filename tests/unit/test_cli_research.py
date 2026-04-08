@@ -67,3 +67,45 @@ def test_research_vault_reuses_matching_note(mock_search_arxiv, monkeypatch, tmp
     assert result.exit_code == 0
     assert f"Reused existing research note: {existing_note}" in result.stdout
     mock_search_arxiv.assert_not_called()
+
+
+@patch("cli.search_web")
+@patch("cli.search_arxiv")
+def test_research_deep_vault_upgrades_existing_shallow_note(
+    mock_search_arxiv, mock_search_web, monkeypatch, tmp_path
+):
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(tmp_path / "vault"))
+    monkeypatch.setenv("EXA_API_KEY", "test-key")
+    research_dir = tmp_path / "vault" / "quant-autoresearch" / "research"
+    research_dir.mkdir(parents=True)
+    existing_note = research_dir / "2026-04-08-intraday-momentum.md"
+    existing_note.write_text(
+        "---\n"
+        "note_type: research\n"
+        "query: intraday momentum strategy\n"
+        "depth: shallow\n"
+        "---\n\n"
+        "# Existing shallow note\n"
+    )
+    mock_search_arxiv.return_value = []
+    mock_search_web.return_value = [
+        {
+            "title": "Macro rates note",
+            "url": "https://example.com/rates",
+            "source": "example",
+            "snippet": "Fresh web result",
+        }
+    ]
+
+    result = runner.invoke(
+        app,
+        ["research", "intraday momentum strategy", "--depth", "deep", "--output", "vault"],
+    )
+
+    assert result.exit_code == 0
+    assert f"Wrote research note: {existing_note}" in result.stdout
+    mock_search_arxiv.assert_called_once()
+    mock_search_web.assert_called_once()
+    updated_note = existing_note.read_text()
+    assert "depth: deep" in updated_note
+    assert "## Web Resources" in updated_note

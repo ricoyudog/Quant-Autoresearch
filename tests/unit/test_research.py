@@ -4,6 +4,7 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 from core.research import (
     CACHE_FILE,
+    find_existing_research_note,
     get_research_context,
     read_frontmatter,
     render_research_report,
@@ -112,3 +113,37 @@ def test_read_frontmatter_returns_query(tmp_path):
     frontmatter = read_frontmatter(note_path)
 
     assert frontmatter["query"] == "mean reversion setup"
+
+
+def test_read_frontmatter_returns_empty_dict_for_malformed_frontmatter(tmp_path):
+    note_path = tmp_path / "broken.md"
+    note_path.write_text(
+        "---\n"
+        "note_type: research\n"
+        "query: broken note\n"
+        "# missing closing delimiter\n"
+    )
+
+    assert read_frontmatter(note_path) == {}
+
+
+def test_find_existing_research_note_skips_malformed_frontmatter(tmp_path):
+    malformed = tmp_path / "broken.md"
+    malformed.write_text(
+        "---\n"
+        "note_type: research\n"
+        "query: broken note\n"
+        "# missing closing delimiter\n"
+    )
+    valid = tmp_path / "valid.md"
+    valid.write_text(
+        "---\n"
+        "note_type: research\n"
+        "query: intraday momentum strategy\n"
+        "---\n\n"
+        "# Valid\n"
+    )
+
+    matched = find_existing_research_note("intraday momentum strategy", tmp_path)
+
+    assert matched == valid

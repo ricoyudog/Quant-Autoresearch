@@ -56,6 +56,29 @@ def test_analyze_fails_clearly_when_cached_data_is_missing(monkeypatch):
     assert "No cached data found for SPY" in result.stdout
 
 
+def test_analyze_without_cached_spy_does_not_fabricate_market_context(monkeypatch):
+    frame = build_symbol_frame()
+
+    class StubConnector:
+        def load_symbol(self, symbol):
+            if symbol == "AAPL":
+                return frame
+            if symbol == "SPY":
+                return None
+            return None
+
+    monkeypatch.setattr("cli.DataConnector", lambda: StubConnector())
+
+    result = runner.invoke(
+        app,
+        ["analyze", "AAPL", "--start", "2025-01-01", "--output", "stdout"],
+    )
+
+    assert result.exit_code == 0
+    assert "Correlation to SPY: N/A" in result.stdout
+    assert "Correlation to SPY: 1.00" not in result.stdout
+
+
 def test_format_analysis_report_renders_nan_values_as_na():
     report = format_analysis_report(
         tickers=["SPY"],

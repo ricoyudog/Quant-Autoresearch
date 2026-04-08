@@ -26,7 +26,7 @@ from analysis import (
 from config.vault import ensure_vault_directories, get_vault_paths
 from core.research import (
     ensure_knowledge_notes,
-    find_existing_research_note,
+    find_reusable_research_note,
     render_research_report,
     search_arxiv,
     search_web,
@@ -89,9 +89,8 @@ def research(
         raise typer.Exit(code=1)
 
     ensure_knowledge_notes()
-
     if output == "vault":
-        existing_note = find_existing_research_note(query, get_vault_paths().research)
+        existing_note = find_reusable_research_note(query, get_vault_paths().research, depth=depth)
         if existing_note is not None:
             typer.echo(f"Reused existing research note: {existing_note}")
             raise typer.Exit(code=0)
@@ -168,14 +167,13 @@ def analyze(
 
     analyses = {}
     for ticker, frame in frames.items():
-        benchmark_frame = benchmark if benchmark is not None else frame
         analyses[ticker] = {
             "momentum": calculate_momentum(frame),
             "volatility": calculate_volatility(frame),
             "volume": analyze_volume(frame),
             "price_structure": find_key_levels(frame),
             "regime": classify_regime(frame),
-            "market_context": calculate_market_context(frame, benchmark_frame),
+            "market_context": calculate_market_context(frame, benchmark),
             "statistics": calculate_summary_stats(frame),
         }
 

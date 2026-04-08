@@ -457,8 +457,11 @@ def read_frontmatter(note_path: str | Path) -> Dict[str, Any]:
     if not text.startswith("---\n"):
         return {}
 
-    _, frontmatter_block, _ = text.split("---", 2)
-    parsed = yaml.safe_load(frontmatter_block) or {}
+    try:
+        _, frontmatter_block, _ = text.split("---", 2)
+        parsed = yaml.safe_load(frontmatter_block) or {}
+    except (ValueError, yaml.YAMLError):
+        return {}
     return parsed if isinstance(parsed, dict) else {}
 
 
@@ -487,19 +490,30 @@ def find_existing_research_note(query: str, research_dir: str | Path) -> Optiona
     return None
 
 
+def find_reusable_research_note(
+    query: str,
+    research_dir: str | Path,
+    depth: str = "shallow",
+) -> Optional[Path]:
+    if depth != "shallow":
+        return None
+    return find_existing_research_note(query, research_dir)
+
+
 def write_research_report(
     query: str,
     report: str,
     generated_at: Optional[datetime] = None,
+    depth: str = "shallow",
 ) -> tuple[Path, bool]:
     generated_at = generated_at or datetime.now()
     ensure_vault_directories()
     paths = get_vault_paths()
     existing_note = find_existing_research_note(query, paths.research)
-    if existing_note is not None:
+    if existing_note is not None and depth == "shallow":
         return existing_note, True
 
-    note_path = paths.research / f"{generated_at.strftime('%Y-%m-%d')}-{slugify(query)}.md"
+    note_path = existing_note or paths.research / f"{generated_at.strftime('%Y-%m-%d')}-{slugify(query)}.md"
     note_path.write_text(report)
     return note_path, False
 
@@ -527,6 +541,7 @@ def render_research_report(
         query=query,
         report=report,
         generated_at=generated_at,
+        depth=depth,
     )
     return report, note_path, reused_existing
 
