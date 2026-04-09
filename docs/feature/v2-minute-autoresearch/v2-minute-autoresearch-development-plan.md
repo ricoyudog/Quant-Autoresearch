@@ -4,7 +4,7 @@
 > Merge target: `main-dev`
 > Canonical root: `docs/feature/v2-minute-autoresearch/`
 > Source brief: `.omx/specs/deep-interview-spec-vs-impl.md`
-> Planning status: Phase 0 complete; local issue/doc package created; GitLab publication blocked locally
+> Planning status: Phase 0 complete; GitHub issue package published; merge handoff targets `main-dev`
 
 ## 1. Context
 
@@ -30,22 +30,21 @@ This workspace turns that clarified architecture into a merge-ready planning pac
 Repo note:
 
 - local `main-dev` existed but was fast-forwarded to match `fork/main-dev`
-- issue publication is currently blocked because `glab` is unavailable locally
+- GitHub issues were published on 2026-04-09 as `#17` through `#21`
 
 ## 3. Scope
 
 - define the canonical V2 architecture package
 - split the work into the required issue-sized workstreams
 - create sprint docs for each child issue
-- document the GitLab publication blocker without losing planning structure
+- publish the issue package and keep docs aligned to the live issue set
 - keep the package ready to merge into `main-dev`
 
 ## 4. Out Of Scope
 
 - implementing the V2 architecture itself
 - reopening unrelated prior feature closeout work
-- posting GitLab cards from this machine
-- guessing GitLab board IDs or workflow state without a GitLab-capable environment
+- reopening issue publication structure that already exists on GitHub
 
 ## 5. Workstream / Issue Topology
 
@@ -62,11 +61,11 @@ Repo note:
 | Phase | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
 | Phase 0 — Architecture Alignment | lock canonical V2 shape and workspace root | deep-interview spec, branch decision, workspace root choice | completed | keep this workspace as the single planning root |
-| Sprint 1 — Autoresearch Core | define loop semantics and idea-ingestion lane | issue A draft, sprint1 backend/infra docs | pending | publish issue A when GitLab is available |
-| Sprint 2 — Minute Runtime | align runtime/data/validation to the minute-level mission | issue B draft, sprint2 backend/infra docs | pending | publish issue B when GitLab is available |
-| Sprint 3 — Stock Discussion Lane | define strategy-facing stock discussion under autoresearch | issue C draft, sprint3 backend/infra docs | pending | publish issue C when GitLab is available |
-| Sprint 4 — Factor Mining Lane | define optional factor-mining sub-mode | issue D draft, sprint4 backend/infra docs | pending | publish issue D when GitLab is available |
-| Phase 5 — Verification + Merge | verify docs coherence and merge-readiness for `main-dev` | test plan, merge-test plan, issue publication blocker note | in progress | replace draft issue references with real GitLab IDs later |
+| Sprint 1 — Autoresearch Core | define loop semantics and idea-ingestion lane | issue #18, sprint1 backend/infra docs | pending | execute sprint1 docs later |
+| Sprint 2 — Minute Runtime | align runtime/data/validation to the minute-level mission | issue #19, sprint2 backend/infra docs | pending | execute sprint2 docs later |
+| Sprint 3 — Stock Discussion Lane | define strategy-facing stock discussion under autoresearch | issue #20, sprint3 backend/infra docs | pending | execute sprint3 docs later |
+| Sprint 4 — Factor Mining Lane | define optional factor-mining sub-mode | issue #21, sprint4 backend/infra docs | pending | execute sprint4 docs later |
+| Phase 5 — Verification + Merge | verify docs coherence and merge-readiness for `main-dev` | test plan, merge-test plan, published issue links | in progress | merge planning package into `main-dev` |
 
 ## 7. Task Table
 
@@ -76,7 +75,7 @@ Repo note:
 | PLAN-02 | Draft umbrella issue card | Planning | PLAN-01 | 0.1d | issue draft has required sections and references |
 | PLAN-03 | Draft child issue cards A-D | Planning | PLAN-02 | 0.2d | each workstream has a structured issue draft |
 | PLAN-04 | Create sprint docs for issues A-D | Planning | PLAN-03 | 0.3d | each child issue has at least one sprint doc |
-| PLAN-05 | Record GitLab publication blocker and merge path | Infra | PLAN-02 | 0.1d | blocker and next publication step are explicit |
+| PLAN-05 | Publish the issue package to GitHub and record live issue links | Infra | PLAN-02 | 0.1d | live issue links replace provisional draft-only status |
 | PLAN-06 | Verify the full docs package against `main-dev` | QA | PLAN-04, PLAN-05 | 0.1d | references, roots, and branch targets are coherent |
 
 ## 8. Detailed Todo
@@ -87,15 +86,15 @@ Repo note:
 - [x] write backend / infra / test / merge-test planning docs
 - [x] write local issue-card drafts for umbrella + four child issues
 - [x] create `sprint1/` through `sprint4/` execution docs
-- [ ] publish the issue-card drafts to GitLab from a GitLab-capable environment
-- [ ] replace provisional issue references with real issue URLs/IDs
+- [x] publish the issue-card drafts to GitHub
+- [x] replace provisional issue references with real issue URLs/IDs
 - [ ] merge the planning package into `main-dev`
 
 ## 9. Dependencies / Risks
 
 | Risk | Mitigation |
 | --- | --- |
-| GitLab publication cannot happen locally | keep publication-ready drafts in `issue-cards/` and document blocker explicitly |
+| GitHub issue set could drift from local docs if manually edited later | keep local issue-card drafts synced with the published cards |
 | Future implementation might drift from the clarified spec | treat `.omx/specs/deep-interview-spec-vs-impl.md` as the governing brief |
 | Workstreams could be too coarse or too fine | use umbrella + four child issues only |
 | Merge-to-`main-dev` could accidentally mix unrelated work | keep this planning package on a dedicated feature branch |
@@ -106,7 +105,7 @@ Repo note:
 - verify one canonical docs root
 - verify every child issue has sprint docs
 - verify issue-card drafts have required sections
-- verify blocker note exists for GitLab publication
+- verify published issue links and local draft sync
 
 ## 11. Acceptance Criteria
 
@@ -115,9 +114,9 @@ Repo note:
 - [x] umbrella issue draft exists
 - [x] four child issue drafts exist
 - [x] `sprint1/` … `sprint4/` docs exist
-- [x] GitLab blocker is documented
+- [x] GitHub issue links are published
 - [x] merge target is documented as `main-dev`
-- [ ] real GitLab issue URLs replace draft references
+- [x] real GitHub issue URLs replace draft references
 
 ## 12. References
 
@@ -131,5 +130,9 @@ Repo note:
 - [issue-cards/issue-b-minute-runtime-validation.md](./issue-cards/issue-b-minute-runtime-validation.md)
 - [issue-cards/issue-c-strategy-stock-discussion.md](./issue-cards/issue-c-strategy-stock-discussion.md)
 - [issue-cards/issue-d-optional-factor-mining.md](./issue-cards/issue-d-optional-factor-mining.md)
+- [#17](https://github.com/ricoyudog/Quant-Autoresearch/issues/17)
+- [#18](https://github.com/ricoyudog/Quant-Autoresearch/issues/18)
+- [#19](https://github.com/ricoyudog/Quant-Autoresearch/issues/19)
+- [#20](https://github.com/ricoyudog/Quant-Autoresearch/issues/20)
+- [#21](https://github.com/ricoyudog/Quant-Autoresearch/issues/21)
 - `.omx/specs/deep-interview-spec-vs-impl.md`
-

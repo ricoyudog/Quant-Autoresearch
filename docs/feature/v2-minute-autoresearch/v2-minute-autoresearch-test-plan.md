@@ -22,15 +22,15 @@ Prove the planning package is structurally sound and aligned to the clarified ar
 
 ### Publication integrity
 
-- [ ] GitLab publication blocker is explicit
-- [ ] no artifact falsely claims the issues were already published
+- [ ] GitHub issue links are present and correct
+- [ ] no artifact falsely claims the issues are unpublished drafts
 
 ## Commands
 
 ```bash
 git branch --show-current
 find docs/feature/v2-minute-autoresearch -maxdepth 3 -type f | sort
-rg -n "minute-level|autoresearch|TradingAgents|factor mining|backtester|GitLab publication blocker|main-dev" docs/feature/v2-minute-autoresearch -S
+rg -n "minute-level|autoresearch|TradingAgents|factor mining|backtester|#17|#18|#19|#20|#21|main-dev" docs/feature/v2-minute-autoresearch -S
 ```
 
 ## Update Space
@@ -45,5 +45,4 @@ rg -n "minute-level|autoresearch|TradingAgents|factor mining|backtester|GitLab p
 
 ### Follow-ups
 
-- publish issue-card drafts to GitLab later
-
+- keep local draft issue cards aligned with GitHub

@@ -8,7 +8,7 @@ Capture the non-code planning constraints required for this feature package to r
 
 - branch and merge target
 - docs root and workspace shape
-- GitLab publication blocker
+- GitHub issue publication status
 - Obsidian / minute-data / environment expectations that the future implementation will depend on
 
 ## Key Constraints
@@ -16,9 +16,12 @@ Capture the non-code planning constraints required for this feature package to r
 - feature branch: `feature/v2-minute-autoresearch`
 - merge target: `main-dev`
 - canonical docs root: `docs/feature/v2-minute-autoresearch/`
-- GitLab publication currently blocked because:
-  - `glab` not installed
-  - no GitLab CLI config found
+- GitHub issues published:
+  - umbrella `#17`
+  - issue A `#18`
+  - issue B `#19`
+  - issue C `#20`
+  - issue D `#21`
 
 ## Runtime Expectations To Preserve
 
@@ -28,15 +31,10 @@ Capture the non-code planning constraints required for this feature package to r
 
 ## Publication Follow-up
 
-Once a GitLab-capable environment exists:
-
-- publish umbrella draft
-- publish child issue drafts
-- confirm `workflow::todo` board/list
-- replace local draft references with live issue links
+- keep the local issue-card drafts synchronized with the live GitHub issues
+- keep the `workflow::todo` label contract consistent for future issue creation
 
 ## References
 
 - `.omx/context/v2-minute-autoresearch-orchestration-20260409T074500Z.md`
 - `.omx/specs/deep-interview-spec-vs-impl.md`
-

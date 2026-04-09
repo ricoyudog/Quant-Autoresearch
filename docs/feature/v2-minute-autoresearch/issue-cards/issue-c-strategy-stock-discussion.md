@@ -2,8 +2,8 @@
 
 **Publication Status**
 
-- Local GitLab issue-card draft only
-- Intended label: `workflow::todo`
+- Published on GitHub as [#20](https://github.com/ricoyudog/Quant-Autoresearch/issues/20)
+- Applied label: `workflow::todo`
 
 **Feature Branch**
 
@@ -73,4 +73,3 @@
 
 - `docs/feature/v2-minute-autoresearch/sprint3/sprint3-backend.md`
 - `docs/feature/v2-minute-autoresearch/sprint3/sprint3-infra.md`
-
