@@ -29,7 +29,7 @@
 ## 3) Step-by-Step Plan
 
 ### Step 1 — Define idea-source assumptions
-- [ ] define where daily collected ideas live
+- [x] define where daily collected ideas live
 - [ ] define what minimum metadata or structure the loop can rely on
 - [ ] define fallback behavior when no suitable idea note exists
 
@@ -58,17 +58,17 @@ rg -n "Obsidian|search|credentials|fallback|idea" docs/feature/v2-minute-autores
 
 ### Completed Work
 
-- leave blank until implemented
+- Verified that the vault idea-source root is `quant-autoresearch/` under `OBSIDIAN_VAULT_PATH` (or the default `~/Documents/Obsidian Vault`) with daily/autoresearch inputs read from `quant-autoresearch/research/` and `quant-autoresearch/knowledge/`.
+- Verified that `setup_vault` creates the expected directories idempotently before idea-intake code reads from them.
 
 ### Command Results
 
-- leave blank until implemented
+- `uv run pytest tests/unit/test_idea_intake.py tests/unit/test_program_guidance.py tests/unit/test_vault_config.py tests/unit/test_cli_setup_vault.py -q` → `7 passed`
 
 ### Blockers / Deviations
 
-- leave blank until implemented
+- The minimum note structure contract and missing-note fallback behavior remain open so the infra contract is only partially complete.
 
 ### Follow-ups
 
-- leave blank until implemented
-
+- Keep the infrastructure note-source contract aligned with the backend Step 1 self-search trigger and minimum structured-context decisions as they land.

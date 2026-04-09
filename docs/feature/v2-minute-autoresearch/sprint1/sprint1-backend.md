@@ -62,17 +62,18 @@ rg -n "autoresearch|Obsidian|idea|backtester|keep / revert|keep/revert" docs/fea
 
 - Added `src/memory/idea_intake.py` with `collect_vault_idea_notes()` so the runtime can enumerate research and knowledge notes from the configured Obsidian vault.
 - Updated `program.md` to state that vault idea notes should be read before self-searching for new ideas.
-- Added `tests/unit/test_idea_intake.py` and extended `tests/unit/test_program_guidance.py`.
+- Added `tests/unit/test_idea_intake.py`, `tests/unit/test_program_guidance.py`, `tests/unit/test_vault_config.py`, and `tests/unit/test_cli_setup_vault.py` to lock the current intake contract around vault note discovery, guidance text, and vault-path setup.
 
 ### Command Results
 
-- `uv run pytest tests/unit/test_idea_intake.py tests/unit/test_program_guidance.py -q` → `3 passed`
-- `uv run pytest tests/unit/test_cli.py tests/unit/test_backtester_v2.py -q` → `66 passed`
+- `uv run pytest tests/unit/test_idea_intake.py tests/unit/test_program_guidance.py tests/unit/test_vault_config.py tests/unit/test_cli_setup_vault.py -q` → `7 passed`
+- `uv run python -m compileall src config cli.py` → completed without compile errors
 
 ### Blockers / Deviations
 
-- leave blank until implemented
+- Step 1 still needs the explicit self-search trigger rule and the minimum structured context rule before the full idea-intake contract is complete.
 
 ### Follow-ups
 
-- leave blank until implemented
+- Worker 1 owns the self-search trigger rule and its tests/docs updates.
+- Worker 2 owns the minimum structured context rule and its tests/docs updates.
