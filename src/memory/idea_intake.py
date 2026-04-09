@@ -29,6 +29,28 @@ def _collect_from_directory(directory: Path, source: str) -> list[dict[str, Any]
     return notes
 
 
+def build_minimum_structured_context(note: dict[str, Any]) -> dict[str, Any]:
+    frontmatter = note.get("frontmatter") or {}
+    tickers = frontmatter.get("tickers") or []
+    if isinstance(tickers, str):
+        tickers = [tickers]
+
+    if not any((frontmatter.get("query"), frontmatter.get("topic"), tickers)):
+        raise ValueError(
+            "minimum structured context requires query, topic, or tickers metadata"
+        )
+
+    return {
+        "path": str(note["path"]),
+        "source": note["source"],
+        "title": note["title"],
+        "note_type": frontmatter.get("note_type"),
+        "query": frontmatter.get("query"),
+        "topic": frontmatter.get("topic"),
+        "tickers": tickers,
+    }
+
+
 def collect_vault_idea_notes(
     limit: int = 10,
     include_research: bool = True,
