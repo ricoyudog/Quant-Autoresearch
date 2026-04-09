@@ -1,6 +1,8 @@
 from pathlib import Path
 
-from memory.idea_intake import collect_vault_idea_notes
+import pytest
+
+from memory.idea_intake import build_minimum_structured_context, collect_vault_idea_notes
 
 
 def test_collect_vault_idea_notes_reads_research_and_knowledge(monkeypatch, tmp_path):
@@ -57,3 +59,41 @@ def test_collect_vault_idea_notes_limits_results(monkeypatch, tmp_path):
 
     assert len(notes) == 2
     assert [note["title"] for note in notes] == ["Note 2", "Note 1"]
+
+
+def test_build_minimum_structured_context_extracts_seed_fields(tmp_path):
+    note_path = tmp_path / "2026-04-09-intraday-alpha.md"
+    note = {
+        "path": note_path,
+        "source": "research",
+        "title": "Intraday Alpha",
+        "frontmatter": {
+            "note_type": "research",
+            "query": "intraday alpha",
+            "tickers": ["AAPL"],
+        },
+    }
+
+    context = build_minimum_structured_context(note)
+
+    assert context == {
+        "path": str(note_path),
+        "source": "research",
+        "title": "Intraday Alpha",
+        "note_type": "research",
+        "query": "intraday alpha",
+        "topic": None,
+        "tickers": ["AAPL"],
+    }
+
+
+def test_build_minimum_structured_context_requires_metadata_seed(tmp_path):
+    note = {
+        "path": tmp_path / "unstructured.md",
+        "source": "research",
+        "title": "Unstructured Idea",
+        "frontmatter": {"note_type": "research"},
+    }
+
+    with pytest.raises(ValueError, match="query, topic, or tickers"):
+        build_minimum_structured_context(note)
