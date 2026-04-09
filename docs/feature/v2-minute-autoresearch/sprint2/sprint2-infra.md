@@ -29,23 +29,23 @@
 ## 3) Step-by-Step Plan
 
 ### Step 1 — Define minute-data prerequisites
-- [ ] define required data sources and local datasets
-- [ ] define what is optional vs mandatory
-- [ ] define the failure mode when minute-level prerequisites are absent
+- [x] define required data sources and local datasets
+- [x] define what is optional vs mandatory
+- [x] define the failure mode when minute-level prerequisites are absent
 
 ### Step 2 — Define merge-target and baseline assumptions
-- [ ] define `main-dev` as the merge target baseline
-- [ ] define how future execution should avoid stale branch drift
+- [x] define `main-dev` as the merge target baseline
+- [x] define how future execution should avoid stale branch drift
 
 ### Step 3 — Define infrastructure risks
-- [ ] document performance, storage, and environment risks for minute-level operation
-- [ ] document any blockers that could delay runtime convergence
+- [x] document performance, storage, and environment risks for minute-level operation
+- [x] document any blockers that could delay runtime convergence
 
 ## 4) Test Plan
 
-- [ ] verify minute-level prerequisites are explicit
-- [ ] verify branch/merge assumptions are explicit
-- [ ] verify infra risks are documented before execution
+- [x] verify minute-level prerequisites are explicit
+- [x] verify branch/merge assumptions are explicit
+- [x] verify infra risks are documented before execution
 
 ## 5) Verification Commands
 
@@ -57,17 +57,20 @@ rg -n "minute|dataset|main-dev|merge target|risk|prerequisite" docs/feature/v2-m
 
 ### Completed Work
 
-- leave blank until implemented
+- Verified that the minute-mode runtime now requires daily DuckDB data and fails with a stable `DATA ERROR` when those prerequisites are absent.
+- Confirmed that `main-dev` is the correct merge target baseline for this issue branch.
+- Confirmed the primary minute runtime still depends on the DuckDB daily cache plus minute-bar queries, and that this path remains the required execution surface for V2.
 
 ### Command Results
 
-- leave blank until implemented
+- `uv run pytest tests/unit/test_backtester_v2.py -q` → `38 passed`
+- `uv run pytest tests/unit/test_cli.py tests/unit/test_backtester_v2.py tests/unit/test_duckdb_connector.py tests/integration/test_minute_backtest.py -q` → `87 passed`
 
 ### Blockers / Deviations
 
-- leave blank until implemented
+- Local datasets / minute CLI availability remain environmental dependencies; the code now reports their absence explicitly instead of masking it behind a legacy fallback.
 
 ### Follow-ups
 
-- leave blank until implemented
-
+- Preserve the explicit failure mode for missing minute prerequisites in later runtime work.
+- Review whether the remaining legacy cache helpers should be isolated further once no tests depend on them.

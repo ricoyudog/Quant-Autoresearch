@@ -437,6 +437,49 @@ class MinuteStrategy:
         assert excinfo.value.code == 1
         assert "DATA ERROR:" in output
 
+    def test_walk_forward_validation_does_not_fallback_to_legacy_runtime_when_daily_data_missing(
+        self,
+        monkeypatch,
+        tmp_path,
+        capsys,
+    ):
+        """Minute-mode V2 should fail explicitly instead of silently using the legacy runtime."""
+        strategy_path = tmp_path / "strategy.py"
+        strategy_path.write_text(
+            """
+class MinuteStrategy:
+    def select_universe(self, daily_data):
+        return ["AAA"]
+
+    def generate_signals(self, data):
+        return {}
+""".strip()
+        )
+
+        monkeypatch.setenv("STRATEGY_FILE", str(strategy_path))
+        monkeypatch.delenv("BACKTEST_START_DATE", raising=False)
+        monkeypatch.delenv("BACKTEST_END_DATE", raising=False)
+        monkeypatch.delenv("BACKTEST_UNIVERSE_SIZE", raising=False)
+        monkeypatch.setattr(backtester, "security_check", lambda file_path=None: (True, ""))
+        monkeypatch.setattr(
+            backtester,
+            "load_daily_data",
+            lambda start_date=None, end_date=None: pd.DataFrame(),
+            raising=False,
+        )
+        monkeypatch.setattr(
+            backtester,
+            "_legacy_walk_forward_validation",
+            lambda strategy_instance: pytest.fail("legacy runtime should not be used"),
+        )
+
+        with pytest.raises(SystemExit) as excinfo:
+            backtester.walk_forward_validation()
+
+        output = capsys.readouterr().out
+        assert excinfo.value.code == 1
+        assert "DATA ERROR:" in output
+
     def test_walk_forward_validation_uses_daily_universe_and_minute_windows(self, monkeypatch, tmp_path, capsys):
         """walk_forward_validation should use the DuckDB daily->universe->minute flow."""
         strategy_path = tmp_path / "strategy.py"

@@ -954,7 +954,8 @@ def walk_forward_validation(strategy_file: str | None = None):
         )
         return
 
-    _legacy_walk_forward_validation(strategy_instance)
+    print("DATA ERROR: minute runtime requires daily DuckDB data; legacy runtime fallback is disabled in V2.")
+    sys.exit(1)
 
 if __name__ == "__main__":
     walk_forward_validation()
