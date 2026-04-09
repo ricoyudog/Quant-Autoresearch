@@ -65,16 +65,23 @@ rg -n "autoresearch|Obsidian|idea|backtester|keep / revert|keep/revert" docs/fea
 - Added `build_minimum_structured_context()` in `src/memory/idea_intake.py` so strategy changes require a stable note path/source/title plus a metadata seed from `query`, `topic`, or `tickers`.
 - Updated `program.md` to document the self-search trigger and the minimum structured-context bundle required before proposing strategy changes.
 - Added `tests/unit/test_idea_intake.py`, `tests/unit/test_idea_search_policy.py`, `tests/unit/test_program_guidance.py`, `tests/unit/test_vault_config.py`, and `tests/unit/test_cli_setup_vault.py` to lock the intake, search-trigger, guidance, and vault-path contracts.
+- Reviewed the merged Sprint 1 branch and confirmed that this slice currently defines the gate before a hypothesis can exist, not the full hypothesis-to-strategy mutation flow: the branch requires structured idea context, a deterministic `analyze` artifact, and the current baseline before any proposal is allowed.
+- Reviewed the same branch for the first keep/revert rule slice and confirmed that Sprint 1 still does not encode a backend handoff helper or a backtester-authority rule in `program.md`/`src`; keep/revert remains a higher-level contract that is not yet implemented in this sprint slice.
 
 ### Command Results
 
 - `uv run pytest tests/unit/test_idea_intake.py tests/unit/test_idea_search_policy.py tests/unit/test_program_guidance.py tests/unit/test_vault_config.py tests/unit/test_cli_setup_vault.py -q` → `13 passed`
 - `uv run python -m compileall src config cli.py` → completed without compile errors
+- `rg -n "minimum structured context|do not propose strategy changes|validated run|keep / revert|keep/revert|backtester outcomes|idea quality|hypothesis" program.md src/memory tests/unit docs/feature/v2-minute-autoresearch -S` → verified that the current slice defines a structured-context gate and post-validation note writing, while backtester-driven keep/revert language still only appears in higher-level feature docs, not in Sprint 1 runtime guidance or helpers.
 
 ### Blockers / Deviations
 
-- Step 1 idea-intake contract is now defined, but candidate-generation, keep/revert, and recording semantics remain open.
+- Step 2 is only partially advanced by the structured-context gate; the branch still does not define how retrieved ideas become concrete strategy hypotheses or how they modify `src/strategies/active_strategy.py`.
+- The first keep/revert rule slice is still open in Sprint 1 backend terms: there is no explicit candidate package handoff to the backtester and no local rule that says idea quality alone cannot justify keeping a change.
+- Recording semantics remain open beyond the existing `results.tsv` / experiment-note guidance.
 
 ### Follow-ups
 
 - Carry the new self-search decision reasons and structured-context bundle forward into Sprint 2+ runtime orchestration instead of re-deriving them ad hoc.
+- Add an explicit hypothesis-to-strategy-change contract before closing Sprint 1 Step 2.
+- Add the backtester handoff and keep/revert authority rule to the next backend slice before treating Sprint 1 keep/revert semantics as complete.
