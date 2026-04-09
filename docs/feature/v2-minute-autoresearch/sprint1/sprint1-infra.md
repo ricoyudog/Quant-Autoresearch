@@ -30,11 +30,11 @@
 
 ### Step 1 — Define idea-source assumptions
 - [x] define where daily collected ideas live
-- [ ] define what minimum metadata or structure the loop can rely on
+- [x] define what minimum metadata or structure the loop can rely on
 - [ ] define fallback behavior when no suitable idea note exists
 
 ### Step 2 — Define search/runtime assumptions
-- [ ] define when self-search is allowed to supplement local ideas
+- [x] define when self-search is allowed to supplement local ideas
 - [ ] define what credentials or external services are optional vs required
 - [ ] define how missing search credentials degrade gracefully
 
@@ -60,15 +60,18 @@ rg -n "Obsidian|search|credentials|fallback|idea" docs/feature/v2-minute-autores
 
 - Verified that the vault idea-source root is `quant-autoresearch/` under `OBSIDIAN_VAULT_PATH` (or the default `~/Documents/Obsidian Vault`) with daily/autoresearch inputs read from `quant-autoresearch/research/` and `quant-autoresearch/knowledge/`.
 - Verified that `setup_vault` creates the expected directories idempotently before idea-intake code reads from them.
+- Verified that the minimum metadata seed for an idea note is `query`, `topic`, or `tickers`, and that strategy changes stay blocked until that structured context exists.
+- Verified that self-search is supplemental only: it runs after vault-note intake and only when recent research notes are missing, stale beyond the 7-day freshness window, or every 10 completed experiments as a refresh cadence.
 
 ### Command Results
 
-- `uv run pytest tests/unit/test_idea_intake.py tests/unit/test_program_guidance.py tests/unit/test_vault_config.py tests/unit/test_cli_setup_vault.py -q` → `7 passed`
+- `uv run pytest tests/unit/test_idea_intake.py tests/unit/test_idea_search_policy.py tests/unit/test_program_guidance.py tests/unit/test_vault_config.py tests/unit/test_cli_setup_vault.py -q` → `13 passed`
+- `uv run python -m compileall src config cli.py` → completed without compile errors
 
 ### Blockers / Deviations
 
-- The minimum note structure contract and missing-note fallback behavior remain open so the infra contract is only partially complete.
+- Missing-note fallback beyond triggering supplemental self-search, external-credential requirements, and degraded-search handling remain open.
 
 ### Follow-ups
 
-- Keep the infrastructure note-source contract aligned with the backend Step 1 self-search trigger and minimum structured-context decisions as they land.
+- Keep the infrastructure contract aligned with future runtime wiring so the same freshness window, refresh cadence, and metadata seed rules are enforced end-to-end.
