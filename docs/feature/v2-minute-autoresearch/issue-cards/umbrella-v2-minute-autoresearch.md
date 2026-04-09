@@ -2,9 +2,8 @@
 
 **Publication Status**
 
-- Local GitLab issue-card draft only
-- Intended label: `workflow::todo`
-- GitLab publication blocker: `glab` unavailable locally
+- Published on GitHub as [#17](https://github.com/ricoyudog/Quant-Autoresearch/issues/17)
+- Applied label: `workflow::todo`
 
 **Feature Branch**
 
@@ -51,11 +50,11 @@
 | Phase | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
 | Phase 0 — Spec Alignment | keep one canonical V2 architecture brief | deep-interview spec, branch choice, root choice | completed | preserve this workspace as source of truth |
-| Sprint 1 — Autoresearch Core | define core loop + idea intake lane | issue A draft + sprint1 docs | pending | publish issue A later |
-| Sprint 2 — Minute Runtime | define minute-level runtime and validation lane | issue B draft + sprint2 docs | pending | publish issue B later |
-| Sprint 3 — Stock Discussion Lane | define strategy-facing stock discussion lane | issue C draft + sprint3 docs | pending | publish issue C later |
-| Sprint 4 — Factor Mining Lane | define optional factor-mining lane | issue D draft + sprint4 docs | pending | publish issue D later |
-| Phase 5 — Verification / Merge | verify docs + merge readiness | test docs, merge-test plan, publication blocker note | in progress | replace draft refs with real issue IDs later |
+| Sprint 1 — Autoresearch Core | define core loop + idea intake lane | issue #18 + sprint1 docs | pending | execute sprint1 docs later |
+| Sprint 2 — Minute Runtime | define minute-level runtime and validation lane | issue #19 + sprint2 docs | pending | execute sprint2 docs later |
+| Sprint 3 — Stock Discussion Lane | define strategy-facing stock discussion lane | issue #20 + sprint3 docs | pending | execute sprint3 docs later |
+| Sprint 4 — Factor Mining Lane | define optional factor-mining lane | issue #21 + sprint4 docs | pending | execute sprint4 docs later |
+| Phase 5 — Verification / Merge | verify docs + merge readiness | test docs, merge-test plan, published issue links | in progress | merge planning package into `main-dev` |
 
 **Task Table**
 
@@ -68,13 +67,13 @@
 
 **Detailed Todo**
 
-- [ ] publish umbrella and child drafts to GitLab later
-- [ ] add real issue IDs/URLs back into this umbrella card
+- [x] publish umbrella and child drafts to GitHub
+- [x] add real issue IDs/URLs back into this umbrella card
 - [ ] use the sprint docs as the execution handoff surface
 
 **Dependencies / Risks**
 
-- GitLab tooling missing locally
+- keep local draft and GitHub issue #17 synchronized
 - current implementation may still drift from target V2
 - merge should target `main-dev`, not the stale `feature/v2-research` branch
 
@@ -89,7 +88,7 @@
 - [x] umbrella draft exists
 - [x] child issue drafts exist
 - [x] sprint docs exist
-- [ ] real GitLab publication completed later
+- [x] GitHub publication completed
 
 **References**
 
@@ -98,4 +97,8 @@
 - `docs/feature/v2-minute-autoresearch/issue-cards/issue-b-minute-runtime-validation.md`
 - `docs/feature/v2-minute-autoresearch/issue-cards/issue-c-strategy-stock-discussion.md`
 - `docs/feature/v2-minute-autoresearch/issue-cards/issue-d-optional-factor-mining.md`
-
+- [#17](https://github.com/ricoyudog/Quant-Autoresearch/issues/17)
+- [#18](https://github.com/ricoyudog/Quant-Autoresearch/issues/18)
+- [#19](https://github.com/ricoyudog/Quant-Autoresearch/issues/19)
+- [#20](https://github.com/ricoyudog/Quant-Autoresearch/issues/20)
+- [#21](https://github.com/ricoyudog/Quant-Autoresearch/issues/21)

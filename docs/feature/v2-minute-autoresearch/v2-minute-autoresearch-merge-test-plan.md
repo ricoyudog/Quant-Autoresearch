@@ -11,7 +11,7 @@ Ensure the planning package can be reviewed and merged into `main-dev` without h
 - [ ] only one canonical feature root exists
 - [ ] issue drafts point to sprint docs
 - [ ] sprint docs point back to governing specs and issue drafts
-- [ ] GitLab publication blocker is explicit and honest
+- [ ] GitHub issue links are explicit and honest
 
 ## Commands
 
@@ -29,6 +29,5 @@ find docs/feature/v2-minute-autoresearch -maxdepth 3 -type f | sort
 
 ### Publication Follow-up
 
-- publish local issue drafts to GitLab
-- replace draft references with real IDs
-
+- keep local issue-card drafts aligned with GitHub issues
+- merge this docs package into `main-dev`

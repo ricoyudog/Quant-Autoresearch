@@ -24,14 +24,15 @@ The canonical source of truth for this workspace is:
 | Merge target | `main-dev` | User explicitly wants the docs package ready for `main-dev` integration |
 | Issue topology | one umbrella + four child issues | Smallest issue set that still matches the architecture workstreams |
 
-## GitLab Publication Blocker
+## GitHub Publication Status
 
-**Status:** blocked locally
+**Status:** published on 2026-04-09
 
-- `glab` is not installed on this machine
-- no GitLab CLI config was found under `~/.config`
-- issue cards below are therefore stored as **local publication-ready drafts**
-- publish them to GitLab later from a GitLab-capable environment and replace provisional references with real issue IDs/URLs
+- Umbrella: [#17](https://github.com/ricoyudog/Quant-Autoresearch/issues/17)
+- Issue A: [#18](https://github.com/ricoyudog/Quant-Autoresearch/issues/18)
+- Issue B: [#19](https://github.com/ricoyudog/Quant-Autoresearch/issues/19)
+- Issue C: [#20](https://github.com/ricoyudog/Quant-Autoresearch/issues/20)
+- Issue D: [#21](https://github.com/ricoyudog/Quant-Autoresearch/issues/21)
 
 ## Workspace Map
 
@@ -46,13 +47,13 @@ The canonical source of truth for this workspace is:
 - `sprint3/` — issue C execution docs
 - `sprint4/` — issue D execution docs
 
-## Issue Draft Set
+## Issue Set
 
-- `issue-cards/umbrella-v2-minute-autoresearch.md`
-- `issue-cards/issue-a-autoresearch-core-idea-intake.md`
-- `issue-cards/issue-b-minute-runtime-validation.md`
-- `issue-cards/issue-c-strategy-stock-discussion.md`
-- `issue-cards/issue-d-optional-factor-mining.md`
+- `issue-cards/umbrella-v2-minute-autoresearch.md` → [#17](https://github.com/ricoyudog/Quant-Autoresearch/issues/17)
+- `issue-cards/issue-a-autoresearch-core-idea-intake.md` → [#18](https://github.com/ricoyudog/Quant-Autoresearch/issues/18)
+- `issue-cards/issue-b-minute-runtime-validation.md` → [#19](https://github.com/ricoyudog/Quant-Autoresearch/issues/19)
+- `issue-cards/issue-c-strategy-stock-discussion.md` → [#20](https://github.com/ricoyudog/Quant-Autoresearch/issues/20)
+- `issue-cards/issue-d-optional-factor-mining.md` → [#21](https://github.com/ricoyudog/Quant-Autoresearch/issues/21)
 
 ## Governing Specs
 
@@ -66,9 +67,8 @@ The canonical source of truth for this workspace is:
 
 ## Acceptance Snapshot
 
-- [ ] GitLab issue drafts are published later with real IDs
+- [x] GitHub issue cards are published with real IDs
 - [x] Canonical docs root is explicit
 - [x] One canonical feature workspace exists
 - [x] Child issue drafts map into `sprintN/` execution docs
 - [x] Planning package is written against `main-dev`
-
