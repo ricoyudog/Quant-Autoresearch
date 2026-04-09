@@ -182,6 +182,7 @@ Use the four memory layers consistently during research and experimentation:
 
 When using the research surface:
 - read vault idea notes before self-searching for new ideas
+- self-search only after vault notes are checked, and only when recent research notes are missing or stale, or every 10 completed experiments to refresh idea flow
 - read existing strategy and knowledge notes before inventing a new hypothesis
 - reuse existing shallow research notes when appropriate, but allow deep runs to refresh them
 - write new experiment notes after each validated run
