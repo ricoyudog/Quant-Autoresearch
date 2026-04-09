@@ -16,6 +16,7 @@ from data.duckdb_connector import (
     DEFAULT_CACHE_PATH,
     build_daily_cache,
     get_trading_days,
+    load_daily_data,
     query_minute_data,
     refresh_daily_cache,
 )
@@ -290,6 +291,34 @@ def _clean_cached_market_frame(frame):
     return cleaned
 
 
+def _load_symbol_from_daily_cache(symbol: str, start: Optional[str], end: Optional[str]) -> Optional[pd.DataFrame]:
+    try:
+        frame = load_daily_data(start_date=start, end_date=end)
+    except Exception:
+        return None
+
+    if frame is None or frame.empty or "ticker" not in frame.columns:
+        return None
+
+    symbol_frame = frame.loc[frame["ticker"] == symbol].copy()
+    if symbol_frame.empty:
+        return None
+
+    symbol_frame["session_date"] = pd.to_datetime(symbol_frame["session_date"])
+    symbol_frame = symbol_frame.sort_values("session_date").set_index("session_date")
+    symbol_frame = symbol_frame.rename(
+        columns={
+            "open": "Open",
+            "high": "High",
+            "low": "Low",
+            "close": "Close",
+            "volume": "Volume",
+            "vwap": "VWAP",
+        }
+    )
+    return symbol_frame
+
+
 def _run_quietly(func, *args, **kwargs):
     from contextlib import redirect_stderr, redirect_stdout
     from io import StringIO
@@ -382,10 +411,11 @@ def analyze(
     for ticker in tickers:
         frame = connector.load_symbol(ticker)
         if frame is None or frame.empty:
+            frame = _load_symbol_from_daily_cache(ticker, start, end)
+        if frame is None or frame.empty:
             typer.echo(
-                f"No cached data found for {ticker} in data/cache. "
-                "Run 'uv run python cli.py fetch "
-                f"{ticker}' or 'uv run python cli.py setup_data' first."
+                f"No cached data found for {ticker} in data/cache or data/daily_cache.duckdb. "
+                "Run 'uv run python cli.py setup-data' first or populate data/cache manually."
             )
             raise typer.Exit(code=1)
         cleaned = _clean_cached_market_frame(frame)
@@ -398,6 +428,8 @@ def analyze(
     benchmark = frames.get("SPY")
     if benchmark is None:
         benchmark = connector.load_symbol("SPY")
+    if benchmark is None or benchmark.empty:
+        benchmark = _load_symbol_from_daily_cache("SPY", start, end)
     if benchmark is not None and not benchmark.empty:
         benchmark = _slice_date_range(_clean_cached_market_frame(benchmark), start, end)
         if benchmark.empty:

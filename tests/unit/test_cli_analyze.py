@@ -43,17 +43,48 @@ def test_analyze_stdout_reports_sections(monkeypatch):
     assert "## Market Context" in result.stdout
 
 
+def test_analyze_falls_back_to_duckdb_daily_cache(monkeypatch):
+    frame = build_symbol_frame().reset_index().rename(
+        columns={
+            "index": "session_date",
+            "Open": "open",
+            "High": "high",
+            "Low": "low",
+            "Close": "close",
+            "Volume": "volume",
+        }
+    )
+    frame["ticker"] = "SPY"
+    frame["transactions"] = 100
+    frame["vwap"] = frame["close"]
+
+    class StubConnector:
+        def load_symbol(self, symbol):
+            return None
+
+    monkeypatch.setattr("cli.CacheConnector", lambda: StubConnector())
+    monkeypatch.setattr("cli.load_daily_data", lambda start_date=None, end_date=None: frame)
+
+    result = runner.invoke(app, ["analyze", "SPY", "--start", "2025-01-01", "--output", "stdout"])
+
+    assert result.exit_code == 0
+    assert "# Stock Analysis: SPY" in result.stdout
+    assert "## Market Context" in result.stdout
+
+
 def test_analyze_fails_clearly_when_cached_data_is_missing(monkeypatch):
     class StubConnector:
         def load_symbol(self, symbol):
             return None
 
     monkeypatch.setattr("cli.CacheConnector", lambda: StubConnector())
+    monkeypatch.setattr("cli.load_daily_data", lambda start_date=None, end_date=None: pd.DataFrame())
 
     result = runner.invoke(app, ["analyze", "SPY", "--output", "stdout"])
 
     assert result.exit_code == 1
     assert "No cached data found for SPY" in result.stdout
+    assert "setup-data" in result.stdout
 
 
 def test_analyze_without_cached_spy_does_not_fabricate_market_context(monkeypatch):
@@ -68,6 +99,7 @@ def test_analyze_without_cached_spy_does_not_fabricate_market_context(monkeypatc
             return None
 
     monkeypatch.setattr("cli.CacheConnector", lambda: StubConnector())
+    monkeypatch.setattr("cli.load_daily_data", lambda start_date=None, end_date=None: pd.DataFrame())
 
     result = runner.invoke(
         app,

@@ -169,7 +169,7 @@ Use the vault-native research CLI when you need external context before changing
 - `uv run python cli.py research "<query>" --depth shallow --output stdout|vault` searches ArXiv first and can reuse or write vault-native research notes.
 - `uv run python cli.py analyze <ticker> --start <date> --output stdout|vault` builds a deterministic stock-analysis report from cached local market data.
 - `research --depth shallow` stays usable without `EXA_API_KEY` or `SERPAPI_KEY`; deep mode should clearly report when web search is skipped.
-- `analyze` currently reads cached local symbol data from `data/cache`; fetch or cache the symbol first when needed.
+- `analyze` reads daily bars from `data/daily_cache.duckdb` when available and can also use legacy `data/cache` symbol files; run `uv run python cli.py setup-data` before analyzing on a fresh machine.
 
 ## Memory Access Patterns
 

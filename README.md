@@ -12,7 +12,8 @@ The active truth surfaces are:
 - `program.md` for the experiment contract
 - `cli.py` for supported commands
 - `src/core/backtester.py` for evaluation and sandbox rules
-- `src/data/connector.py` for data ingestion and cache loading
+- `src/data/duckdb_connector.py` for DuckDB daily-cache and minute-data access
+- `src/core/research.py` and `src/analysis/` for the vault-native research surface
 - `src/strategies/active_strategy.py` for the strategy under iteration
 
 ## Core Workflow
@@ -32,11 +33,13 @@ The active truth surfaces are:
 │   ├── core/
 │   │   ├── backtester.py
 │   │   └── research.py
+│   ├── analysis/
 │   ├── data/
+│   │   ├── cache_connector.py
 │   │   ├── connector.py
-│   │   └── preprocessor.py
+│   │   └── duckdb_connector.py
 │   ├── memory/
-│   │   └── playbook.py
+│   │   └── __init__.py
 │   ├── strategies/
 │   │   └── active_strategy.py
 │   └── utils/
@@ -47,11 +50,11 @@ The active truth surfaces are:
 
 Notes:
 
-- `src/core/research.py` is available for academic and web-backed research
-  helpers.
-- `src/memory/playbook.py` remains available as an optional SQLite-backed memory
-  tool.
-- The primary validation path is the backtester.
+- `src/core/research.py` and `src/analysis/` provide the current vault-native
+  research and deterministic analysis surfaces.
+- `setup_vault`, `research`, and `analyze` are first-class CLI commands on the
+  current V2 surface.
+- The primary validation path is still the backtester.
 
 ## Quick Start
 
@@ -88,21 +91,34 @@ For direct `src/core/backtester.py` runs, `CACHE_DIR` can override the cache
 location and `STRATEGY_FILE` can override the strategy path. The CLI surfaces
 continue to use their explicit options and default cache path.
 
-### 3. Prepare Data
+### 3. Prepare Data And Vault
 
-Download the default dataset:
+Build the DuckDB daily cache used by the V2 pipeline:
 
 ```bash
 uv run python cli.py setup-data
 ```
 
-Or fetch a specific symbol:
+Prepare a vault root for research notes (override `OBSIDIAN_VAULT_PATH` when needed):
 
 ```bash
-uv run python cli.py fetch SPY --start 2020-01-01
+uv run python cli.py setup_vault
 ```
 
-### 4. Run a Backtest
+Query bounded minute bars when you need an inspection slice:
+
+```bash
+uv run python cli.py fetch SPY --start 2025-01-01 --end 2025-03-31
+```
+
+### 4. Run Research / Analysis
+
+```bash
+uv run python cli.py research "intraday momentum strategy minute bars" --depth shallow --output vault
+uv run python cli.py analyze SPY --start 2025-01-01 --end 2025-03-31 --output vault
+```
+
+### 5. Run a Backtest
 
 ```bash
 uv run python cli.py backtest
@@ -115,7 +131,7 @@ uv run python cli.py backtest --strategy src/strategies/active_strategy.py
 uv run python cli.py backtest --symbols SPY,QQQ
 ```
 
-### 5. Run Tests
+### 6. Run Tests
 
 ```bash
 uv run pytest --tb=short -q
@@ -140,11 +156,12 @@ result regardless of how plausible the logic looks.
 ## Supporting Modules
 
 - `src/core/research.py` can gather academic and web research context.
-- `src/memory/playbook.py` stores reusable strategy patterns in SQLite.
+- `src/analysis/` renders deterministic stock-analysis reports from cached data.
+- `config/vault.py` and the vault helpers support the Obsidian-native research workspace.
 - `src/utils/telemetry.py` supports optional W&B telemetry.
 
 These modules support the workflow, but they do not replace the
-`program.md` + strategy-file + backtester loop.
+`program.md` + CLI + backtester loop.
 
 ## License
 
