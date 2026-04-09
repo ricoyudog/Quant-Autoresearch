@@ -63,8 +63,8 @@ Notes:
 3. Use `setup_vault`, `research`, and `analyze` for the vault-native research workflow.
 4. Validate strategies with the minute-mode backtester.
 
-There is no active Python-side OPENDEV engine loop in the current main_dev closeout target.
-Historical docs may discuss OPENDEV as legacy context, but current operator guidance should follow
+There is no active Python-side legacy orchestration loop in the current `main_dev` closeout target.
+Historical docs may still discuss older runtime phases, but current operator guidance should follow
 `program.md` and the CLI/runtime surfaces above.
 
 ## Environment Variables

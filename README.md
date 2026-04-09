@@ -18,7 +18,7 @@ The active truth surfaces are:
 
 ## Core Workflow
 
-1. Prepare cached market data with `setup-data` or `fetch`.
+1. Build the DuckDB daily cache with `setup-data`; use `fetch` only when you need a bounded minute-bar inspection slice.
 2. Modify `src/strategies/active_strategy.py`.
 3. Run `backtest` or call `src/core/backtester.py` directly.
 4. Record outcomes in `results.tsv` and `experiments/notes/`.
@@ -36,7 +36,6 @@ The active truth surfaces are:
 │   ├── analysis/
 │   ├── data/
 │   │   ├── cache_connector.py
-│   │   ├── connector.py
 │   │   └── duckdb_connector.py
 │   ├── memory/
 │   │   └── __init__.py
@@ -124,11 +123,11 @@ uv run python cli.py analyze SPY --start 2025-01-01 --end 2025-03-31 --output va
 uv run python cli.py backtest
 ```
 
-Use a custom strategy path or symbol subset when needed:
+Use a custom strategy path or a different universe size when needed:
 
 ```bash
 uv run python cli.py backtest --strategy src/strategies/active_strategy.py
-uv run python cli.py backtest --symbols SPY,QQQ
+uv run python cli.py backtest --universe-size 20
 ```
 
 ### 6. Run Tests
