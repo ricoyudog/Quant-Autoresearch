@@ -3,7 +3,8 @@
 **Publication Status**
 
 - Published on GitHub as [#19](https://github.com/ricoyudog/Quant-Autoresearch/issues/19)
-- Applied label: `workflow::todo`
+- Applied label: `workflow::done`
+- Merged to `main-dev` via [PR #24](https://github.com/ricoyudog/Quant-Autoresearch/pull/24) on `2026-04-09`
 
 **Feature Branch**
 
@@ -40,7 +41,7 @@
 
 | Phase | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
-| Sprint 2 | define minute runtime and validation alignment | sprint2 backend/infra docs | pending | execute sprint2 docs later |
+| Sprint 2 | define minute runtime and validation alignment | sprint2 backend/infra docs plus merged backtester/runtime guard | completed | none |
 
 **Task Table**
 
@@ -52,9 +53,9 @@
 
 **Detailed Todo**
 
-- [ ] define minute-level mission enforcement
-- [ ] define how current runtime drifts from target runtime
-- [ ] define invariant-preserving implementation constraints
+- [x] define minute-level mission enforcement
+- [x] define how current runtime drifts from target runtime
+- [x] define invariant-preserving implementation constraints
 
 **Dependencies / Risks**
 
@@ -65,12 +66,31 @@
 
 - sprint2 docs exist and link back to canonical spec
 
+**Verification Evidence**
+
+- `uv run pytest tests/unit/test_backtester_v2.py tests/unit/test_cli.py tests/unit/test_duckdb_connector.py tests/integration/test_minute_backtest.py -q` → `87 passed`
+- `uv run python -m compileall src config cli.py` → completed without compile errors
+
+**Implementation Summary**
+
+- Removed the public V2 fallback from `walk_forward_validation()` when daily DuckDB inputs are missing
+- Enforced a stable `DATA ERROR` for missing minute-runtime prerequisites
+- Synchronized Sprint 2 backend/infra docs to the enforced minute-runtime-only contract
+
+**Closeout Notes**
+
+- Remaining legacy helper functions in `src/core/backtester.py` are compatibility scaffolding only; the public V2 path now fails explicitly instead of silently dropping into the legacy runtime.
+
 **Acceptance Criteria**
 
-- [ ] sprint2 docs are execution-ready
-- [ ] backtester invariants are treated as hard requirements
+- [x] sprint2 docs are execution-ready
+- [x] backtester invariants are treated as hard requirements
 
 **References**
 
 - `docs/feature/v2-minute-autoresearch/sprint2/sprint2-backend.md`
 - `docs/feature/v2-minute-autoresearch/sprint2/sprint2-infra.md`
+- `src/core/backtester.py`
+- `tests/unit/test_backtester_v2.py`
+- [PR #24](https://github.com/ricoyudog/Quant-Autoresearch/pull/24)
+- [Issue #19](https://github.com/ricoyudog/Quant-Autoresearch/issues/19)
