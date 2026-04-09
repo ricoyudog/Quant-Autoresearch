@@ -30,7 +30,7 @@
 ## 3) Step-by-Step Plan
 
 ### Step 1 — Define idea intake
-- [ ] define how daily Obsidian notes enter the loop
+- [x] define how daily Obsidian notes enter the loop
 - [ ] define when the loop should search for new ideas itself
 - [ ] define the minimum structured context the loop consumes before proposing strategy changes
 
@@ -60,11 +60,14 @@ rg -n "autoresearch|Obsidian|idea|backtester|keep / revert|keep/revert" docs/fea
 
 ### Completed Work
 
-- leave blank until implemented
+- Added `src/memory/idea_intake.py` with `collect_vault_idea_notes()` so the runtime can enumerate research and knowledge notes from the configured Obsidian vault.
+- Updated `program.md` to state that vault idea notes should be read before self-searching for new ideas.
+- Added `tests/unit/test_idea_intake.py` and extended `tests/unit/test_program_guidance.py`.
 
 ### Command Results
 
-- leave blank until implemented
+- `uv run pytest tests/unit/test_idea_intake.py tests/unit/test_program_guidance.py -q` → `3 passed`
+- `uv run pytest tests/unit/test_cli.py tests/unit/test_backtester_v2.py -q` → `66 passed`
 
 ### Blockers / Deviations
 
@@ -73,4 +76,3 @@ rg -n "autoresearch|Obsidian|idea|backtester|keep / revert|keep/revert" docs/fea
 ### Follow-ups
 
 - leave blank until implemented
-

@@ -6,3 +6,4 @@ def test_program_includes_research_and_memory_guidance_sections():
 
     assert "## Research Capabilities" in content
     assert "## Memory Access Patterns" in content
+    assert "read vault idea notes before self-searching for new ideas" in content

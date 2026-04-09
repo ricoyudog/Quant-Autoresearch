@@ -181,8 +181,8 @@ Use the four memory layers consistently during research and experimentation:
 4. **Long-term score tracking** — `results.tsv`, which remains the cross-session ledger of the best validated outcomes.
 
 When using the research surface:
+- read vault idea notes before self-searching for new ideas
 - read existing strategy and knowledge notes before inventing a new hypothesis
 - reuse existing shallow research notes when appropriate, but allow deep runs to refresh them
 - write new experiment notes after each validated run
 - keep `results.tsv` aligned with any experiment that beats the baseline and passes the statistical gates
-
