@@ -187,3 +187,10 @@ When using the research surface:
 - reuse existing shallow research notes when appropriate, but allow deep runs to refresh them
 - write new experiment notes after each validated run
 - keep `results.tsv` aligned with any experiment that beats the baseline and passes the statistical gates
+
+Before proposing strategy changes:
+- consume a minimum structured context bundle before proposing strategy changes
+- require one vault idea note with a stable path, source, title, and metadata seed such as `query`, `topic`, or `tickers`
+- require the latest deterministic `analyze` report or equivalent local market-context note
+- require the current strategy baseline from `program.md`, `src/strategies/active_strategy.py`, and recent `results.tsv` entries
+- if any element is missing, keep researching or summarizing the gap; do not propose strategy changes until that bundle exists
