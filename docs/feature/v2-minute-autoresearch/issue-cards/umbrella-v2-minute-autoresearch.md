@@ -53,7 +53,7 @@
 | Sprint 1 — Autoresearch Core | define core loop + idea intake lane | issue #18 + sprint1 docs | pending | execute sprint1 docs later |
 | Sprint 2 — Minute Runtime | define minute-level runtime and validation lane | issue #19 + sprint2 docs | pending | execute sprint2 docs later |
 | Sprint 3 — Stock Discussion Lane | define strategy-facing stock discussion lane | issue #20 + sprint3 docs + packet contract | completed | move issue #20 into review / PR |
-| Sprint 4 — Factor Mining Lane | define optional factor-mining lane | issue #21 + sprint4 docs | pending | execute sprint4 docs later |
+| Sprint 4 — Factor Mining Lane | define optional factor-mining lane | issue #21 + sprint4 docs | in progress | complete Sprint 4 Step 3 result-judgment semantics |
 | Phase 5 — Verification / Merge | verify docs + merge readiness | test docs, merge-test plan, published issue links | in progress | merge planning package into `main-dev` |
 
 **Task Table**
