@@ -3,7 +3,7 @@
 **Publication Status**
 
 - Published on GitHub as [#17](https://github.com/ricoyudog/Quant-Autoresearch/issues/17)
-- Closeout target: `workflow::done`
+- Current state: closed on GitHub with `workflow::done`
 
 **Feature Branch**
 
@@ -54,7 +54,7 @@
 | Sprint 2 — Minute Runtime | define minute-level runtime and validation lane | issue #19 + sprint2 docs | completed | merged via PR #24 |
 | Sprint 3 — Stock Discussion Lane | define strategy-facing stock discussion lane | issue #20 + sprint3 docs + packet contract | completed | merged via PR #26 with post-merge fix PR #27 |
 | Sprint 4 — Factor Mining Lane | define optional factor-mining lane | issue #21 + sprint4 docs | completed | merged via PR #28 |
-| Phase 5 — Verification / Merge | verify docs + merge readiness | test docs, merge-test plan, published issue links | completed | close umbrella issue #17 |
+| Phase 5 — Verification / Merge | verify docs + merge readiness | test docs, merge-test plan, published issue links | completed | historical closeout record only |
 
 **Task Table**
 
@@ -73,7 +73,7 @@
 
 **Dependencies / Risks**
 
-- keep local docs and live issue #17 synchronized through final closeout
+- avoid post-closeout drift between this card and the merged local docs if later historical edits are needed
 - future implementation work should treat `.omx/specs/deep-interview-spec-vs-impl.md` and the merged sprint docs as the governing brief
 - follow-up work should branch from current `main-dev`, not the historical `feature/v2-research` line
 
