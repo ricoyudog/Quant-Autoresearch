@@ -3,11 +3,11 @@
 **Publication Status**
 
 - Published on GitHub as [#20](https://github.com/ricoyudog/Quant-Autoresearch/issues/20)
-- Applied label: `workflow::todo`
+- Applied label: `workflow::in-progress`
 
 **Feature Branch**
 
-- `feature/v2-minute-autoresearch`
+- `feature/20-strategy-stock-discussion`
 
 **Goal**
 
@@ -39,7 +39,7 @@
 
 | Phase | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
-| Sprint 3 | define stock-discussion lane and its boundary with analyze | sprint3 backend/infra docs | pending | execute sprint3 docs later |
+| Sprint 3 | define stock-discussion lane and its boundary with analyze | sprint3 backend/infra docs | in progress | execute Sprint 3 Step 2 discussion-output slice next |
 
 **Task Table**
 
@@ -51,8 +51,8 @@
 
 **Detailed Todo**
 
-- [ ] define where stock discussion enters the loop
-- [ ] define what stays in lightweight analyze
+- [x] define where stock discussion enters the loop
+- [x] define what stays in lightweight analyze
 - [ ] define how discussion feeds candidate strategies
 
 **Dependencies / Risks**
@@ -63,6 +63,24 @@
 **Verification Plan**
 
 - sprint3 docs exist and preserve the boundary decisions from deep-interview
+
+**Current Slice Status**
+
+- Sprint 3 Step 1 is complete on `feature/20-strategy-stock-discussion`
+- Current slice added `src/analysis/discussion_routing.py`
+- Current slice added `tests/unit/test_discussion_routing.py`
+- Sprint 3 backend/infra docs now reflect the analyze-vs-discussion routing boundary
+
+**Verification Evidence**
+
+- `uv run pytest tests/unit/test_discussion_routing.py tests/unit/test_cli_analyze.py tests/unit/test_market_context.py tests/unit/test_regime.py tests/unit/test_technical.py tests/integration/test_analyze_pipeline.py -q` → `28 passed`
+- `uv run python -m compileall src cli.py` → completed without compile errors
+
+**Next Slice**
+
+- define the structured discussion output shape
+- define how it feeds strategy hypotheses instead of final buy/sell decisions
+- define how negative / contrarian reasoning is preserved
 
 **Acceptance Criteria**
 
