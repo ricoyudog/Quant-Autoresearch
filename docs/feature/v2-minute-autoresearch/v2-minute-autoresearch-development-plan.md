@@ -4,7 +4,7 @@
 > Merge target: `main-dev`
 > Canonical root: `docs/feature/v2-minute-autoresearch/`
 > Source brief: `.omx/specs/deep-interview-spec-vs-impl.md`
-> Planning status: Phase 0 complete; GitHub issue package published; merge handoff targets `main-dev`
+> Planning status: all four child issue lanes merged; umbrella closeout ready
 
 ## 1. Context
 
@@ -31,6 +31,7 @@ Repo note:
 
 - local `main-dev` existed but was fast-forwarded to match `fork/main-dev`
 - GitHub issues were published on 2026-04-09 as `#17` through `#21`
+- child issue delivery completed through merged PRs #23, #24, #25, #26, #27, and #28
 
 ## 3. Scope
 
@@ -61,11 +62,11 @@ Repo note:
 | Phase | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
 | Phase 0 — Architecture Alignment | lock canonical V2 shape and workspace root | deep-interview spec, branch decision, workspace root choice | completed | keep this workspace as the single planning root |
-| Sprint 1 — Autoresearch Core | define loop semantics and idea-ingestion lane | issue #18, sprint1 backend/infra docs | pending | execute sprint1 docs later |
-| Sprint 2 — Minute Runtime | align runtime/data/validation to the minute-level mission | issue #19, sprint2 backend/infra docs | pending | execute sprint2 docs later |
-| Sprint 3 — Stock Discussion Lane | define strategy-facing stock discussion under autoresearch | issue #20, sprint3 backend/infra docs, discussion packet contract | completed | review / merge issue #20 branch |
-| Sprint 4 — Factor Mining Lane | define optional factor-mining sub-mode | issue #21, sprint4 backend/infra docs | completed | review / merge issue #21 branch |
-| Phase 5 — Verification + Merge | verify docs coherence and merge-readiness for `main-dev` | test plan, merge-test plan, published issue links | in progress | merge planning package into `main-dev` |
+| Sprint 1 — Autoresearch Core | define loop semantics and idea-ingestion lane | issue #18, sprint1 backend/infra docs | completed | merged via PRs #23 and #25 |
+| Sprint 2 — Minute Runtime | align runtime/data/validation to the minute-level mission | issue #19, sprint2 backend/infra docs | completed | merged via PR #24 |
+| Sprint 3 — Stock Discussion Lane | define strategy-facing stock discussion under autoresearch | issue #20, sprint3 backend/infra docs, discussion packet contract | completed | merged via PR #26 with post-merge fix PR #27 |
+| Sprint 4 — Factor Mining Lane | define optional factor-mining sub-mode | issue #21, sprint4 backend/infra docs | completed | merged via PR #28 |
+| Phase 5 — Verification + Merge | verify docs coherence and merge-readiness for `main-dev` | test plan, merge-test plan, published issue links | completed | close umbrella issue #17 |
 
 ## 7. Task Table
 
@@ -88,7 +89,7 @@ Repo note:
 - [x] create `sprint1/` through `sprint4/` execution docs
 - [x] publish the issue-card drafts to GitHub
 - [x] replace provisional issue references with real issue URLs/IDs
-- [ ] merge the planning package into `main-dev`
+- [x] merge the planning package into `main-dev`
 
 ## 9. Dependencies / Risks
 
@@ -117,6 +118,7 @@ Repo note:
 - [x] GitHub issue links are published
 - [x] merge target is documented as `main-dev`
 - [x] real GitHub issue URLs replace draft references
+- [x] all child issue lanes are merged into `main-dev`
 
 ## 12. References
 
@@ -135,4 +137,11 @@ Repo note:
 - [#19](https://github.com/ricoyudog/Quant-Autoresearch/issues/19)
 - [#20](https://github.com/ricoyudog/Quant-Autoresearch/issues/20)
 - [#21](https://github.com/ricoyudog/Quant-Autoresearch/issues/21)
+- [PR #22](https://github.com/ricoyudog/Quant-Autoresearch/pull/22)
+- [PR #23](https://github.com/ricoyudog/Quant-Autoresearch/pull/23)
+- [PR #24](https://github.com/ricoyudog/Quant-Autoresearch/pull/24)
+- [PR #25](https://github.com/ricoyudog/Quant-Autoresearch/pull/25)
+- [PR #26](https://github.com/ricoyudog/Quant-Autoresearch/pull/26)
+- [PR #27](https://github.com/ricoyudog/Quant-Autoresearch/pull/27)
+- [PR #28](https://github.com/ricoyudog/Quant-Autoresearch/pull/28)
 - `.omx/specs/deep-interview-spec-vs-impl.md`
