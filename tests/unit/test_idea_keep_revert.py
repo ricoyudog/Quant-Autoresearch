@@ -3,6 +3,7 @@ from memory.idea_keep_revert import (
     build_iteration_record,
     decide_keep_revert,
 )
+from memory.candidate_generation import build_candidate_strategy_hypothesis
 
 
 def _candidate() -> dict:
@@ -143,4 +144,45 @@ def test_build_iteration_record_lists_required_outputs():
             "results_tsv": "experiments/results.tsv",
             "experiment_note": "vault/experiments/2026-04-09-volume-breakout.md",
         },
+    }
+
+
+def test_build_backtest_handoff_accepts_candidate_generation_output_without_adapter():
+    candidate = build_candidate_strategy_hypothesis(
+        idea_context={
+            "path": "vault/research/2026-04-09-intraday-momentum.md",
+            "source": "research",
+            "title": "Intraday Momentum",
+            "query": "intraday momentum",
+            "tickers": ["AAPL"],
+        },
+        market_context={
+            "source": "analyze:AAPL",
+            "summary": "AAPL keeps extending after opening liquidity bursts.",
+            "expected_effect": "improve risk-adjusted returns during high-liquidity windows",
+        },
+        strategy_context={
+            "strategy_path": "src/strategies/active_strategy.py",
+            "baseline_sharpe": 0.45,
+            "components": ["momentum entry", "volume-ranked universe"],
+            "results_summary": "Baseline momentum beats passive only when liquidity stays elevated.",
+        },
+    )
+
+    handoff = build_backtest_handoff(
+        candidate,
+        analysis_note={"path": "vault/analysis/2026-04-09-aapl.md", "title": "AAPL Analysis"},
+        strategy_path="src/strategies/active_strategy.py",
+        previous_best=0.62,
+    )
+
+    assert handoff["candidate_id"].startswith("cand-")
+    assert handoff["change_summary"]
+    assert handoff["idea_trace"] == {
+        "path": "vault/research/2026-04-09-intraday-momentum.md",
+        "source": "research",
+        "title": "Intraday Momentum",
+        "query": "intraday momentum",
+        "topic": None,
+        "tickers": ["AAPL"],
     }
