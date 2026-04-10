@@ -35,3 +35,27 @@ def test_route_stock_question_escalates_microstructure_questions():
         "route": "strategy_stock_discussion",
         "reason": "strategy_oriented_stock_reasoning",
     }
+
+
+def test_route_stock_question_prioritizes_strategy_questions_over_regime_mentions():
+    result = route_stock_question(
+        question="Should AAPL remain in the minute strategy universe in this regime?",
+        context={"tickers": ["AAPL"]},
+    )
+
+    assert result == {
+        "route": "strategy_stock_discussion",
+        "reason": "strategy_oriented_stock_reasoning",
+    }
+
+
+def test_route_stock_question_prioritizes_strategy_questions_over_market_state_mentions():
+    result = route_stock_question(
+        question="Given the current market state, how should NVDA intraday execution adapt?",
+        context={"tickers": ["NVDA"]},
+    )
+
+    assert result == {
+        "route": "strategy_stock_discussion",
+        "reason": "strategy_oriented_stock_reasoning",
+    }
