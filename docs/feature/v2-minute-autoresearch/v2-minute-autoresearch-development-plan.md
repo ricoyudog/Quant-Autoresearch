@@ -4,7 +4,7 @@
 > Merge target: `main-dev`
 > Canonical root: `docs/feature/v2-minute-autoresearch/`
 > Source brief: `.omx/specs/deep-interview-spec-vs-impl.md`
-> Planning status: all four child issue lanes merged; umbrella closeout ready
+> Planning status: all four child issue lanes merged; umbrella closeout completed
 
 ## 1. Context
 
@@ -66,7 +66,7 @@ Repo note:
 | Sprint 2 — Minute Runtime | align runtime/data/validation to the minute-level mission | issue #19, sprint2 backend/infra docs | completed | merged via PR #24 |
 | Sprint 3 — Stock Discussion Lane | define strategy-facing stock discussion under autoresearch | issue #20, sprint3 backend/infra docs, discussion packet contract | completed | merged via PR #26 with post-merge fix PR #27 |
 | Sprint 4 — Factor Mining Lane | define optional factor-mining sub-mode | issue #21, sprint4 backend/infra docs | completed | merged via PR #28 |
-| Phase 5 — Verification + Merge | verify docs coherence and merge-readiness for `main-dev` | test plan, merge-test plan, published issue links | completed | close umbrella issue #17 |
+| Phase 5 — Verification + Merge | verify docs coherence and merge-readiness for `main-dev` | test plan, merge-test plan, published issue links | completed | historical closeout record only |
 
 ## 7. Task Table
 
