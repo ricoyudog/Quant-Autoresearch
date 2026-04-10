@@ -62,6 +62,8 @@ rg -n "TradingAgents|stock discussion|analyze|strategy-facing|contrarian" docs/f
 - Locked the boundary that simple regime/state questions stay in `analyze`, while minute/intraday/liquidity/universe-selection questions escalate into the strategy-stock-discussion lane.
 - Added `src/analysis/discussion_packet.py` with `build_strategy_discussion_packet()` so strategy-facing discussion now emits a stable packet contract instead of ad hoc output.
 - Preserved explicit contrarian reasoning via `contrarian_observations`, kept the lane non-decision-making via `decision_guard`, and carried a future handoff surface via `candidate_hooks` and `traceability`.
+- Landed a post-merge review fix on `main-dev` (`ec6240f`) so deterministic snapshot-style intraday/minute questions stay on `analyze` unless explicit strategy intent is present.
+- Added regression coverage in `tests/unit/test_discussion_routing.py` for intraday snapshot wording and minute-context snapshot queries so the analyze-vs-discussion boundary now matches the intended Sprint 3 contract under realistic inputs.
 
 ### Command Results
 
@@ -70,11 +72,15 @@ rg -n "TradingAgents|stock discussion|analyze|strategy-facing|contrarian" docs/f
 - `uv run pytest tests/unit/test_discussion_routing.py -q` → `3 passed`
 - `uv run pytest tests/unit/test_cli_analyze.py tests/unit/test_market_context.py tests/unit/test_regime.py tests/unit/test_technical.py tests/integration/test_analyze_pipeline.py tests/unit/test_discussion_routing.py -q` → `28 passed`
 - `uv run python -m compileall src cli.py` → completed without compile errors
+- `uv run pytest tests/unit/test_discussion_routing.py tests/unit/test_cli_analyze.py tests/integration/test_analyze_pipeline.py -q` → `14 passed`
+- `uv run python -m compileall src cli.py` → passed after the routing review fix on `main-dev`
 
 ### Blockers / Deviations
 
 - No new backend blockers remain in Sprint 3 after the packet contract landed.
+- A post-merge review finding showed that generic `minute` / `intraday` wording could over-escalate deterministic snapshot questions into the discussion lane; this was fixed on `main-dev` without reopening the broader Sprint 3 scope.
 
 ### Follow-ups
 
 - When the runtime loop starts consuming discussion packets, keep the handoff aligned with Sprint 1 candidate-generation / keep-revert schemas.
+- Keep future routing edits snapshot-first unless there is explicit strategy intent, so minute-mode runtime questions do not regress back into over-escalation.

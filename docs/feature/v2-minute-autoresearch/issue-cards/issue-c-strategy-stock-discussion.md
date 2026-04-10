@@ -3,7 +3,7 @@
 **Publication Status**
 
 - Published on GitHub as [#20](https://github.com/ricoyudog/Quant-Autoresearch/issues/20)
-- Applied label: `workflow::review`
+- Applied label: `workflow::done`
 
 **Feature Branch**
 
@@ -39,7 +39,7 @@
 
 | Phase | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
-| Sprint 3 | define stock-discussion lane and its boundary with analyze | sprint3 backend/infra docs plus discussion packet contract | completed | open PR / review the branch |
+| Sprint 3 | define stock-discussion lane and its boundary with analyze | sprint3 backend/infra docs plus discussion packet contract | completed | merged via PR #26; post-merge routing fix landed on `main-dev` |
 
 **Task Table**
 
@@ -66,12 +66,10 @@
 
 **Current Slice Status**
 
-- Sprint 3 Step 1 and Step 2 are complete on `feature/20-strategy-stock-discussion`
-- Current branch includes `src/analysis/discussion_routing.py`
-- Current branch includes `src/analysis/discussion_packet.py`
-- Current branch includes `tests/unit/test_discussion_routing.py`
-- Current branch includes `tests/unit/test_discussion_packet.py`
-- Sprint 3 backend/infra docs now reflect the routing boundary, packet contract, non-decision guardrails, and traceability surface
+- Sprint 3 Step 1 and Step 2 were completed on `feature/20-strategy-stock-discussion` and merged via PR #26
+- A post-merge routing follow-up then landed on `main-dev` as commit `ec6240f` to keep deterministic intraday/minute snapshot questions on `analyze` unless explicit strategy intent is present
+- Current `main-dev` now includes `src/analysis/discussion_routing.py`, `src/analysis/discussion_packet.py`, `tests/unit/test_discussion_routing.py`, and `tests/unit/test_discussion_packet.py`
+- Sprint 3 backend/infra docs continue to reflect the routing boundary, packet contract, non-decision guardrails, and traceability surface after the review fix
 
 **Verification Evidence**
 
@@ -79,11 +77,14 @@
 - `uv run pytest tests/unit/test_discussion_packet.py tests/unit/test_discussion_routing.py tests/unit/test_cli_analyze.py tests/integration/test_analyze_pipeline.py -q` → `13 passed`
 - `uv run pytest tests/unit/test_discussion_routing.py tests/unit/test_cli_analyze.py tests/unit/test_market_context.py tests/unit/test_regime.py tests/unit/test_technical.py tests/integration/test_analyze_pipeline.py -q` → `28 passed`
 - `uv run python -m compileall src cli.py` → completed without compile errors
+- `uv run pytest tests/unit/test_discussion_routing.py tests/unit/test_cli_analyze.py tests/integration/test_analyze_pipeline.py -q` → `14 passed`
+- `uv run python -m compileall src cli.py` → passed after commit `ec6240f`
 
 **Acceptance Criteria**
 
 - [x] sprint3 docs are execution-ready
 - [x] stock discussion is clearly strategy-facing only
+- [x] post-merge routing follow-up preserves deterministic snapshot questions on `analyze`
 
 **References**
 
