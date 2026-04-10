@@ -1,4 +1,5 @@
 import re
+from hashlib import sha1
 from typing import Any
 
 
@@ -102,9 +103,26 @@ def build_candidate_strategy_hypothesis(
         f"using {seed_type} '{seed_value}', the minute strategy should {expected_effect} "
         f"because {market_summary}"
     )
+    structured_context = {
+        "path": str(idea_path),
+        "source": idea_source,
+        "title": idea_title,
+        "query": idea_context.get("query"),
+        "topic": idea_context.get("topic"),
+        "tickers": _coerce_tickers(idea_context.get("tickers")),
+    }
+    candidate_id = "cand-" + sha1(
+        f"{structured_context['path']}|{change['change_mode']}|{change['target_component']}".encode()
+    ).hexdigest()[:12]
+    change_summary = (
+        f"{change['change_mode']} via {change['target_component']} "
+        f"from {seed_type} '{seed_value}'"
+    )
 
     return {
+        "candidate_id": candidate_id,
         "hypothesis": hypothesis,
+        "change_summary": change_summary,
         "change_mode": change["change_mode"],
         "target_component": change["target_component"],
         "matched_terms": change["matched_terms"],
@@ -112,13 +130,14 @@ def build_candidate_strategy_hypothesis(
         "validation_status": "pending_backtest",
         "validation_rule": "backtester_required",
         "keep_revert_basis": "not_decided",
+        "structured_context": structured_context,
         "idea_reference": {
-            "path": str(idea_path),
-            "source": idea_source,
-            "title": idea_title,
+            "path": structured_context["path"],
+            "source": structured_context["source"],
+            "title": structured_context["title"],
             "seed_type": seed_type,
             "seed_value": seed_value,
-            "tickers": _coerce_tickers(idea_context.get("tickers")),
+            "tickers": structured_context["tickers"],
         },
         "market_context": {
             "source": market_source,
