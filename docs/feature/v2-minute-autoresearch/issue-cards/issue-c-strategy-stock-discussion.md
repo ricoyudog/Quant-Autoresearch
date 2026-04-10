@@ -3,11 +3,11 @@
 **Publication Status**
 
 - Published on GitHub as [#20](https://github.com/ricoyudog/Quant-Autoresearch/issues/20)
-- Applied label: `workflow::todo`
+- Applied label: `workflow::review`
 
 **Feature Branch**
 
-- `feature/v2-minute-autoresearch`
+- `feature/20-strategy-stock-discussion`
 
 **Goal**
 
@@ -39,7 +39,7 @@
 
 | Phase | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
-| Sprint 3 | define stock-discussion lane and its boundary with analyze | sprint3 backend/infra docs | pending | execute sprint3 docs later |
+| Sprint 3 | define stock-discussion lane and its boundary with analyze | sprint3 backend/infra docs plus discussion packet contract | completed | open PR / review the branch |
 
 **Task Table**
 
@@ -51,9 +51,9 @@
 
 **Detailed Todo**
 
-- [ ] define where stock discussion enters the loop
-- [ ] define what stays in lightweight analyze
-- [ ] define how discussion feeds candidate strategies
+- [x] define where stock discussion enters the loop
+- [x] define what stays in lightweight analyze
+- [x] define how discussion feeds candidate strategies
 
 **Dependencies / Risks**
 
@@ -64,10 +64,26 @@
 
 - sprint3 docs exist and preserve the boundary decisions from deep-interview
 
+**Current Slice Status**
+
+- Sprint 3 Step 1 and Step 2 are complete on `feature/20-strategy-stock-discussion`
+- Current branch includes `src/analysis/discussion_routing.py`
+- Current branch includes `src/analysis/discussion_packet.py`
+- Current branch includes `tests/unit/test_discussion_routing.py`
+- Current branch includes `tests/unit/test_discussion_packet.py`
+- Sprint 3 backend/infra docs now reflect the routing boundary, packet contract, non-decision guardrails, and traceability surface
+
+**Verification Evidence**
+
+- `uv run pytest tests/unit/test_discussion_packet.py -q` → `3 passed`
+- `uv run pytest tests/unit/test_discussion_packet.py tests/unit/test_discussion_routing.py tests/unit/test_cli_analyze.py tests/integration/test_analyze_pipeline.py -q` → `13 passed`
+- `uv run pytest tests/unit/test_discussion_routing.py tests/unit/test_cli_analyze.py tests/unit/test_market_context.py tests/unit/test_regime.py tests/unit/test_technical.py tests/integration/test_analyze_pipeline.py -q` → `28 passed`
+- `uv run python -m compileall src cli.py` → completed without compile errors
+
 **Acceptance Criteria**
 
-- [ ] sprint3 docs are execution-ready
-- [ ] stock discussion is clearly strategy-facing only
+- [x] sprint3 docs are execution-ready
+- [x] stock discussion is clearly strategy-facing only
 
 **References**
 

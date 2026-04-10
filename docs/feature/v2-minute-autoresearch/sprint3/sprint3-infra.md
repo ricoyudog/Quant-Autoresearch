@@ -3,7 +3,7 @@
 > Feature: `v2-minute-autoresearch`
 > Role: `Infra`
 > Derived from: `Issue Draft C — Strategy-Facing Stock Discussion Lane`
-> Last Updated: `2026-04-09`
+> Last Updated: `2026-04-10`
 
 ## 0) Governing Specs
 
@@ -29,21 +29,21 @@
 ## 3) Step-by-Step Plan
 
 ### Step 1 — Define data assumptions
-- [ ] define what market context the lane may consume
-- [ ] define what remains deterministic vs research-driven
+- [x] define what market context the lane may consume
+- [x] define what remains deterministic vs research-driven
 
 ### Step 2 — Define runtime constraints
-- [ ] define what prevents this lane from becoming a separate decision product
-- [ ] define how results stay subordinate to the backtester
+- [x] define what prevents this lane from becoming a separate decision product
+- [x] define how results stay subordinate to the backtester
 
 ### Step 3 — Define traceability expectations
-- [ ] define how discussion outputs are recorded
-- [ ] define how they link back to strategy candidate generation
+- [x] define how discussion outputs are recorded
+- [x] define how they link back to strategy candidate generation
 
 ## 4) Test Plan
 
-- [ ] verify discussion outputs do not masquerade as final decisions
-- [ ] verify traceability back to strategy refinement exists
+- [x] verify discussion routing does not masquerade as final decisions
+- [x] verify traceability back to strategy refinement exists
 
 ## 5) Verification Commands
 
@@ -55,17 +55,23 @@ rg -n "traceability|discussion|decision|backtester|deterministic" docs/feature/v
 
 ### Completed Work
 
-- leave blank until implemented
+- Defined the first infrastructure/runtime boundary for Sprint 3: deterministic snapshot market-state questions remain on the `analyze` path, while strategy-facing minute/intraday/liquidity/universe questions escalate into the stock-discussion lane.
+- Confirmed the lane stays subordinate to the backtester and does not become a separate decision engine.
+- Defined the strategy-discussion packet as the recording surface for this lane, with `decision_guard: research_input_only`, `validation_rule: backtester_required`, and traceability fields for question, route reason, tickers, analysis context, and strategy context.
+- Confirmed the packet exposes `candidate_hooks` so later strategy refinement can consume discussion output without treating it as a final trade decision.
 
 ### Command Results
 
-- leave blank until implemented
+- `uv run pytest tests/unit/test_discussion_packet.py -q` → `3 passed`
+- `uv run pytest tests/unit/test_discussion_packet.py tests/unit/test_discussion_routing.py tests/unit/test_cli_analyze.py tests/integration/test_analyze_pipeline.py -q` → `13 passed`
+- `uv run pytest tests/unit/test_discussion_routing.py -q` → `3 passed`
+- `uv run pytest tests/unit/test_cli_analyze.py tests/unit/test_market_context.py tests/unit/test_regime.py tests/unit/test_technical.py tests/integration/test_analyze_pipeline.py tests/unit/test_discussion_routing.py -q` → `28 passed`
+- `uv run python -m compileall src cli.py` → completed without compile errors
 
 ### Blockers / Deviations
 
-- leave blank until implemented
+- No new infra blockers remain in Sprint 3 after the discussion packet contract landed.
 
 ### Follow-ups
 
-- leave blank until implemented
-
+- Preserve the current packet contract when later runtime wiring persists or consumes discussion output.
