@@ -37,6 +37,42 @@ def test_route_stock_question_keeps_snapshot_queries_in_analyze_with_minute_cont
     }
 
 
+def test_route_stock_question_keeps_plain_intraday_snapshot_wording_in_analyze():
+    result = route_stock_question(
+        question="How is NVDA doing intraday right now?",
+        context={"tickers": ["NVDA"]},
+    )
+
+    assert result == {
+        "route": "analyze_snapshot",
+        "reason": "default_snapshot_path",
+    }
+
+
+def test_route_stock_question_keeps_plain_minute_chart_snapshot_wording_in_analyze():
+    result = route_stock_question(
+        question="What does the 1-minute chart look like for AAPL?",
+        context={"tickers": ["AAPL"]},
+    )
+
+    assert result == {
+        "route": "analyze_snapshot",
+        "reason": "default_snapshot_path",
+    }
+
+
+def test_route_stock_question_keeps_plain_intraday_snapshot_wording_in_analyze_with_minute_context():
+    result = route_stock_question(
+        question="How is NVDA doing intraday right now?",
+        context={"tickers": ["NVDA"], "strategy_mode": "minute"},
+    )
+
+    assert result == {
+        "route": "analyze_snapshot",
+        "reason": "default_snapshot_path",
+    }
+
+
 def test_route_stock_question_escalates_strategy_selection_to_stock_discussion():
     result = route_stock_question(
         question="Should AAPL stay in the intraday universe for the minute strategy?",
