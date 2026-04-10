@@ -34,13 +34,13 @@
 - [x] define what it must not absorb
 
 ### Step 2 — Define output shape
-- [ ] define the structured discussion output
-- [ ] define how it feeds strategy hypotheses instead of final buy/sell decisions
-- [ ] define how negative / contrarian reasoning is preserved
+- [x] define the structured discussion output
+- [x] define how it feeds strategy hypotheses instead of final buy/sell decisions
+- [x] define how negative / contrarian reasoning is preserved
 
 ### Step 3 — Define `analyze` boundary
-- [ ] define what remains a deterministic snapshot
-- [ ] define what escalates into full strategy-facing discussion
+- [x] define what remains a deterministic snapshot
+- [x] define what escalates into full strategy-facing discussion
 
 ## 4) Test Plan
 
@@ -60,17 +60,21 @@ rg -n "TradingAgents|stock discussion|analyze|strategy-facing|contrarian" docs/f
 
 - Added `src/analysis/discussion_routing.py` with `route_stock_question()` so the runtime can distinguish lightweight snapshot analysis from strategy-facing stock discussion.
 - Locked the boundary that simple regime/state questions stay in `analyze`, while minute/intraday/liquidity/universe-selection questions escalate into the strategy-stock-discussion lane.
+- Added `src/analysis/discussion_packet.py` with `build_strategy_discussion_packet()` so strategy-facing discussion now emits a stable packet contract instead of ad hoc output.
+- Preserved explicit contrarian reasoning via `contrarian_observations`, kept the lane non-decision-making via `decision_guard`, and carried a future handoff surface via `candidate_hooks` and `traceability`.
 
 ### Command Results
 
+- `uv run pytest tests/unit/test_discussion_packet.py -q` → `3 passed`
+- `uv run pytest tests/unit/test_discussion_packet.py tests/unit/test_discussion_routing.py tests/unit/test_cli_analyze.py tests/integration/test_analyze_pipeline.py -q` → `13 passed`
 - `uv run pytest tests/unit/test_discussion_routing.py -q` → `3 passed`
 - `uv run pytest tests/unit/test_cli_analyze.py tests/unit/test_market_context.py tests/unit/test_regime.py tests/unit/test_technical.py tests/integration/test_analyze_pipeline.py tests/unit/test_discussion_routing.py -q` → `28 passed`
 - `uv run python -m compileall src cli.py` → completed without compile errors
 
 ### Blockers / Deviations
 
-- Output-shape design and final documentation of the discussion packet still remain for later Sprint 3 slices.
+- No new backend blockers remain in Sprint 3 after the packet contract landed.
 
 ### Follow-ups
 
-- Next slice should define the structured output of the strategy-facing stock discussion itself, not just the routing boundary.
+- When the runtime loop starts consuming discussion packets, keep the handoff aligned with Sprint 1 candidate-generation / keep-revert schemas.

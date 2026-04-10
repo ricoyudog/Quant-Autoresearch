@@ -63,7 +63,7 @@ Repo note:
 | Phase 0 — Architecture Alignment | lock canonical V2 shape and workspace root | deep-interview spec, branch decision, workspace root choice | completed | keep this workspace as the single planning root |
 | Sprint 1 — Autoresearch Core | define loop semantics and idea-ingestion lane | issue #18, sprint1 backend/infra docs | pending | execute sprint1 docs later |
 | Sprint 2 — Minute Runtime | align runtime/data/validation to the minute-level mission | issue #19, sprint2 backend/infra docs | pending | execute sprint2 docs later |
-| Sprint 3 — Stock Discussion Lane | define strategy-facing stock discussion under autoresearch | issue #20, sprint3 backend/infra docs | in progress | execute Sprint 3 Step 2 discussion-output slice next |
+| Sprint 3 — Stock Discussion Lane | define strategy-facing stock discussion under autoresearch | issue #20, sprint3 backend/infra docs, discussion packet contract | completed | review / merge issue #20 branch |
 | Sprint 4 — Factor Mining Lane | define optional factor-mining sub-mode | issue #21, sprint4 backend/infra docs | pending | execute sprint4 docs later |
 | Phase 5 — Verification + Merge | verify docs coherence and merge-readiness for `main-dev` | test plan, merge-test plan, published issue links | in progress | merge planning package into `main-dev` |
 
