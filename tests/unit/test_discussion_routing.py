@@ -13,6 +13,30 @@ def test_route_stock_question_keeps_snapshot_regime_queries_in_analyze():
     }
 
 
+def test_route_stock_question_keeps_intraday_snapshot_queries_in_analyze():
+    result = route_stock_question(
+        question="What is NVDA's intraday market state snapshot right now?",
+        context={"tickers": ["NVDA"]},
+    )
+
+    assert result == {
+        "route": "analyze_snapshot",
+        "reason": "snapshot_market_state",
+    }
+
+
+def test_route_stock_question_keeps_snapshot_queries_in_analyze_with_minute_context():
+    result = route_stock_question(
+        question="What regime is AAPL in on the minute chart right now?",
+        context={"tickers": ["AAPL"], "strategy_mode": "minute"},
+    )
+
+    assert result == {
+        "route": "analyze_snapshot",
+        "reason": "snapshot_market_state",
+    }
+
+
 def test_route_stock_question_escalates_strategy_selection_to_stock_discussion():
     result = route_stock_question(
         question="Should AAPL stay in the intraday universe for the minute strategy?",
