@@ -3,7 +3,7 @@
 **Publication Status**
 
 - Published on GitHub as [#17](https://github.com/ricoyudog/Quant-Autoresearch/issues/17)
-- Applied label: `workflow::todo`
+- Closeout target: `workflow::done`
 
 **Feature Branch**
 
@@ -50,11 +50,11 @@
 | Phase | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
 | Phase 0 — Spec Alignment | keep one canonical V2 architecture brief | deep-interview spec, branch choice, root choice | completed | preserve this workspace as source of truth |
-| Sprint 1 — Autoresearch Core | define core loop + idea intake lane | issue #18 + sprint1 docs | pending | execute sprint1 docs later |
-| Sprint 2 — Minute Runtime | define minute-level runtime and validation lane | issue #19 + sprint2 docs | pending | execute sprint2 docs later |
-| Sprint 3 — Stock Discussion Lane | define strategy-facing stock discussion lane | issue #20 + sprint3 docs + packet contract | completed | move issue #20 into review / PR |
-| Sprint 4 — Factor Mining Lane | define optional factor-mining lane | issue #21 + sprint4 docs | completed | review / merge issue #21 branch |
-| Phase 5 — Verification / Merge | verify docs + merge readiness | test docs, merge-test plan, published issue links | in progress | merge planning package into `main-dev` |
+| Sprint 1 — Autoresearch Core | define core loop + idea intake lane | issue #18 + sprint1 docs | completed | merged via PRs #23 and #25 |
+| Sprint 2 — Minute Runtime | define minute-level runtime and validation lane | issue #19 + sprint2 docs | completed | merged via PR #24 |
+| Sprint 3 — Stock Discussion Lane | define strategy-facing stock discussion lane | issue #20 + sprint3 docs + packet contract | completed | merged via PR #26 with post-merge fix PR #27 |
+| Sprint 4 — Factor Mining Lane | define optional factor-mining lane | issue #21 + sprint4 docs | completed | merged via PR #28 |
+| Phase 5 — Verification / Merge | verify docs + merge readiness | test docs, merge-test plan, published issue links | completed | close umbrella issue #17 |
 
 **Task Table**
 
@@ -69,13 +69,13 @@
 
 - [x] publish umbrella and child drafts to GitHub
 - [x] add real issue IDs/URLs back into this umbrella card
-- [ ] use the sprint docs as the execution handoff surface
+- [x] use the sprint docs as the execution handoff surface
 
 **Dependencies / Risks**
 
-- keep local draft and GitHub issue #17 synchronized
-- current implementation may still drift from target V2
-- merge should target `main-dev`, not the stale `feature/v2-research` branch
+- keep local docs and live issue #17 synchronized through final closeout
+- future implementation work should treat `.omx/specs/deep-interview-spec-vs-impl.md` and the merged sprint docs as the governing brief
+- follow-up work should branch from current `main-dev`, not the historical `feature/v2-research` line
 
 **Verification Plan**
 
@@ -89,6 +89,8 @@
 - [x] child issue drafts exist
 - [x] sprint docs exist
 - [x] GitHub publication completed
+- [x] child issue lanes are merged into `main-dev`
+- [x] umbrella merge readiness is fully documented
 
 **References**
 
@@ -102,3 +104,10 @@
 - [#19](https://github.com/ricoyudog/Quant-Autoresearch/issues/19)
 - [#20](https://github.com/ricoyudog/Quant-Autoresearch/issues/20)
 - [#21](https://github.com/ricoyudog/Quant-Autoresearch/issues/21)
+- [PR #22](https://github.com/ricoyudog/Quant-Autoresearch/pull/22)
+- [PR #23](https://github.com/ricoyudog/Quant-Autoresearch/pull/23)
+- [PR #24](https://github.com/ricoyudog/Quant-Autoresearch/pull/24)
+- [PR #25](https://github.com/ricoyudog/Quant-Autoresearch/pull/25)
+- [PR #26](https://github.com/ricoyudog/Quant-Autoresearch/pull/26)
+- [PR #27](https://github.com/ricoyudog/Quant-Autoresearch/pull/27)
+- [PR #28](https://github.com/ricoyudog/Quant-Autoresearch/pull/28)
