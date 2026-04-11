@@ -25,6 +25,21 @@ def _program_markdown_path() -> str:
     return str(bt.CACHE_DIR).replace("data/cache", "program.md")
 
 
+def _enable_public_entrypoint_for_overfit_tests(monkeypatch, sample_data: pd.DataFrame) -> None:
+    """Satisfy the V2 public minute-runtime preconditions while reusing legacy metric fixtures."""
+    daily_frame = pd.DataFrame({"session_date": pd.to_datetime(["2025-01-02"]), "ticker": ["TEST"]})
+
+    monkeypatch.setattr(bt, "load_daily_data", lambda start_date=None, end_date=None: daily_frame.copy())
+    monkeypatch.setattr(bt, "load_data", lambda: {"TEST": sample_data})
+    monkeypatch.setattr(
+        bt,
+        "_minute_pipeline_walk_forward_validation",
+        lambda strategy_instance, daily_data, universe_size_override: bt._legacy_walk_forward_validation(
+            strategy_instance
+        ),
+    )
+
+
 def _expected_newey_west_score(sample_data: pd.DataFrame) -> float:
     window_size = len(sample_data) // 5
     window_scores = []
@@ -49,11 +64,11 @@ def _expected_newey_west_score(sample_data: pd.DataFrame) -> float:
 
 
 def test_output_contains_naive_sharpe(tmp_path, sample_data, monkeypatch, capsys):
-    """Backtester output should expose the raw Sharpe for comparison."""
+    """Public V2 entrypoint should still expose the raw Sharpe once minute preconditions are satisfied."""
     strategy_path = _write_strategy_file(tmp_path)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(bt, "STRATEGY_FILE", str(strategy_path))
-    monkeypatch.setattr(bt, "load_data", lambda: {"TEST": sample_data})
+    _enable_public_entrypoint_for_overfit_tests(monkeypatch, sample_data)
 
     bt.walk_forward_validation()
 
@@ -62,11 +77,11 @@ def test_output_contains_naive_sharpe(tmp_path, sample_data, monkeypatch, capsys
 
 
 def test_output_contains_nw_bias(tmp_path, sample_data, monkeypatch, capsys):
-    """Backtester output should show the adjustment gap between raw and NW Sharpe."""
+    """Public V2 entrypoint should report the NW adjustment gap once minute preconditions are satisfied."""
     strategy_path = _write_strategy_file(tmp_path)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(bt, "STRATEGY_FILE", str(strategy_path))
-    monkeypatch.setattr(bt, "load_data", lambda: {"TEST": sample_data})
+    _enable_public_entrypoint_for_overfit_tests(monkeypatch, sample_data)
 
     bt.walk_forward_validation()
 
@@ -75,11 +90,11 @@ def test_output_contains_nw_bias(tmp_path, sample_data, monkeypatch, capsys):
 
 
 def test_output_contains_deflated_sr(tmp_path, sample_data, monkeypatch, capsys):
-    """Backtester output should include Deflated Sharpe Ratio."""
+    """Public V2 entrypoint should include Deflated Sharpe Ratio once minute preconditions are satisfied."""
     strategy_path = _write_strategy_file(tmp_path)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(bt, "STRATEGY_FILE", str(strategy_path))
-    monkeypatch.setattr(bt, "load_data", lambda: {"TEST": sample_data})
+    _enable_public_entrypoint_for_overfit_tests(monkeypatch, sample_data)
 
     bt.walk_forward_validation()
 
@@ -88,7 +103,7 @@ def test_output_contains_deflated_sr(tmp_path, sample_data, monkeypatch, capsys)
 
 
 def test_missing_results_tsv_defaults_to_single_trial(tmp_path, sample_data, monkeypatch):
-    """Without experiment history, DSR should be computed with a single trial."""
+    """Without experiment history, DSR should still default to a single trial via the public V2 entrypoint."""
     strategy_path = _write_strategy_file(tmp_path)
     observed = {}
 
@@ -98,7 +113,7 @@ def test_missing_results_tsv_defaults_to_single_trial(tmp_path, sample_data, mon
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(bt, "STRATEGY_FILE", str(strategy_path))
-    monkeypatch.setattr(bt, "load_data", lambda: {"TEST": sample_data})
+    _enable_public_entrypoint_for_overfit_tests(monkeypatch, sample_data)
     monkeypatch.setattr(bt, "deflated_sharpe_ratio", fake_deflated_sharpe_ratio, raising=False)
 
     bt.walk_forward_validation()
@@ -107,11 +122,11 @@ def test_missing_results_tsv_defaults_to_single_trial(tmp_path, sample_data, mon
 
 
 def test_no_p_value_in_output(tmp_path, sample_data, monkeypatch, capsys):
-    """Monte Carlo placeholder output should be removed."""
+    """Public V2 entrypoint should not reintroduce the removed Monte Carlo placeholder output."""
     strategy_path = _write_strategy_file(tmp_path)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(bt, "STRATEGY_FILE", str(strategy_path))
-    monkeypatch.setattr(bt, "load_data", lambda: {"TEST": sample_data})
+    _enable_public_entrypoint_for_overfit_tests(monkeypatch, sample_data)
 
     bt.walk_forward_validation()
 
@@ -125,11 +140,11 @@ def test_no_monte_carlo_function():
 
 
 def test_score_is_newey_west(tmp_path, sample_data, monkeypatch, capsys):
-    """Reported SCORE should match the average Newey-West Sharpe across windows."""
+    """Reported SCORE should still match the average Newey-West Sharpe through the public V2 entrypoint."""
     strategy_path = _write_strategy_file(tmp_path)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(bt, "STRATEGY_FILE", str(strategy_path))
-    monkeypatch.setattr(bt, "load_data", lambda: {"TEST": sample_data})
+    _enable_public_entrypoint_for_overfit_tests(monkeypatch, sample_data)
 
     bt.walk_forward_validation()
 
@@ -141,11 +156,11 @@ def test_score_is_newey_west(tmp_path, sample_data, monkeypatch, capsys):
 
 
 def test_nw_bias_calculation(tmp_path, sample_data, monkeypatch, capsys):
-    """NW bias should equal raw Sharpe minus adjusted SCORE."""
+    """NW bias should equal raw Sharpe minus adjusted SCORE through the public V2 entrypoint."""
     strategy_path = _write_strategy_file(tmp_path)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(bt, "STRATEGY_FILE", str(strategy_path))
-    monkeypatch.setattr(bt, "load_data", lambda: {"TEST": sample_data})
+    _enable_public_entrypoint_for_overfit_tests(monkeypatch, sample_data)
 
     bt.walk_forward_validation()
 
@@ -158,11 +173,11 @@ def test_nw_bias_calculation(tmp_path, sample_data, monkeypatch, capsys):
 
 
 def test_results_tsv_new_columns(tmp_path, sample_data, monkeypatch):
-    """Backtester should initialize results.tsv with the Sprint 1 header."""
+    """Public V2 entrypoint should initialize results.tsv with the Sprint 1 header."""
     strategy_path = _write_strategy_file(tmp_path)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(bt, "STRATEGY_FILE", str(strategy_path))
-    monkeypatch.setattr(bt, "load_data", lambda: {"TEST": sample_data})
+    _enable_public_entrypoint_for_overfit_tests(monkeypatch, sample_data)
 
     bt.walk_forward_validation()
 
