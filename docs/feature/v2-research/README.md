@@ -18,6 +18,9 @@ replaces Playbook-era memory with vault-native notes plus `results.tsv`.
 - The issue-level phase table is the umbrella summary only; execution belongs in the referenced
   `sprintN/` docs
 - Sprint 1, Sprint 2, and Phase 3 verification were completed on 2026-04-08
+- On 2026-04-11, the remaining branch-only repair diff was reviewed during V2 closeout and the
+  branch was explicitly retired as a superseded historical branch rather than kept as a live merge
+  target
 
 ## Canonical Decisions
 

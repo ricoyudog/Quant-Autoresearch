@@ -3,8 +3,8 @@
 > Feature branch: `feature/v2-research`
 > Umbrella issue: #13
 > Canonical root: `docs/feature/v2-research/`
-> Last updated: 2026-04-08
-> Planning status: Phase 0 complete; execution ready to start on the feature branch
+> Last updated: 2026-04-11
+> Planning status: implementation and verification complete; branch retired as a superseded historical closeout record
 
 ## 1. Context
 
@@ -18,8 +18,9 @@ controller and into `program.md`. Issue #13 now owns the research capabilities a
 
 The governing designs for this work already exist in `docs/research-capabilities-v2.md` and
 `docs/upgrade-plan-v2.md`. On 2026-04-08, the upstream V2 dependency issues `#8`, `#9`, `#11`, and
-`#12` were confirmed closed on the live umbrella repo, so the remaining blocker for implementation
-is feature-branch setup plus baseline capture.
+`#12` were confirmed closed on the live umbrella repo. By 2026-04-11, the remaining branch-only
+repair diff had been reviewed during V2 closeout and the branch was explicitly retired as a
+superseded historical branch instead of carried forward as a live merge target.
 
 ## 2. Root And Branch Decision
 
@@ -113,10 +114,10 @@ repo's current V2 naming convention.
 
 | Phase | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
-| Phase 0 -- Spec Alignment + Baseline | Confirm docs root, branch convention, dependency state, and umbrella references | refreshed workspace index, lane docs, test plan, rewritten issue card | completed | create or switch to `feature/v2-research` and capture the baseline |
-| Sprint 1 -- Vault Foundation + Playbook Removal | Add vault config, setup CLI support, and remove the legacy Playbook surface | `config/vault.py`, updated `cli.py`, updated `src/core/research.py`, deleted Playbook files, vault tests | pending | start once the branch baseline is recorded |
-| Sprint 2 -- Research CLI + Analysis + Knowledge | Add research / analyze CLI flows, analysis helpers, knowledge notes, and memory guidance | `src/analysis/`, CLI commands, knowledge notes, `program.md` updates, new unit + integration coverage | pending | start after Sprint 1 verification |
-| Phase 3 -- Verification + Closeout | Run the full gate and prepare review evidence | green dependency sync, green tests, CLI smoke results, issue or PR evidence update | pending | execute after Sprint 2 implementation finishes |
+| Phase 0 -- Spec Alignment + Baseline | Confirm docs root, branch convention, dependency state, and umbrella references | refreshed workspace index, lane docs, test plan, rewritten issue card | completed | historical planning record only |
+| Sprint 1 -- Vault Foundation + Playbook Removal | Add vault config, setup CLI support, and remove the legacy Playbook surface | `config/vault.py`, updated `cli.py`, updated `src/core/research.py`, deleted Playbook files, vault tests | completed | keep branch disposition aligned with the canonical V2 closeout package |
+| Sprint 2 -- Research CLI + Analysis + Knowledge | Add research / analyze CLI flows, analysis helpers, knowledge notes, and memory guidance | `src/analysis/`, CLI commands, knowledge notes, `program.md` updates, new unit + integration coverage | completed | keep branch disposition aligned with the canonical V2 closeout package |
+| Phase 3 -- Verification + Closeout | Run the full gate and prepare review evidence | green dependency sync, green tests, CLI smoke results, issue or PR evidence update | completed | superseded historical branch retired during V2 closeout; no further merge action required |
 
 ## 8. Task Tables
 

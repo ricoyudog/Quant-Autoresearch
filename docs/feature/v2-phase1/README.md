@@ -12,7 +12,7 @@ Phase 1 of the V2 upgrade. Upgrades the backtester with full metrics suite and d
 
 | Issue | Scope | Status |
 | --- | --- | --- |
-| [#8](https://github.com/ricoyudog/Quant-Autoresearch/issues/8) | Phase 1: Backtester + program.md + strategy interface | pending |
+| [#8](https://github.com/ricoyudog/Quant-Autoresearch/issues/8) | Phase 1: Backtester + program.md + strategy interface | complete |
 
 ## Execution Order
 

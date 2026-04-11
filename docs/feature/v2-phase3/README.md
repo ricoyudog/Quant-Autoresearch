@@ -17,7 +17,7 @@ Phase 3 of the V2 upgrade. Simplifies the CLI to three working commands (`setup-
 
 | Issue | Scope | Status |
 | --- | --- | --- |
-| [#9](https://github.com/ricoyudog/Quant-Autoresearch/issues/9) | Umbrella: Phase 3 — CLI + Obsidian + program.md | review |
+| [#9](https://github.com/ricoyudog/Quant-Autoresearch/issues/9) | Umbrella: Phase 3 — CLI + Obsidian + program.md | complete |
 
 ## Execution Order
 
