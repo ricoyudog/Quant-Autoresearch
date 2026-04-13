@@ -405,6 +405,157 @@ class UniverseStrategy:
         backtester.walk_forward_validation()
 
 
+def test_walk_forward_validation_recomputes_universe_per_training_window(monkeypatch, tmp_path, capsys):
+    """Universe selection should be recomputed from each window's training slice."""
+    strategy_script = """
+class WindowAwareStrategy:
+    def select_universe(self, daily_data):
+        latest = str(daily_data["session_date"].iloc[-1])[:10]
+        if latest <= "2025-11-05":
+            return ["AAA"]
+        return ["BBB"]
+
+    def generate_signals(self, data):
+        return {
+            ticker: pd.Series([1.0] * len(frame), index=frame.index)
+            for ticker, frame in data.items()
+        }
+"""
+    windows = [
+        {"train_start": "2025-11-03", "train_end": "2025-11-05", "test_start": "2025-11-06", "test_end": "2025-11-06"},
+        {"train_start": "2025-11-03", "train_end": "2025-11-06", "test_start": "2025-11-07", "test_end": "2025-11-07"},
+    ]
+    daily_data = build_daily_universe_frame()
+    _configure_walk_forward_env(monkeypatch, tmp_path, strategy_script, windows, daily_data)
+
+    query_calls = []
+
+    def fake_query(symbols, start_date, end_date):
+        query_calls.append((list(symbols), start_date, end_date))
+        return build_window_minute_data(list(symbols), start_date)
+
+    monkeypatch.setattr(backtester, "query_minute_data", fake_query)
+    monkeypatch.setattr(
+        backtester,
+        "calculate_metrics",
+        lambda combined_returns, trades, trade_activity=None: {
+            "sharpe": 1.0,
+            "sortino": 1.0,
+            "calmar": 1.0,
+            "drawdown": -0.1,
+            "max_dd_days": 1,
+            "trades": 1,
+            "win_rate": 0.5,
+            "profit_factor": 1.0,
+            "avg_win": 0.01,
+            "avg_loss": -0.01,
+        },
+    )
+    monkeypatch.setattr(backtester, "calculate_baseline_sharpe", lambda data: 0.1)
+
+    backtester.walk_forward_validation()
+    capsys.readouterr()
+
+    assert query_calls == [
+        (["AAA"], "2025-11-06", "2025-11-06"),
+        (["BBB"], "2025-11-07", "2025-11-07"),
+    ]
+
+
+def test_walk_forward_validation_fallback_universe_excludes_stale_tickers(monkeypatch, tmp_path, capsys):
+    """Fallback universe should ignore tickers missing from the latest training session."""
+    strategy_script = """
+class MinuteStrategy:
+    def generate_signals(self, data):
+        return {
+            ticker: pd.Series([1.0] * len(frame), index=frame.index)
+            for ticker, frame in data.items()
+        }
+"""
+    windows = [
+        {"train_start": "2025-11-03", "train_end": "2025-11-06", "test_start": "2025-11-07", "test_end": "2025-11-07"},
+    ]
+    rows = []
+    sessions = pd.to_datetime(["2025-11-03", "2025-11-04", "2025-11-05", "2025-11-06"])
+    for session in sessions:
+        rows.append(
+            {
+                "ticker": "AAA",
+                "session_date": session,
+                "open": 100.0,
+                "high": 101.0,
+                "low": 99.0,
+                "close": 100.5,
+                "volume": 1_000_000,
+                "transactions": 100,
+                "vwap": 100.2,
+            }
+        )
+        rows.append(
+            {
+                "ticker": "BBB",
+                "session_date": session,
+                "open": 50.0,
+                "high": 51.0,
+                "low": 49.0,
+                "close": 50.5,
+                "volume": 750_000,
+                "transactions": 80,
+                "vwap": 50.2,
+            }
+        )
+
+    for session in sessions[:2]:
+        rows.append(
+            {
+                "ticker": "OLD",
+                "session_date": session,
+                "open": 10.0,
+                "high": 11.0,
+                "low": 9.0,
+                "close": 10.5,
+                "volume": 5_000_000,
+                "transactions": 50,
+                "vwap": 10.2,
+            }
+        )
+
+    daily_data = pd.DataFrame(rows)
+    _configure_walk_forward_env(monkeypatch, tmp_path, strategy_script, windows, daily_data)
+
+    query_calls = []
+
+    def fake_query(symbols, start_date, end_date):
+        query_calls.append((list(symbols), start_date, end_date))
+        return build_window_minute_data(list(symbols), start_date)
+
+    monkeypatch.setattr(backtester, "query_minute_data", fake_query)
+    monkeypatch.setattr(
+        backtester,
+        "calculate_metrics",
+        lambda combined_returns, trades, trade_activity=None: {
+            "sharpe": 1.0,
+            "sortino": 1.0,
+            "calmar": 1.0,
+            "drawdown": -0.1,
+            "max_dd_days": 1,
+            "trades": 1,
+            "win_rate": 0.5,
+            "profit_factor": 1.0,
+            "avg_win": 0.01,
+            "avg_loss": -0.01,
+        },
+    )
+    monkeypatch.setattr(backtester, "calculate_baseline_sharpe", lambda data: 0.1)
+
+    backtester.walk_forward_validation()
+    capsys.readouterr()
+
+    assert query_calls == [
+        (["AAA", "BBB"], "2025-11-07", "2025-11-07"),
+    ]
+
+
 class TestWalkForwardValidationMinutePipelineContinued:
     def test_walk_forward_validation_rejects_invalid_environment_configuration(self, monkeypatch, tmp_path, capsys):
         """Invalid environment overrides should fail deterministically."""

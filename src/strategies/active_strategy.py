@@ -29,6 +29,20 @@ class TradingStrategy:
         if ranked.empty:
             return []
 
+        if "session_date" in ranked.columns:
+            ranked["ticker"] = ranked["ticker"].astype(str)
+            latest_session = pd.to_datetime(ranked["session_date"]).max()
+            active_tickers = (
+                ranked.loc[pd.to_datetime(ranked["session_date"]) == latest_session, "ticker"]
+                .dropna()
+                .astype(str)
+                .tolist()
+            )
+            if active_tickers:
+                ranked = ranked[ranked["ticker"].isin(active_tickers)].copy()
+            if ranked.empty:
+                return []
+
         if "volume" not in ranked.columns:
             return ranked["ticker"].astype(str).drop_duplicates().head(30).tolist()
 

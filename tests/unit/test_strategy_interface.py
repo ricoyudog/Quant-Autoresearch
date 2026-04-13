@@ -426,6 +426,107 @@ class TestStrategyFile:
 
         assert universe[:3] == ["CCC", "BBB", "AAA"]
 
+    def test_select_universe_excludes_tickers_missing_latest_session(self, strategy_file_path):
+        """The example strategy should ignore stale tickers absent from the latest session."""
+        from strategies.active_strategy import TradingStrategy
+
+        rows = [
+            {
+                "ticker": "AAA",
+                "session_date": pd.Timestamp("2024-01-01"),
+                "open": 10.0,
+                "high": 10.5,
+                "low": 9.5,
+                "close": 10.2,
+                "volume": 1_000,
+                "transactions": 10,
+                "vwap": 10.1,
+            },
+            {
+                "ticker": "AAA",
+                "session_date": pd.Timestamp("2024-01-02"),
+                "open": 10.0,
+                "high": 10.5,
+                "low": 9.5,
+                "close": 10.2,
+                "volume": 1_000,
+                "transactions": 10,
+                "vwap": 10.1,
+            },
+            {
+                "ticker": "AAA",
+                "session_date": pd.Timestamp("2024-01-03"),
+                "open": 10.0,
+                "high": 10.5,
+                "low": 9.5,
+                "close": 10.2,
+                "volume": 1_000,
+                "transactions": 10,
+                "vwap": 10.1,
+            },
+            {
+                "ticker": "BBB",
+                "session_date": pd.Timestamp("2024-01-01"),
+                "open": 20.0,
+                "high": 20.5,
+                "low": 19.5,
+                "close": 20.2,
+                "volume": 500,
+                "transactions": 20,
+                "vwap": 20.1,
+            },
+            {
+                "ticker": "BBB",
+                "session_date": pd.Timestamp("2024-01-02"),
+                "open": 20.0,
+                "high": 20.5,
+                "low": 19.5,
+                "close": 20.2,
+                "volume": 500,
+                "transactions": 20,
+                "vwap": 20.1,
+            },
+            {
+                "ticker": "BBB",
+                "session_date": pd.Timestamp("2024-01-03"),
+                "open": 20.0,
+                "high": 20.5,
+                "low": 19.5,
+                "close": 20.2,
+                "volume": 500,
+                "transactions": 20,
+                "vwap": 20.1,
+            },
+            {
+                "ticker": "OLD",
+                "session_date": pd.Timestamp("2024-01-01"),
+                "open": 30.0,
+                "high": 30.5,
+                "low": 29.5,
+                "close": 30.2,
+                "volume": 5_000_000,
+                "transactions": 30,
+                "vwap": 30.1,
+            },
+            {
+                "ticker": "OLD",
+                "session_date": pd.Timestamp("2024-01-02"),
+                "open": 30.0,
+                "high": 30.5,
+                "low": 29.5,
+                "close": 30.2,
+                "volume": 5_000_000,
+                "transactions": 30,
+                "vwap": 30.1,
+            },
+        ]
+
+        strategy = TradingStrategy()
+        universe = strategy.select_universe(pd.DataFrame(rows))
+
+        assert "OLD" not in universe
+        assert universe[:2] == ["AAA", "BBB"]
+
     def test_generate_signals_uses_20_bar_momentum(self, strategy_file_path):
         """The example strategy uses 20-bar price momentum in minute mode."""
         from strategies.active_strategy import TradingStrategy

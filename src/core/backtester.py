@@ -226,6 +226,20 @@ def default_universe_from_daily_data(daily_data: pd.DataFrame, max_tickers: int 
     if ranked.empty:
         return []
 
+    if "session_date" in ranked.columns:
+        ranked["ticker"] = ranked["ticker"].astype(str)
+        latest_session = pd.to_datetime(ranked["session_date"]).max()
+        active_tickers = (
+            ranked.loc[pd.to_datetime(ranked["session_date"]) == latest_session, "ticker"]
+            .dropna()
+            .astype(str)
+            .tolist()
+        )
+        if active_tickers:
+            ranked = ranked[ranked["ticker"].isin(active_tickers)].copy()
+        if ranked.empty:
+            return []
+
     if "volume" in ranked.columns:
         ranked = ranked.dropna(subset=["volume"])
         if not ranked.empty:
@@ -838,29 +852,36 @@ def _minute_pipeline_walk_forward_validation(
         print(f"DATA ERROR: {exc}")
         sys.exit(1)
 
-    try:
-        selected_tickers = (
-            strategy_instance.select_universe(daily_data)
-            if hasattr(strategy_instance, "select_universe")
-            else None
-        )
-    except Exception:
-        selected_tickers = None
-
-    selected_tickers = normalize_universe_selection(selected_tickers, daily_data)
-    if universe_size_override is not None:
-        selected_tickers = selected_tickers[:universe_size_override]
-    if not selected_tickers:
-        print("DATA ERROR: No tickers available for minute backtest.")
-        sys.exit(1)
-
     all_metrics = []
     baseline_frames: dict[str, list[pd.DataFrame]] = {}
     per_symbol_returns: dict[str, list[pd.Series]] = {}
     per_symbol_signals: dict[str, list[pd.Series]] = {}
     n_trials = count_experiment_trials()
+    daily_session_dates = pd.to_datetime(daily_data["session_date"])
 
     for window in windows:
+        train_end = pd.Timestamp(window["train_end"])
+        training_daily_data = daily_data.loc[daily_session_dates <= train_end].copy()
+        if training_daily_data.empty:
+            print(f"DATA ERROR ({window['test_start']}..{window['test_end']}): no training daily data available.")
+            sys.exit(1)
+
+        try:
+            selected_tickers = (
+                strategy_instance.select_universe(training_daily_data)
+                if hasattr(strategy_instance, "select_universe")
+                else None
+            )
+        except Exception:
+            selected_tickers = None
+
+        selected_tickers = normalize_universe_selection(selected_tickers, training_daily_data)
+        if universe_size_override is not None:
+            selected_tickers = selected_tickers[:universe_size_override]
+        if not selected_tickers:
+            print(f"DATA ERROR ({window['test_start']}..{window['test_end']}): no tickers available for minute backtest.")
+            sys.exit(1)
+
         try:
             minute_data = query_minute_data(
                 selected_tickers,
