@@ -275,7 +275,7 @@ tests/
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **Quant-Autoresearch** (2471 symbols, 3936 relationships, 78 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **Quant-Autoresearch** (2636 symbols, 4111 relationships, 78 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -377,6 +377,8 @@ To check whether embeddings exist, inspect `.gitnexus/meta.json` — the `stats.
 ## Active Technologies
 - Python 3.12+ for repository tooling; Markdown and JSON for closeout artifacts + stdlib file handling, git CLI, pytest, uv, Typer-based repo tooling, existing planning docs (001-v2-closeout)
 - Repository files under `/Users/chunsingyu/softwares/Quant-Autoresearch`, especially `specs/`, `docs/feature/`, and git metadata (001-v2-closeout)
+- Python 3.12+ for the loop runner and repository tooling; shell wrapper for Claude Code invocation + existing `cli.py` commands, `src/core/backtester.py`, `src/core/research.py`, `src/memory/idea_keep_revert.py`, `src/memory/candidate_generation.py`, Claude Code CLI, git CLI (002-claude-autoresearch-loop)
+- Repository files plus persisted run artifacts under `/Users/chunsingyu/softwares/Quant-Autoresearch/experiments/` and optional vault notes under the configured Obsidian path (002-claude-autoresearch-loop)
 
 ## Recent Changes
 - 001-v2-closeout: Added Python 3.12+ for repository tooling; Markdown and JSON for closeout artifacts + stdlib file handling, git CLI, pytest, uv, Typer-based repo tooling, existing planning docs
