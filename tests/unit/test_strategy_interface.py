@@ -126,6 +126,12 @@ def build_whipsaw_minute_frame(ticker: str) -> pd.DataFrame:
     return build_minute_frame(ticker, closes)
 
 
+def build_hold_minute_frame(ticker: str) -> pd.DataFrame:
+    """Build a frame that confirms long, then quickly confirms short while hold should still apply."""
+    closes = list(range(100, 123)) + [80, 79, 78, 77, 76, 75, 74]
+    return build_minute_frame(ticker, closes)
+
+
 # =============================================================================
 # Dynamic loading tests
 # =============================================================================
@@ -683,11 +689,43 @@ class TestStrategyFile:
         assert signals["AAPL"].iloc[21] == 1.0
         assert signals["MSFT"].iloc[21] == -1.0
 
-    def test_generate_signals_go_flat_before_reversing_after_brief_contradiction(self, strategy_file_path):
-        """A confirmed position should go flat before the opposite side earns fresh confirmation."""
+    def test_generate_signals_holds_confirmed_position_for_minimum_bars(self, strategy_file_path):
+        """After entry, the strategy should hold the confirmed position for the configured minimum bars."""
         from strategies.active_strategy import TradingStrategy
 
-        strategy = TradingStrategy()
+        strategy = TradingStrategy(min_hold_bars=5)
+        strategy.select_universe(build_neutral_daily_frame())
+        signals = strategy.generate_signals({"AAPL": build_hold_minute_frame("AAPL")})
+
+        assert signals["AAPL"].iloc[22] == 1.0
+        assert signals["AAPL"].iloc[23] == 1.0
+        assert signals["AAPL"].iloc[24] == 1.0
+        assert signals["AAPL"].iloc[25] == 1.0
+        assert signals["AAPL"].iloc[26] == 1.0
+        assert signals["AAPL"].iloc[27] == 0.0
+        assert signals["AAPL"].iloc[28] == 0.0
+        assert signals["AAPL"].iloc[29] == -1.0
+
+    def test_generate_signals_supports_custom_minimum_hold_length(self, strategy_file_path):
+        """Researchers can tune the minimum hold length explicitly."""
+        from strategies.active_strategy import TradingStrategy
+
+        strategy = TradingStrategy(min_hold_bars=2)
+        strategy.select_universe(build_neutral_daily_frame())
+        signals = strategy.generate_signals({"AAPL": build_hold_minute_frame("AAPL")})
+
+        assert strategy.min_hold_bars == 2
+        assert signals["AAPL"].iloc[22] == 1.0
+        assert signals["AAPL"].iloc[23] == 1.0
+        assert signals["AAPL"].iloc[24] == 0.0
+        assert signals["AAPL"].iloc[25] == 0.0
+        assert signals["AAPL"].iloc[26] == -1.0
+
+    def test_generate_signals_go_flat_before_reversing_after_brief_contradiction(self, strategy_file_path):
+        """Without an added hold layer, confirmation-only logic should still go flat before reversing."""
+        from strategies.active_strategy import TradingStrategy
+
+        strategy = TradingStrategy(min_hold_bars=1)
         strategy.select_universe(build_neutral_daily_frame())
         signals = strategy.generate_signals({"AAPL": build_whipsaw_minute_frame("AAPL")})
 
@@ -707,6 +745,16 @@ class TestStrategyFile:
         assert signals["AAPL"].eq(0.0).all()
         assert signals["MSFT"].eq(0.0).all()
 
+    def test_bear_volatile_overrides_minimum_hold_immediately(self, strategy_file_path):
+        """The hostile regime gate should still flatten even when a hold would otherwise be active."""
+        from strategies.active_strategy import TradingStrategy
+
+        strategy = TradingStrategy(min_hold_bars=5)
+        strategy.market_regime = "bear_volatile"
+        signals = strategy.generate_signals({"AAPL": build_hold_minute_frame("AAPL")})
+
+        assert signals["AAPL"].eq(0.0).all()
+
     def test_strategy_class_init(self, strategy_file_path):
         """TradingStrategy can be instantiated."""
         from strategies.active_strategy import TradingStrategy
@@ -716,13 +764,16 @@ class TestStrategyFile:
         assert hasattr(strategy, 'fast_ma')
         assert hasattr(strategy, 'slow_ma')
         assert hasattr(strategy, 'confirmation_bars')
+        assert hasattr(strategy, 'min_hold_bars')
         assert strategy.confirmation_bars == 3
+        assert strategy.min_hold_bars == 5
 
         # Should be able to instantiate with custom params
-        strategy_custom = TradingStrategy(fast_ma=10, slow_ma=30, confirmation_bars=2)
+        strategy_custom = TradingStrategy(fast_ma=10, slow_ma=30, confirmation_bars=2, min_hold_bars=4)
         assert strategy_custom.fast_ma == 10
         assert strategy_custom.slow_ma == 30
         assert strategy_custom.confirmation_bars == 2
+        assert strategy_custom.min_hold_bars == 4
 
 
 # =============================================================================

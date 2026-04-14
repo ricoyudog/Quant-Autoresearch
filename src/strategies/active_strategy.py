@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 class TradingStrategy:
-    def __init__(self, fast_ma=20, slow_ma=50, confirmation_bars=3):
+    def __init__(self, fast_ma=20, slow_ma=50, confirmation_bars=3, min_hold_bars=5):
         """
         Initialize hyperparameters. 
         The AI Agent can modify these or add new ones here.
@@ -10,6 +10,7 @@ class TradingStrategy:
         self.fast_ma = fast_ma
         self.slow_ma = slow_ma
         self.confirmation_bars = confirmation_bars if confirmation_bars and confirmation_bars > 0 else 1
+        self.min_hold_bars = min_hold_bars if min_hold_bars and min_hold_bars > 0 else 1
         self.market_regime = "neutral"
 
     def classify_market_regime(self, daily_data: "pd.DataFrame") -> "str":
@@ -133,6 +134,62 @@ class TradingStrategy:
         confirmed[short_confirmed] = -1.0
         return confirmed
 
+    def apply_minimum_hold_filter(self, raw_signals: "pd.Series") -> "pd.Series":
+        """Apply confirmation and minimum-hold rules without accumulating reversals during hold."""
+        series = pd.Series(raw_signals, copy=True).fillna(0.0).astype(float)
+        if series.empty:
+            return pd.Series(index=series.index, dtype=float)
+
+        if self.min_hold_bars <= 1:
+            return self.apply_confirmation_filter(series)
+
+        held = pd.Series(0.0, index=series.index)
+        current_position = 0.0
+        hold_bars_remaining = 0
+        candidate_direction = 0.0
+        candidate_streak = 0
+
+        for idx, signal in series.items():
+            if current_position != 0.0 and hold_bars_remaining > 0:
+                held.loc[idx] = current_position
+                hold_bars_remaining = hold_bars_remaining - 1
+                candidate_direction = 0.0
+                candidate_streak = 0
+                continue
+
+            if current_position == 0.0:
+                if signal == 0.0:
+                    candidate_direction = 0.0
+                    candidate_streak = 0
+                elif signal == candidate_direction:
+                    candidate_streak = candidate_streak + 1
+                else:
+                    candidate_direction = float(signal)
+                    candidate_streak = 1
+
+                if candidate_direction != 0.0 and candidate_streak >= self.confirmation_bars:
+                    current_position = candidate_direction
+                    hold_bars_remaining = self.min_hold_bars - 1
+                    candidate_direction = 0.0
+                    candidate_streak = 0
+            else:
+                if signal == current_position:
+                    candidate_direction = 0.0
+                    candidate_streak = 0
+                else:
+                    if signal == 0.0:
+                        current_position = 0.0
+                        candidate_direction = 0.0
+                        candidate_streak = 0
+                    else:
+                        current_position = 0.0
+                        candidate_direction = float(signal)
+                        candidate_streak = 1
+
+            held.loc[idx] = current_position
+
+        return held
+
     def generate_signal_series(self, frame: "pd.DataFrame") -> "pd.Series":
         """Generate confirmed long/flat/short signals aligned to one ticker frame."""
         if frame is None:
@@ -158,7 +215,7 @@ class TradingStrategy:
         raw_signals = pd.Series(0.0, index=frame.index)
         raw_signals[momentum > 0] = 1.0
         raw_signals[momentum < 0] = -1.0
-        return self.apply_confirmation_filter(raw_signals)
+        return self.apply_minimum_hold_filter(raw_signals)
 
     def generate_signals(self, data):
         """
