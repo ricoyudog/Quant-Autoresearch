@@ -7,6 +7,9 @@ set -euo pipefail
 # This wrapper keeps Claude Code outside the repository runtime while giving the
 # outer loop a stable per-iteration invocation contract.
 
+SCRIPT_DIR="$(CDPATH="" cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(CDPATH="" cd "$SCRIPT_DIR/.." && pwd)"
+
 usage() {
   cat <<'EOF' >&2
 Usage: scripts/run_claude_iteration.sh <iteration-number> [options] [-- <extra claude args>]
@@ -16,6 +19,7 @@ Options:
   --strategy <path>       Path to strategy-under-iteration (default: src/strategies/active_strategy.py)
   --state-file <path>     Path to autoresearch state file (default: experiments/autoresearch_state.json)
   --output-dir <path>     Iteration artifact root (default: experiments/iterations)
+  --context-file <path>   Optional markdown context bundle for the round prompt
   --claude-bin <path>     Claude Code executable (default: $CLAUDE_CODE_BIN or claude)
   --dry-run               Build prompt artifact and print the planned invocation without executing Claude Code
   --help                  Show this message
@@ -39,10 +43,24 @@ PROGRAM_PATH="program.md"
 STRATEGY_PATH="src/strategies/active_strategy.py"
 STATE_FILE="experiments/autoresearch_state.json"
 OUTPUT_DIR="experiments/iterations"
+CONTEXT_FILE=""
 CLAUDE_BIN="${CLAUDE_CODE_BIN:-claude}"
+CLAUDE_RATE_LIMIT_EXIT_CODE=75
 DRY_RUN=0
 EXTRA_ARGS=()
 EXTRA_ARGS_COUNT=0
+
+resolve_repo_path() {
+  local input_path="$1"
+  if [ -z "$input_path" ]; then
+    printf '%s\n' "$input_path"
+    return
+  fi
+  case "$input_path" in
+    /*) printf '%s\n' "$input_path" ;;
+    *) printf '%s\n' "$REPO_ROOT/$input_path" ;;
+  esac
+}
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -60,6 +78,10 @@ while [ "$#" -gt 0 ]; do
       ;;
     --output-dir)
       OUTPUT_DIR="$2"
+      shift 2
+      ;;
+    --context-file)
+      CONTEXT_FILE="$2"
       shift 2
       ;;
     --claude-bin)
@@ -88,6 +110,14 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
+PROGRAM_PATH="$(resolve_repo_path "$PROGRAM_PATH")"
+STRATEGY_PATH="$(resolve_repo_path "$STRATEGY_PATH")"
+STATE_FILE="$(resolve_repo_path "$STATE_FILE")"
+OUTPUT_DIR="$(resolve_repo_path "$OUTPUT_DIR")"
+if [ -n "$CONTEXT_FILE" ]; then
+  CONTEXT_FILE="$(resolve_repo_path "$CONTEXT_FILE")"
+fi
+
 if [ ! -f "$PROGRAM_PATH" ]; then
   echo "Program file not found: $PROGRAM_PATH" >&2
   exit 1
@@ -95,6 +125,11 @@ fi
 
 if [ ! -f "$STRATEGY_PATH" ]; then
   echo "Strategy file not found: $STRATEGY_PATH" >&2
+  exit 1
+fi
+
+if [ -n "$CONTEXT_FILE" ] && [ ! -f "$CONTEXT_FILE" ]; then
+  echo "Context file not found: $CONTEXT_FILE" >&2
   exit 1
 fi
 
@@ -123,18 +158,25 @@ Required behavior:
 - Leave enough output for the outer runner to summarize the round hypothesis and strategy change
 EOF
 
+if [ -n "$CONTEXT_FILE" ]; then
+  {
+    printf '\nContext Bundle:\n\n'
+    cat "$CONTEXT_FILE"
+  } >> "$PROMPT_PATH"
+fi
+
 INVOKE_MODE="${CLAUDE_CODE_INVOKE_MODE:-stdin}"
 
-echo "Claude Code iteration wrapper"
-echo "iteration=$ITERATION_NUMBER"
-echo "program=$PROGRAM_PATH"
-echo "strategy=$STRATEGY_PATH"
-echo "state_file=$STATE_FILE"
-echo "prompt_file=$PROMPT_PATH"
-echo "invoke_mode=$INVOKE_MODE"
-echo "claude_bin=$CLAUDE_BIN"
-
 if [ "$DRY_RUN" -eq 1 ]; then
+  echo "Claude Code iteration wrapper"
+  echo "iteration=$ITERATION_NUMBER"
+  echo "program=$PROGRAM_PATH"
+  echo "strategy=$STRATEGY_PATH"
+  echo "state_file=$STATE_FILE"
+  echo "context_file=$CONTEXT_FILE"
+  echo "prompt_file=$PROMPT_PATH"
+  echo "invoke_mode=$INVOKE_MODE"
+  echo "claude_bin=$CLAUDE_BIN"
   echo "status=dry_run"
   if [ "$EXTRA_ARGS_COUNT" -gt 0 ]; then
     EXTRA_ARGS_JOINED="${EXTRA_ARGS[*]}"
@@ -148,18 +190,59 @@ if ! command -v "$CLAUDE_BIN" >/dev/null 2>&1; then
   exit 1
 fi
 
+emit_runtime_banner() {
+  {
+    echo "Claude Code iteration wrapper"
+    echo "iteration=$ITERATION_NUMBER"
+    echo "program=$PROGRAM_PATH"
+    echo "strategy=$STRATEGY_PATH"
+    echo "state_file=$STATE_FILE"
+    echo "context_file=$CONTEXT_FILE"
+    echo "prompt_file=$PROMPT_PATH"
+    echo "invoke_mode=$INVOKE_MODE"
+    echo "claude_bin=$CLAUDE_BIN"
+  } >&2
+}
+
+run_claude_with_contract() {
+  local stdout_file stderr_file exit_code combined_output
+  stdout_file=$(mktemp)
+  stderr_file=$(mktemp)
+  emit_runtime_banner
+
+  if [ "$INVOKE_MODE" = "stdin" ]; then
+    if [ "$EXTRA_ARGS_COUNT" -gt 0 ]; then
+      "$CLAUDE_BIN" "${EXTRA_ARGS[@]}" < "$PROMPT_PATH" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
+    else
+      "$CLAUDE_BIN" < "$PROMPT_PATH" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
+    fi
+  else
+    if [ "$EXTRA_ARGS_COUNT" -gt 0 ]; then
+      "$CLAUDE_BIN" "$PROMPT_PATH" "${EXTRA_ARGS[@]}" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
+    else
+      "$CLAUDE_BIN" "$PROMPT_PATH" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
+    fi
+  fi
+
+  exit_code=${exit_code:-0}
+  cat "$stdout_file"
+  cat "$stderr_file" >&2
+  combined_output="$(cat "$stdout_file" "$stderr_file")"
+  rm -f "$stdout_file" "$stderr_file"
+
+  if [ "$exit_code" -ne 0 ] && printf '%s' "$combined_output" | grep -Eq 'API Error: 429|Rate limit reached for requests|"code":"1302"|"code": "1302"'; then
+    exit "$CLAUDE_RATE_LIMIT_EXIT_CODE"
+  fi
+
+  exit "$exit_code"
+}
+
 case "$INVOKE_MODE" in
   stdin)
-    if [ "$EXTRA_ARGS_COUNT" -gt 0 ]; then
-      exec "$CLAUDE_BIN" "${EXTRA_ARGS[@]}" < "$PROMPT_PATH"
-    fi
-    exec "$CLAUDE_BIN" < "$PROMPT_PATH"
+    run_claude_with_contract
     ;;
   prompt-file)
-    if [ "$EXTRA_ARGS_COUNT" -gt 0 ]; then
-      exec "$CLAUDE_BIN" "$PROMPT_PATH" "${EXTRA_ARGS[@]}"
-    fi
-    exec "$CLAUDE_BIN" "$PROMPT_PATH"
+    run_claude_with_contract
     ;;
   *)
     echo "Unsupported CLAUDE_CODE_INVOKE_MODE: $INVOKE_MODE" >&2
