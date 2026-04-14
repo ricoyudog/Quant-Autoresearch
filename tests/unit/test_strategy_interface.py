@@ -39,6 +39,62 @@ def build_minute_frame(ticker: str, closes: list[float]) -> pd.DataFrame:
     )
 
 
+def build_spy_regime_daily_frame() -> pd.DataFrame:
+    """Build daily data where SPY ends in a bear-volatile state."""
+    sessions = pd.bdate_range("2024-01-01", periods=25)
+    closes = []
+    price = 100.0
+    for idx in range(len(sessions)):
+        drift = -0.6
+        shock = 2.5 if idx % 2 == 0 else -2.3
+        price = price + drift + shock
+        closes.append(price)
+
+    rows = []
+    for session, close in zip(sessions, closes):
+        rows.append(
+            {
+                "ticker": "SPY",
+                "session_date": session,
+                "open": close - 0.4,
+                "high": close + 0.5,
+                "low": close - 0.7,
+                "close": close,
+                "volume": 10_000_000,
+                "transactions": 1_000,
+                "vwap": close - 0.1,
+            }
+        )
+        rows.append(
+            {
+                "ticker": "AAA",
+                "session_date": session,
+                "open": 20.0,
+                "high": 20.5,
+                "low": 19.5,
+                "close": 20.2,
+                "volume": 2_000,
+                "transactions": 20,
+                "vwap": 20.1,
+            }
+        )
+        rows.append(
+            {
+                "ticker": "BBB",
+                "session_date": session,
+                "open": 30.0,
+                "high": 30.5,
+                "low": 29.5,
+                "close": 30.2,
+                "volume": 1_500,
+                "transactions": 30,
+                "vwap": 30.1,
+            }
+        )
+
+    return pd.DataFrame(rows)
+
+
 # =============================================================================
 # Dynamic loading tests
 # =============================================================================
@@ -527,6 +583,41 @@ class TestStrategyFile:
         assert "OLD" not in universe
         assert universe[:2] == ["AAA", "BBB"]
 
+    def test_select_universe_marks_bear_volatile_when_spy_is_weak_and_volatile(self, strategy_file_path):
+        """SPY daily context should set the simple bear-volatile regime gate."""
+        from strategies.active_strategy import TradingStrategy
+
+        strategy = TradingStrategy()
+        universe = strategy.select_universe(build_spy_regime_daily_frame())
+
+        assert strategy.market_regime == "bear_volatile"
+        assert "AAA" in universe
+        assert "BBB" in universe
+
+    def test_select_universe_defaults_to_neutral_without_spy_context(self, strategy_file_path):
+        """Without SPY daily context the strategy should keep the neutral regime."""
+        from strategies.active_strategy import TradingStrategy
+
+        strategy = TradingStrategy()
+        universe = strategy.select_universe(
+            pd.DataFrame(
+                {
+                    "ticker": ["AAA", "AAA", "BBB", "BBB"],
+                    "session_date": pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-01", "2024-01-02"]),
+                    "open": [10.0, 10.0, 20.0, 20.0],
+                    "high": [10.5, 10.5, 20.5, 20.5],
+                    "low": [9.5, 9.5, 19.5, 19.5],
+                    "close": [10.2, 10.3, 20.2, 20.3],
+                    "volume": [1_000, 1_200, 900, 1_100],
+                    "transactions": [10, 12, 9, 11],
+                    "vwap": [10.1, 10.2, 20.1, 20.2],
+                }
+            )
+        )
+
+        assert strategy.market_regime == "neutral"
+        assert universe[:2] == ["AAA", "BBB"]
+
     def test_generate_signals_uses_20_bar_momentum(self, strategy_file_path):
         """The example strategy uses 20-bar price momentum in minute mode."""
         from strategies.active_strategy import TradingStrategy
@@ -543,6 +634,22 @@ class TestStrategyFile:
         assert signals["MSFT"].iloc[19] == 0.0
         assert signals["AAPL"].iloc[20] == 1.0
         assert signals["MSFT"].iloc[20] == -1.0
+
+    def test_generate_signals_flatten_when_market_regime_is_bear_volatile(self, strategy_file_path):
+        """The simple regime gate should flatten all minute signals in bear-volatile conditions."""
+        from strategies.active_strategy import TradingStrategy
+
+        minute_data = {
+            "AAPL": build_minute_frame("AAPL", list(range(100, 125))),
+            "MSFT": build_minute_frame("MSFT", list(range(200, 175, -1))),
+        }
+
+        strategy = TradingStrategy()
+        strategy.market_regime = "bear_volatile"
+        signals = strategy.generate_signals(minute_data)
+
+        assert signals["AAPL"].eq(0.0).all()
+        assert signals["MSFT"].eq(0.0).all()
 
     def test_strategy_class_init(self, strategy_file_path):
         """TradingStrategy can be instantiated."""

@@ -9,6 +9,41 @@ class TradingStrategy:
         """
         self.fast_ma = fast_ma
         self.slow_ma = slow_ma
+        self.market_regime = "neutral"
+
+    def classify_market_regime(self, daily_data: "pd.DataFrame") -> "str":
+        """Classify a simple broad-market regime from SPY daily bars."""
+        if daily_data is None or daily_data.empty:
+            return "neutral"
+
+        required_columns = {"ticker", "session_date", "close"}
+        if not required_columns.issubset(set(daily_data.columns)):
+            return "neutral"
+
+        spy_data = daily_data.loc[daily_data["ticker"].astype(str) == "SPY"].copy()
+        if spy_data.empty:
+            return "neutral"
+
+        spy_data["session_date"] = pd.to_datetime(spy_data["session_date"])
+        spy_data = spy_data.sort_values("session_date", kind="mergesort")
+
+        close = spy_data["close"].astype(float)
+        if len(close) < 21:
+            return "neutral"
+
+        daily_returns = close.pct_change().fillna(0.0)
+        momentum_20 = close.pct_change(periods=20).iloc[-1]
+        realized_vol_20 = daily_returns.rolling(20, min_periods=20).std() * np.sqrt(252)
+        realized_vol_20 = realized_vol_20.dropna()
+        if realized_vol_20.empty:
+            return "neutral"
+
+        latest_vol = realized_vol_20.iloc[-1]
+        vol_reference = realized_vol_20.quantile(0.6)
+        if momentum_20 < 0 and latest_vol >= vol_reference and latest_vol > 0:
+            return "bear_volatile"
+
+        return "neutral"
 
     def select_universe(self, daily_data: "pd.DataFrame") -> "list[str]":
         """
@@ -20,10 +55,14 @@ class TradingStrategy:
         latest 20-session average volume.
         """
         if daily_data is None or daily_data.empty:
+            self.market_regime = "neutral"
             return []
 
         if "ticker" not in daily_data.columns:
+            self.market_regime = "neutral"
             return []
+
+        self.market_regime = self.classify_market_regime(daily_data)
 
         ranked = daily_data.dropna(subset=["ticker"]).copy()
         if ranked.empty:
@@ -73,6 +112,9 @@ class TradingStrategy:
 
         if frame.empty:
             return pd.Series(index=frame.index, dtype=float)
+
+        if self.market_regime == "bear_volatile":
+            return pd.Series(0.0, index=frame.index)
 
         close_col = (
             "close" if "close" in frame.columns
