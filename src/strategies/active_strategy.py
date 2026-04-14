@@ -2,13 +2,14 @@ import numpy as np
 import pandas as pd
 
 class TradingStrategy:
-    def __init__(self, fast_ma=20, slow_ma=50):
+    def __init__(self, fast_ma=20, slow_ma=50, confirmation_bars=3):
         """
         Initialize hyperparameters. 
         The AI Agent can modify these or add new ones here.
         """
         self.fast_ma = fast_ma
         self.slow_ma = slow_ma
+        self.confirmation_bars = confirmation_bars if confirmation_bars and confirmation_bars > 0 else 1
         self.market_regime = "neutral"
 
     def classify_market_regime(self, daily_data: "pd.DataFrame") -> "str":
@@ -105,8 +106,35 @@ class TradingStrategy:
         )
         return universe["ticker"].astype(str).head(30).tolist()
 
+    def apply_confirmation_filter(self, raw_signals: "pd.Series") -> "pd.Series":
+        """Require the same directional raw signal for the configured confirmation window."""
+        series = pd.Series(raw_signals, copy=True).fillna(0.0).astype(float)
+        if series.empty:
+            return pd.Series(index=series.index, dtype=float)
+
+        if self.confirmation_bars <= 1:
+            return series
+
+        long_confirmed = (
+            series.eq(1.0)
+            .rolling(self.confirmation_bars, min_periods=self.confirmation_bars)
+            .sum()
+            .eq(float(self.confirmation_bars))
+        )
+        short_confirmed = (
+            series.eq(-1.0)
+            .rolling(self.confirmation_bars, min_periods=self.confirmation_bars)
+            .sum()
+            .eq(float(self.confirmation_bars))
+        )
+
+        confirmed = pd.Series(0.0, index=series.index)
+        confirmed[long_confirmed] = 1.0
+        confirmed[short_confirmed] = -1.0
+        return confirmed
+
     def generate_signal_series(self, frame: "pd.DataFrame") -> "pd.Series":
-        """Generate raw long/flat/short signals aligned to one ticker frame."""
+        """Generate confirmed long/flat/short signals aligned to one ticker frame."""
         if frame is None:
             return pd.Series(index=pd.Index([]), dtype=float)
 
@@ -127,10 +155,10 @@ class TradingStrategy:
         close = frame[close_col].astype(float)
         momentum = close - close.shift(20)
 
-        signals = pd.Series(0.0, index=frame.index)
-        signals[momentum > 0] = 1.0
-        signals[momentum < 0] = -1.0
-        return signals
+        raw_signals = pd.Series(0.0, index=frame.index)
+        raw_signals[momentum > 0] = 1.0
+        raw_signals[momentum < 0] = -1.0
+        return self.apply_confirmation_filter(raw_signals)
 
     def generate_signals(self, data):
         """

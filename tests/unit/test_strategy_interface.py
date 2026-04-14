@@ -95,6 +95,37 @@ def build_spy_regime_daily_frame() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def build_neutral_daily_frame() -> pd.DataFrame:
+    """Build daily data without SPY so the strategy falls back to a neutral regime."""
+    return pd.DataFrame(
+        {
+            "ticker": ["AAA", "AAA", "BBB", "BBB"],
+            "session_date": pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-01", "2024-01-02"]),
+            "open": [10.0, 10.0, 20.0, 20.0],
+            "high": [10.5, 10.5, 20.5, 20.5],
+            "low": [9.5, 9.5, 19.5, 19.5],
+            "close": [10.2, 10.3, 20.2, 20.3],
+            "volume": [1_000, 1_200, 900, 1_100],
+            "transactions": [10, 12, 9, 11],
+            "vwap": [10.1, 10.2, 20.1, 20.2],
+        }
+    )
+
+
+def build_confirmation_minute_data() -> dict[str, pd.DataFrame]:
+    """Build trending minute frames long enough to test confirmation windows."""
+    return {
+        "AAPL": build_minute_frame("AAPL", list(range(100, 130))),
+        "MSFT": build_minute_frame("MSFT", list(range(200, 170, -1))),
+    }
+
+
+def build_whipsaw_minute_frame(ticker: str) -> pd.DataFrame:
+    """Build a frame that confirms long, goes flat on a brief contradiction, then confirms short."""
+    closes = list(range(100, 123)) + [80, 79, 78, 110, 111]
+    return build_minute_frame(ticker, closes)
+
+
 # =============================================================================
 # Dynamic loading tests
 # =============================================================================
@@ -599,27 +630,13 @@ class TestStrategyFile:
         from strategies.active_strategy import TradingStrategy
 
         strategy = TradingStrategy()
-        universe = strategy.select_universe(
-            pd.DataFrame(
-                {
-                    "ticker": ["AAA", "AAA", "BBB", "BBB"],
-                    "session_date": pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-01", "2024-01-02"]),
-                    "open": [10.0, 10.0, 20.0, 20.0],
-                    "high": [10.5, 10.5, 20.5, 20.5],
-                    "low": [9.5, 9.5, 19.5, 19.5],
-                    "close": [10.2, 10.3, 20.2, 20.3],
-                    "volume": [1_000, 1_200, 900, 1_100],
-                    "transactions": [10, 12, 9, 11],
-                    "vwap": [10.1, 10.2, 20.1, 20.2],
-                }
-            )
-        )
+        universe = strategy.select_universe(build_neutral_daily_frame())
 
         assert strategy.market_regime == "neutral"
         assert universe[:2] == ["AAA", "BBB"]
 
     def test_generate_signals_uses_20_bar_momentum(self, strategy_file_path):
-        """The example strategy uses 20-bar price momentum in minute mode."""
+        """The example strategy uses 20-bar momentum and emits only after confirmation."""
         from strategies.active_strategy import TradingStrategy
 
         minute_data = {
@@ -632,21 +649,60 @@ class TestStrategyFile:
 
         assert signals["AAPL"].iloc[19] == 0.0
         assert signals["MSFT"].iloc[19] == 0.0
-        assert signals["AAPL"].iloc[20] == 1.0
-        assert signals["MSFT"].iloc[20] == -1.0
+        assert signals["AAPL"].iloc[20] == 0.0
+        assert signals["MSFT"].iloc[20] == 0.0
+        assert signals["AAPL"].iloc[22] == 1.0
+        assert signals["MSFT"].iloc[22] == -1.0
+
+    def test_generate_signals_requires_confirmation_bars_before_non_hostile_entry(self, strategy_file_path):
+        """Default confirmation bars should delay non-hostile entries until direction persists."""
+        from strategies.active_strategy import TradingStrategy
+
+        strategy = TradingStrategy()
+        strategy.select_universe(build_neutral_daily_frame())
+        signals = strategy.generate_signals(build_confirmation_minute_data())
+
+        assert signals["AAPL"].iloc[20] == 0.0
+        assert signals["MSFT"].iloc[20] == 0.0
+        assert signals["AAPL"].iloc[21] == 0.0
+        assert signals["MSFT"].iloc[21] == 0.0
+        assert signals["AAPL"].iloc[22] == 1.0
+        assert signals["MSFT"].iloc[22] == -1.0
+
+    def test_generate_signals_supports_custom_confirmation_length(self, strategy_file_path):
+        """Researchers can shorten or lengthen the confirmation window explicitly."""
+        from strategies.active_strategy import TradingStrategy
+
+        strategy = TradingStrategy(confirmation_bars=2)
+        strategy.select_universe(build_neutral_daily_frame())
+        signals = strategy.generate_signals(build_confirmation_minute_data())
+
+        assert strategy.confirmation_bars == 2
+        assert signals["AAPL"].iloc[20] == 0.0
+        assert signals["MSFT"].iloc[20] == 0.0
+        assert signals["AAPL"].iloc[21] == 1.0
+        assert signals["MSFT"].iloc[21] == -1.0
+
+    def test_generate_signals_go_flat_before_reversing_after_brief_contradiction(self, strategy_file_path):
+        """A confirmed position should go flat before the opposite side earns fresh confirmation."""
+        from strategies.active_strategy import TradingStrategy
+
+        strategy = TradingStrategy()
+        strategy.select_universe(build_neutral_daily_frame())
+        signals = strategy.generate_signals({"AAPL": build_whipsaw_minute_frame("AAPL")})
+
+        assert signals["AAPL"].iloc[22] == 1.0
+        assert signals["AAPL"].iloc[23] == 0.0
+        assert signals["AAPL"].iloc[24] == 0.0
+        assert signals["AAPL"].iloc[25] == -1.0
 
     def test_generate_signals_flatten_when_market_regime_is_bear_volatile(self, strategy_file_path):
         """The simple regime gate should flatten all minute signals in bear-volatile conditions."""
         from strategies.active_strategy import TradingStrategy
 
-        minute_data = {
-            "AAPL": build_minute_frame("AAPL", list(range(100, 125))),
-            "MSFT": build_minute_frame("MSFT", list(range(200, 175, -1))),
-        }
-
         strategy = TradingStrategy()
         strategy.market_regime = "bear_volatile"
-        signals = strategy.generate_signals(minute_data)
+        signals = strategy.generate_signals(build_confirmation_minute_data())
 
         assert signals["AAPL"].eq(0.0).all()
         assert signals["MSFT"].eq(0.0).all()
@@ -659,11 +715,14 @@ class TestStrategyFile:
         strategy = TradingStrategy()
         assert hasattr(strategy, 'fast_ma')
         assert hasattr(strategy, 'slow_ma')
+        assert hasattr(strategy, 'confirmation_bars')
+        assert strategy.confirmation_bars == 3
 
         # Should be able to instantiate with custom params
-        strategy_custom = TradingStrategy(fast_ma=10, slow_ma=30)
+        strategy_custom = TradingStrategy(fast_ma=10, slow_ma=30, confirmation_bars=2)
         assert strategy_custom.fast_ma == 10
         assert strategy_custom.slow_ma == 30
+        assert strategy_custom.confirmation_bars == 2
 
 
 # =============================================================================
