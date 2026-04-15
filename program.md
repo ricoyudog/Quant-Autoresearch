@@ -153,6 +153,16 @@ Red flags:
 - Minute queries are window-scoped to keep memory use bounded.
 - The security gate still blocks dangerous imports, forbidden builtins, and look-ahead patterns such as `.shift(-1)`.
 
+## Claude Code Outer-Loop Contract
+
+Current 003 branch status for `scripts/autoresearch_runner.py`:
+
+- `--dry-run` writes one machine-first iteration artifact bundle for audit and review.
+- The bundle includes context, prompt, decision, iteration record, and a derived `experiment_note_draft.md`.
+- The draft is **not** raw evidence and requires an explicit finalize step before becoming a real vault experiment note.
+- The evaluator remains the only authority for any future keep/revert decision.
+- Full live multi-round execution and richer resume semantics remain follow-up work.
+
 ## Experiment Logging
 
 Log experiment outcomes to `experiments/results.tsv` with the header:
