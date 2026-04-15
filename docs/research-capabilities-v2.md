@@ -648,6 +648,12 @@ tags: [knowledge, methodology, experiments]
 
 遵循 vault 既有的 YAML frontmatter 慣例，寫入 `quant-autoresearch/experiments/`：
 
+- 實驗筆記是 **原始證據**，以 append-only 為原則
+- 自動化續跑使用 `experiments/continuation/current_research_base.json` 作為 canonical manifest
+- 摘要與索引可自動刷新，但必須保留原始筆記連結，不能取代原文
+- 每份筆記都要保留費用 / turnover 教訓與 `validation_status`
+- Canonical contract: `.omx/specs/strategy-knowledge-loop-artifact-contract.md`
+
 ```markdown
 ---
 note_type: experiment
@@ -724,11 +730,20 @@ false signals during high-volatility periods while maintaining trend capture.
 ### 5.3 與 results.tsv 的關係
 
 ```
-results.tsv = 機器可讀的表格（agent 快速掃描歷史）
-experiments/*.md = 人類可讀的筆記（含推理、觀察、反面論證）
+results.tsv = 機器可讀的跨 session 成績表
+experiments/*.md = 人類可讀的原始證據（含推理、觀察、反面論證）
+experiments/continuation/current_research_base.json = 自動化續跑 canonical manifest
 ```
 
-兩者通過 `experiment_id` 和 `commit` hash 關聯。
+三者通過 `experiment_id`、`commit` hash、`raw_note_path` 和 `branch_id` 關聯。
+
+### 5.4 完整記憶原則
+
+- 保留成功與失敗實驗，不只保留 winners
+- 自動整理可以做，但不得刪除原始證據
+- 一次改善只是 follow-up evidence，不是 proof
+- 交易費 / turnover 影響必須顯式記錄在實驗脈絡中
+- generic intake 只讀 `research/` 與 `knowledge/`；`experiments/` 只在 explicit continuation mode 下讀取
 
 ---
 
@@ -750,7 +765,9 @@ experiments/*.md = 人類可讀的筆記（含推理、觀察、反面論證）
 │ Layer 3: 持久記憶（Obsidian Vault）                      │
 │                                                          │
 │ quant-autoresearch/                                      │
-│ ├── experiments/  → 歷史實驗筆記                         │
+│ ├── experiments/  → 原始實驗筆記（append-only）         │
+│ ├── experiments/continuation/current_research_base.json │
+│ │                 → canonical continuation manifest      │
 │ ├── research/     → 研究搜索結果                         │
 │ └── knowledge/    → 靜態知識庫                           │
 │                                                          │
@@ -764,7 +781,7 @@ experiments/*.md = 人類可讀的筆記（含推理、觀察、反面論證）
 │ • 當前 active_strategy.py 的狀態                         │
 │ • run.log（最近一次回測輸出）                             │
 │ • program.md（研究指令）                                  │
-│ • 當前 session 的 experiments/*.md                        │
+│ • 當前 session 的 experiments/*.md（僅限當前續跑分支）     │
 └─────────────────────────────────────────────────────────┘
         ↑ 載入
 ┌─────────────────────────────────────────────────────────┐
@@ -787,7 +804,7 @@ experiments/*.md = 人類可讀的筆記（含推理、觀察、反面論證）
    → 了解當前最佳 SCORE、歷史趨勢
 
 2. **每 5 次實驗**：讀 experiments/ 最近筆記（Layer 2-3）
-   → 回顧最近的觀察和 Next Ideas
+   → 回顧最近的觀察和 Next Ideas；若是 continuation mode，則同時讀 canonical manifest 並恢復 branch 狀態
 
 3. **卡住時**：讀 trading strategy/*/strategies/（Layer 3）
    → 從社群策略中找新靈感
@@ -797,6 +814,9 @@ experiments/*.md = 人類可讀的筆記（含推理、觀察、反面論證）
 
 5. **重大改進後**：跑進階驗證（Layer 2 CLI）
    → CPCV、regime、stability 確認
+
+6. **explicit continuation mode**：讀 `experiments/` + canonical manifest
+   → 恢復 baseline、失敗分支、fee lesson、下一步實驗
 ```
 
 ---

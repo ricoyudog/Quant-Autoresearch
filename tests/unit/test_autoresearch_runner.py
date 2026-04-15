@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import importlib.util
 from pathlib import Path
 
@@ -79,3 +80,44 @@ NW_SHARPE_BIAS: 0.01
 
     assert decision["decision"] == "revert"
     assert "score_not_above_previous_best" in decision["reasons"]
+
+
+def test_build_parser_accepts_continuation_manifest_option():
+    runner = _load_runner_module()
+
+    args = runner.build_parser().parse_args(
+        ["--iterations", "2", "--continuation-manifest", "tmp/manifest.json"]
+    )
+
+    assert args.continuation_manifest == "tmp/manifest.json"
+
+
+def test_summarize_contract_reports_continuation_manifest_context(tmp_path):
+    runner = _load_runner_module()
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "current_baseline": {"title": "Minimum Hold Duration v1"},
+                "failed_branches": [{"title": "Overfit Revert"}],
+                "next_recommended_experiment": "Test a momentum-strength threshold",
+            }
+        )
+    )
+
+    args = runner.build_parser().parse_args(
+        [
+            "--iterations",
+            "2",
+            "--continuation-manifest",
+            str(manifest_path),
+            "--dry-run",
+        ]
+    )
+    summary = runner.summarize_contract(args)
+
+    assert f"continuation_manifest={manifest_path}" in summary
+    assert "continuation_manifest_exists=True" in summary
+    assert "continuation_current_baseline=Minimum Hold Duration v1" in summary
+    assert "continuation_failed_branches=1" in summary
+    assert "continuation_next_experiment=Test a momentum-strength threshold" in summary

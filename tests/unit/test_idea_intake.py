@@ -87,6 +87,33 @@ def test_build_minimum_structured_context_extracts_seed_fields(tmp_path):
     }
 
 
+def test_collect_vault_idea_notes_ignores_experiment_notes(monkeypatch, tmp_path):
+    vault_root = tmp_path / "vault"
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(vault_root))
+
+    project_root = vault_root / "quant-autoresearch"
+    research_dir = project_root / "research"
+    knowledge_dir = project_root / "knowledge"
+    experiments_dir = project_root / "experiments"
+    research_dir.mkdir(parents=True)
+    knowledge_dir.mkdir(parents=True)
+    experiments_dir.mkdir(parents=True)
+
+    (research_dir / "2026-04-09-intraday-alpha.md").write_text(
+        "---\nquery: intraday alpha\n---\n\n# Intraday Alpha\n"
+    )
+    (knowledge_dir / "market-microstructure.md").write_text(
+        "---\ntopic: market-microstructure\n---\n\n# Market Microstructure\n"
+    )
+    (experiments_dir / "2026-04-09-alpha-check.md").write_text(
+        "---\nnote_type: experiment\n---\n\n# Experiment\n"
+    )
+
+    notes = collect_vault_idea_notes()
+
+    assert [note["source"] for note in notes] == ["research", "knowledge"]
+
+
 def test_build_minimum_structured_context_requires_metadata_seed(tmp_path):
     note = {
         "path": tmp_path / "unstructured.md",

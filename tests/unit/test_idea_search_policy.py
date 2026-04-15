@@ -41,6 +41,25 @@ def test_self_search_runs_when_latest_research_note_is_stale():
     assert decision["reasons"] == ["stale_research_note"]
 
 
+def test_self_search_ignores_experiment_notes_when_research_is_missing():
+    notes = [
+        {
+            "path": Path("2026-04-09-turnover-check.md"),
+            "source": "experiment",
+            "title": "Turnover Check",
+            "frontmatter": {
+                "note_type": "experiment",
+                "date": "2026-04-09",
+            },
+        }
+    ]
+
+    decision = decide_self_search(notes, completed_experiments=1, today=date(2026, 4, 9))
+
+    assert decision["should_search"] is True
+    assert decision["reasons"] == ["missing_recent_research_note"]
+
+
 def test_self_search_runs_on_refresh_cadence_even_with_recent_notes():
     notes = [_research_note("2026-04-09-intraday-alpha.md", "2026-04-09")]
 

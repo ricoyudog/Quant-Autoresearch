@@ -42,6 +42,7 @@ from core.research import (
     search_web,
 )
 from data.cache_connector import CacheConnector
+from memory.experiment_memory import CONTINUATION_MANIFEST_PATH, refresh_research_base
 
 app = typer.Typer(help="Quant Autoresearch")
 
@@ -343,6 +344,33 @@ def setup_vault():
     for status in statuses:
         state = "created" if status.created else "already existed"
         typer.echo(f"{status.name}: {state} -> {status.path}")
+
+
+@app.command("refresh_research_base")
+def refresh_research_base_command(
+    manifest_path: str = typer.Option(
+        str(CONTINUATION_MANIFEST_PATH),
+        "--manifest-path",
+        help="Path to the canonical continuation manifest written under the repo.",
+    ),
+):
+    """Refresh the Obsidian-derived research base and emit a continuation manifest."""
+    manifest = refresh_research_base(manifest_path=manifest_path)
+    typer.echo(f"Manifest: {manifest['manifest_path']}")
+    typer.echo(f"Index note: {manifest['index_note_path']}")
+    typer.echo(f"Experiments parsed: {len(manifest['experiments'])}")
+
+    current_baseline = manifest.get("current_baseline")
+    if current_baseline is None:
+        typer.echo("Current baseline: none")
+    else:
+        typer.echo(f"Current baseline: {current_baseline['title']}")
+        typer.echo(f"Baseline note: {current_baseline['raw_note_path']}")
+        typer.echo(f"Validation status: {current_baseline['validation_status']}")
+
+    typer.echo(f"Rejected branches: {len(manifest['failed_branches'])}")
+    next_experiment = manifest.get("next_recommended_experiment") or "none"
+    typer.echo(f"Next experiment: {next_experiment}")
 
 
 @app.command()

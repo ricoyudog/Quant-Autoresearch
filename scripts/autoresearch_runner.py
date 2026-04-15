@@ -22,11 +22,13 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from src.memory.idea_keep_revert import decide_keep_revert
+from src.memory.experiment_memory import CONTINUATION_MANIFEST_PATH, load_continuation_manifest
 
 
 DEFAULT_STATE_PATH = Path("experiments/autoresearch_state.json")
 DEFAULT_STRATEGY_PATH = Path("src/strategies/active_strategy.py")
 DEFAULT_ITERATION_ROOT = Path("experiments/iterations")
+DEFAULT_CONTINUATION_MANIFEST_PATH = CONTINUATION_MANIFEST_PATH
 METRIC_PATTERN = re.compile(r"^(?P<name>[A-Z_]+):\s*(?P<value>-?\d+(?:\.\d+)?)\s*$")
 RUN_STATE_TEMPLATE = {
     "run_id": None,
@@ -82,6 +84,11 @@ def save_run_state(state_file: str | Path, state: dict[str, Any]) -> Path:
 def resolve_strategy_path(strategy_file: str | Path) -> Path:
     """Resolve the strategy-under-iteration path."""
     return Path(strategy_file).expanduser()
+
+
+def resolve_continuation_manifest_path(manifest_file: str | Path) -> Path:
+    """Resolve the continuation manifest path for repo-local research memory."""
+    return Path(manifest_file).expanduser()
 
 
 def get_snapshot_root(root: str | Path | None = None) -> Path:
@@ -222,6 +229,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional consecutive non-improving round limit.",
     )
     parser.add_argument(
+        "--continuation-manifest",
+        default=str(DEFAULT_CONTINUATION_MANIFEST_PATH),
+        help="Path to the canonical continuation manifest for current research memory.",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Validate arguments and print the planned runner contract without executing rounds.",
@@ -240,6 +252,11 @@ def validate_args(args: argparse.Namespace) -> None:
 def summarize_contract(args: argparse.Namespace) -> str:
     """Return a human-readable summary of the planned run contract."""
     current_state = load_run_state(args.state_file)
+    continuation_manifest_path = resolve_continuation_manifest_path(args.continuation_manifest)
+    continuation_manifest = load_continuation_manifest(continuation_manifest_path)
+    continuation_baseline = continuation_manifest.get("current_baseline") if continuation_manifest else None
+    next_experiment = continuation_manifest.get("next_recommended_experiment") if continuation_manifest else None
+    failed_count = len(continuation_manifest.get("failed_branches", [])) if continuation_manifest else 0
     return "\n".join(
         [
             "Claude Code autoresearch runner scaffold",
@@ -249,6 +266,15 @@ def summarize_contract(args: argparse.Namespace) -> str:
             f"iteration_root={args.iteration_root}",
             f"target_score={args.target_score}",
             f"max_no_improve={args.max_no_improve}",
+            f"continuation_manifest={continuation_manifest_path}",
+            f"continuation_manifest_exists={continuation_manifest is not None}",
+            (
+                f"continuation_current_baseline={continuation_baseline['title']}"
+                if continuation_baseline
+                else "continuation_current_baseline=None"
+            ),
+            f"continuation_failed_branches={failed_count}",
+            f"continuation_next_experiment={next_experiment}",
             f"dry_run={args.dry_run}",
             f"state_status={current_state['status']}",
             f"state_current_iteration={current_state['current_iteration']}",
