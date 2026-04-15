@@ -653,6 +653,7 @@ tags: [knowledge, methodology, experiments]
 - 摘要與索引可自動刷新，但必須保留原始筆記連結，不能取代原文
 - 每份筆記都要保留費用 / turnover 教訓與 `validation_status`
 - Canonical contract: `.omx/specs/strategy-knowledge-loop-artifact-contract.md`
+- `experiments/iterations/<run-id>/iteration-####/` 是 **ephemeral audit layer**，只存每輪 runtime 證據與 derived note draft，不算 raw note
 
 ```markdown
 ---
@@ -744,6 +745,7 @@ experiments/continuation/current_research_base.json = 自動化續跑 canonical 
 - 一次改善只是 follow-up evidence，不是 proof
 - 交易費 / turnover 影響必須顯式記錄在實驗脈絡中
 - generic intake 只讀 `research/` 與 `knowledge/`；`experiments/` 只在 explicit continuation mode 下讀取
+- `experiments/iterations/**/experiment_note_draft.md` 是 derived artifact，不能被當作正式實驗筆記或 generic intake 來源
 
 ---
 

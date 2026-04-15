@@ -18,6 +18,11 @@ when summaries are auto-generated.
 3. **Derived summaries** — rebuildable views such as `experiment-index.md`,
    kickoff updates, and branch summaries
 
+Outside that hierarchy, the runtime may also emit an **ephemeral audit layer**
+under `experiments/iterations/<run-id>/iteration-####/`. Those iteration
+artifacts are rebuildable runtime evidence only — not raw notes and not the
+canonical continuation manifest.
+
 Automation may read or regenerate items in layers 2-3, but it must not rewrite
 layer 1 as part of summarization.
 
@@ -93,6 +98,22 @@ Examples:
 - daily kickoff summaries
 - compressed branch summaries for older experiment chains
 
+## Ephemeral Audit Layer
+
+Examples:
+- `context.json`
+- `context.md`
+- `claude_prompt.md`
+- `decision.json`
+- `iteration_record.json`
+- `experiment_note_draft.md`
+
+Rules:
+- These files may explain one round end-to-end.
+- They must remain excluded from generic intake.
+- `experiment_note_draft.md` is a derived draft, not a raw experiment note.
+- Only an explicit finalize flow may materialize a raw vault note from them.
+
 ## Continuation Modes
 
 ### Generic intake
@@ -159,4 +180,3 @@ turnover_fee_lesson: "Higher turnover erodes the backtest gain after fees"
 
 Downstream docs, runners, and future autoresearch lanes must treat this contract
 as the documentation boundary for knowledge-loop behavior.
-

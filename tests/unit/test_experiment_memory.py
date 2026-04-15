@@ -154,3 +154,27 @@ def test_build_continuation_context_prefers_terminal_keep_in_parent_chain(monkey
     context = build_continuation_context(collect_experiment_memory())
 
     assert context["current_baseline"]["title"] == "Minimum Hold Duration"
+
+
+def test_collect_experiment_memory_ignores_iteration_drafts(monkeypatch, tmp_path):
+    vault_root = tmp_path / "vault"
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(vault_root))
+    experiments_dir = vault_root / "quant-autoresearch" / "experiments"
+    experiments_dir.mkdir(parents=True)
+    iteration_dir = experiments_dir / "iterations" / "run-001" / "iteration-0001"
+    iteration_dir.mkdir(parents=True)
+
+    _write_note(
+        experiments_dir,
+        "2026-04-14-real-note.md",
+        "note_type: experiment\nexperiment_slug: real-note\nstatus: completed\ndecision: keep\n",
+        "# Real Note\n\n## Decision\nStatus: **keep**\n",
+    )
+    (iteration_dir / "experiment_note_draft.md").write_text(
+        "---\nnote_type: experiment_draft\n---\n\n# Draft\n"
+    )
+
+    records = collect_experiment_memory()
+
+    assert len(records) == 1
+    assert records[0]["title"] == "Real Note"
