@@ -40,7 +40,7 @@
 - [x] T005 [P] Implement strategy snapshot and restore helpers for `src/strategies/active_strategy.py` in `scripts/autoresearch_runner.py`
 - [x] T006 [P] Implement backtest-output parsing and decision normalization using `src/memory/idea_keep_revert.py` in `scripts/autoresearch_runner.py`
 - [x] T007 Wire the Claude Code iteration invocation wrapper in `scripts/run_claude_iteration.sh`
-- [ ] T008 Add foundational unit coverage for run-state, snapshot, and decision parsing in `tests/unit/test_autoresearch_runner.py`
+- [x] T008 Add foundational unit coverage for run-state, snapshot, and decision parsing in `tests/unit/test_autoresearch_runner.py`
 
 **Checkpoint**: The runner can persist state, snapshot the strategy, invoke Claude Code externally, and normalize evaluator output.
 
@@ -54,15 +54,15 @@
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] Add a runner lifecycle unit test for bounded multi-round execution in `tests/unit/test_autoresearch_runner.py`
-- [ ] T010 [P] [US1] Add an integration-style dry-run test for the external iteration wrapper in `tests/integration/test_autoresearch_runner.py`
+- [x] T009 [P] [US1] Add a runner lifecycle unit test for bounded multi-round execution in `tests/unit/test_autoresearch_runner.py`
+- [x] T010 [P] [US1] Add an integration-style dry-run test for the external iteration wrapper in `tests/integration/test_autoresearch_runner_integration.py`
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Implement bounded run initialization and iteration budgeting in `scripts/autoresearch_runner.py`
-- [ ] T012 [US1] Implement per-iteration context assembly from `program.md`, `experiments/results.tsv`, and recent notes in `scripts/autoresearch_runner.py`
-- [ ] T013 [US1] Implement iteration artifact writing for each completed round in `scripts/autoresearch_runner.py`
-- [ ] T014 [US1] Expose an operator launch path and documented arguments in `scripts/run_claude_iteration.sh`
+- [x] T011 [US1] Implement bounded run initialization and iteration budgeting in `scripts/autoresearch_runner.py`
+- [x] T012 [US1] Implement per-iteration context assembly from `program.md`, `experiments/results.tsv`, and recent notes in `scripts/autoresearch_runner.py`
+- [x] T013 [US1] Implement iteration artifact writing for each completed round in `scripts/autoresearch_runner.py`
+- [x] T014 [US1] Expose an operator launch path and documented arguments in `scripts/run_claude_iteration.sh`
 
 **Checkpoint**: User Story 1 is complete when the runner can execute multiple rounds in sequence and persist structured round artifacts.
 
@@ -76,14 +76,14 @@
 
 ### Tests for User Story 2
 
-- [ ] T015 [P] [US2] Add a keep-path regression test for retained strategy updates in `tests/unit/test_autoresearch_runner.py`
-- [ ] T016 [P] [US2] Add a revert-path regression test for failed or non-improving rounds in `tests/unit/test_autoresearch_runner.py`
+- [x] T015 [P] [US2] Add a keep-path regression test for retained strategy updates in `tests/unit/test_autoresearch_runner.py`
+- [x] T016 [P] [US2] Add a revert-path regression test for failed or non-improving rounds in `tests/unit/test_autoresearch_runner.py`
 
 ### Implementation for User Story 2
 
-- [ ] T017 [US2] Implement keep/revert decision application around `src/strategies/active_strategy.py` in `scripts/autoresearch_runner.py`
-- [ ] T018 [US2] Implement best-known-score and no-improvement tracking in `scripts/autoresearch_runner.py`
-- [ ] T019 [US2] Implement failure handling for malformed or missing evaluator output in `scripts/autoresearch_runner.py`
+- [x] T017 [US2] Implement keep/revert decision application around `src/strategies/active_strategy.py` in `scripts/autoresearch_runner.py`
+- [x] T018 [US2] Implement best-known-score and no-improvement tracking in `scripts/autoresearch_runner.py`
+- [x] T019 [US2] Implement failure handling for malformed or missing evaluator output in `scripts/autoresearch_runner.py`
 
 **Checkpoint**: User Story 2 is complete when the runner, not Claude Code, deterministically owns strategy retention decisions.
 
@@ -97,14 +97,14 @@
 
 ### Tests for User Story 3
 
-- [ ] T020 [P] [US3] Add a resume-state unit test in `tests/unit/test_autoresearch_runner.py`
-- [ ] T021 [P] [US3] Add an iteration-audit artifact test in `tests/integration/test_autoresearch_runner.py`
+- [x] T020 [P] [US3] Add a resume-state unit test in `tests/unit/test_autoresearch_runner.py`
+- [x] T021 [P] [US3] Add an iteration-audit artifact test in `tests/integration/test_autoresearch_runner_integration.py`
 
 ### Implementation for User Story 3
 
-- [ ] T022 [US3] Implement resume-from-state behavior in `scripts/autoresearch_runner.py`
-- [ ] T023 [US3] Implement operator-facing run summaries and status reporting in `scripts/autoresearch_runner.py`
-- [ ] T024 [US3] Update `program.md` with the Claude Code outer-loop contract and operator expectations
+- [x] T022 [US3] Implement resume-from-state behavior in `scripts/autoresearch_runner.py`
+- [x] T023 [US3] Implement operator-facing run summaries and status reporting in `scripts/autoresearch_runner.py`
+- [x] T024 [US3] Update `program.md` with the Claude Code outer-loop contract and operator expectations
 
 **Checkpoint**: User Story 3 is complete when interrupted runs resume correctly and completed runs are audit-friendly.
 
@@ -114,9 +114,9 @@
 
 **Purpose**: Final verification and documentation across all stories.
 
-- [ ] T025 [P] Document operator usage and stop-condition semantics in `README.md`
-- [ ] T026 [P] Run the full autoresearch runner verification matrix from `specs/002-claude-autoresearch-loop/quickstart.md`
-- [ ] T027 Validate the new runner against `specs/002-claude-autoresearch-loop/contracts/autoresearch-runner-contract.md` and summarize any residual risks in `specs/002-claude-autoresearch-loop/quickstart.md`
+- [x] T025 [P] Document operator usage and stop-condition semantics in `README.md`
+- [x] T026 [P] Run the full autoresearch runner verification matrix from `specs/002-claude-autoresearch-loop/quickstart.md`
+- [x] T027 Validate the new runner against `specs/002-claude-autoresearch-loop/contracts/autoresearch-runner-contract.md` and summarize any residual risks in `specs/002-claude-autoresearch-loop/quickstart.md`
 
 ---
 
