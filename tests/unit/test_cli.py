@@ -117,6 +117,12 @@ class TestCommandRegistration:
         assert result.exit_code == 0
         assert "setup_vault" in result.stdout
 
+    def test_refresh_research_base_command_exists(self):
+        """Verify refresh_research_base is registered."""
+        result = runner.invoke(app, ["--help"])
+        assert result.exit_code == 0
+        assert "refresh_research_base" in result.stdout
+
     def test_research_command_exists(self):
         """Verify research is registered."""
         result = runner.invoke(app, ["--help"])

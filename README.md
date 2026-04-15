@@ -15,6 +15,7 @@ The active truth surfaces are:
 - `src/data/duckdb_connector.py` for DuckDB daily-cache and minute-data access
 - `src/core/research.py` and `src/analysis/` for the vault-native research surface
 - `src/strategies/active_strategy.py` for the strategy under iteration
+- `scripts/autoresearch_runner.py` for the current dry-run iteration-artifact runner
 
 ## Core Workflow
 
@@ -23,6 +24,27 @@ The active truth surfaces are:
 3. Run `backtest` or call `src/core/backtester.py` directly.
 4. Record outcomes in `results.tsv` and `experiments/notes/`.
 5. Iterate based on the metrics reported by the backtester.
+
+## Claude Code Autoresearch Runner
+
+The current 003 branch exposes a **dry-run audit-bundle** surface for the
+outer-loop runner. It does not yet ship the full live multi-round execution
+loop, but it can already materialize one auditable iteration bundle while
+keeping the evaluator as the future acceptance authority.
+
+```bash
+uv run python scripts/autoresearch_runner.py \
+  --iterations 1 \
+  --dry-run \
+  --claude-wrapper scripts/run_claude_iteration.sh
+```
+
+Current grounded behavior:
+
+- `--dry-run` writes a machine-first artifact bundle under `experiments/iterations/<run_id>/iteration-0001/`.
+- The bundle includes `context.json`, `context.md`, `decision.json`, `iteration_record.json`, and `experiment_note_draft.md`.
+- `experiment_note_draft.md` is a **derived draft**, not a finalized raw experiment note.
+- Full live multi-round execution and richer resume semantics remain follow-up work.
 
 ## Project Structure
 
@@ -137,6 +159,7 @@ uv run pytest --tb=short -q
 uv run pytest tests/unit/test_cli.py -v
 uv run pytest tests/unit/test_backtester_v2.py -v
 uv run pytest tests/unit/test_strategy_interface.py -v
+uv run pytest tests/unit/test_autoresearch_runner.py tests/integration/test_autoresearch_runner_artifacts.py -v
 ```
 
 ## Evaluation and Safety

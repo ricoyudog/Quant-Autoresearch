@@ -153,6 +153,16 @@ Red flags:
 - Minute queries are window-scoped to keep memory use bounded.
 - The security gate still blocks dangerous imports, forbidden builtins, and look-ahead patterns such as `.shift(-1)`.
 
+## Claude Code Outer-Loop Contract
+
+Current 003 branch status for `scripts/autoresearch_runner.py`:
+
+- `--dry-run` writes one machine-first iteration artifact bundle for audit and review.
+- The bundle includes context, prompt, decision, iteration record, and a derived `experiment_note_draft.md`.
+- The draft is **not** raw evidence and requires an explicit finalize step before becoming a real vault experiment note.
+- The evaluator remains the only authority for any future keep/revert decision.
+- Full live multi-round execution and richer resume semantics remain follow-up work.
+
 ## Experiment Logging
 
 Log experiment outcomes to `experiments/results.tsv` with the header:
@@ -177,7 +187,7 @@ Use the four memory layers consistently during research and experimentation:
 
 1. **Session context** — current Codex conversation, active branch state, and the immediate task.
 2. **Working memory** — recent experiment notes, `run.log`, and in-flight observations from the current research loop.
-3. **Persistent vault knowledge** — `quant-autoresearch/research/`, `quant-autoresearch/knowledge/`, and existing Obsidian strategy notes that can inform new hypotheses.
+3. **Persistent vault knowledge** — `quant-autoresearch/research/`, `quant-autoresearch/knowledge/`, and existing Obsidian strategy notes that can inform new hypotheses. Experiment notes live in a separate continuation lane and should only be loaded when the run is explicitly continuing a branch.
 4. **Long-term score tracking** — `results.tsv`, which remains the cross-session ledger of the best validated outcomes.
 
 When using the research surface:
@@ -187,6 +197,15 @@ When using the research surface:
 - reuse existing shallow research notes when appropriate, but allow deep runs to refresh them
 - write new experiment notes after each validated run
 - keep `results.tsv` aligned with any experiment that beats the baseline and passes the statistical gates
+
+Strategy knowledge loop rules:
+- Follow `.omx/specs/strategy-knowledge-loop-artifact-contract.md` as the canonical contract for experiment memory.
+- Treat `quant-autoresearch/experiments/` as raw evidence, not disposable output.
+- Preserve failed experiments, rejected hypotheses, and fee / turnover lessons as first-class knowledge.
+- The canonical automation source for continuation is `experiments/continuation/current_research_base.json`.
+- Derived summaries such as `experiment-index.md` and kickoff notes may be auto-refreshed, but they must link back to raw notes and never replace them.
+- A single improved backtest is follow-up evidence, not proof, and it must not automatically stop exploration of other branches.
+- Generic intake stays anchored to `research/` + `knowledge/`; experiment memory is only loaded through an explicit continuation mode.
 
 Before proposing strategy changes:
 - consume a minimum structured context bundle before proposing strategy changes
