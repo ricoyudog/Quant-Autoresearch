@@ -1,8 +1,12 @@
+> Status: historical
+>
+> This document is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # V2 Research -- Backend Lane Plan
 
 > Feature branch: `feature/v2-research`
 > Role: Backend
-> Canonical workspace: `docs/feature/v2-research/`
+> Historical workspace: `docs/feature/v2-research/`
 > Last updated: 2026-04-08
 
 ## Mission

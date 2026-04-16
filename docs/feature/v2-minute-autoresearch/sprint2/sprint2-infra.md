@@ -1,3 +1,7 @@
+> Status: historical
+>
+> This document is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # Sprint 2 — Infra Plan
 
 > Feature: `v2-minute-autoresearch`

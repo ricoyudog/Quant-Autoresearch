@@ -1,3 +1,7 @@
+> Status: historical
+>
+> This document is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # V2 Minute Autoresearch — Infra Plan
 
 ## Goal
@@ -15,7 +19,7 @@ Capture the non-code planning constraints required for this feature package to r
 
 - feature branch: `feature/v2-minute-autoresearch`
 - merge target: `main-dev`
-- canonical docs root: `docs/feature/v2-minute-autoresearch/`
+- historical docs root used during planning: `docs/feature/v2-minute-autoresearch/`
 - GitHub issues published:
   - umbrella `#17`
   - issue A `#18`

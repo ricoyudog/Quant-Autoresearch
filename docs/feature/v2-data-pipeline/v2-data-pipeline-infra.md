@@ -1,8 +1,12 @@
+> Status: historical
+>
+> This document is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # V2 Data Pipeline -- Infra Lane Plan
 
 > Feature branch: `feature/v2-data-pipeline`
 > Role: Infra / Runtime
-> Canonical workspace: `docs/feature/v2-data-pipeline/`
+> Historical workspace: `docs/feature/v2-data-pipeline/`
 > Last updated: 2026-04-04
 
 ## Mission
@@ -15,7 +19,7 @@ system works outside unit tests.
 
 | Item | Current Value | Why It Matters |
 | --- | --- | --- |
-| Dataset root | `~/Library/Mobile Documents/com~apple~CloudDocs/massive data/us_stocks_sip/minute_aggs_parquet_v1` | Source of truth for minute bars and daily aggregation |
+| Dataset root | `~/Library/Mobile Documents/com~apple~CloudDocs/massive data/us_stocks_sip/minute_aggs_parquet_v1` | Primary local dataset path referenced during the historical planning pass |
 | CLI binary | `/Users/chunsingyu/softwares/massive-minute-aggs-parquet/.venv/bin/minute-aggs` | Required for minute-bar reads and batched SQL aggregation |
 | DuckDB output | `data/daily_cache.duckdb` | Stable local cache path for daily bars |
 | Temp workspace | `/tmp/` CSV outputs during cache build and minute queries | Needed for batched CLI exports without loading the full dataset in memory |

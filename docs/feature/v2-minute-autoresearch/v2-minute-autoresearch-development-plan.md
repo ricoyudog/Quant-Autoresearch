@@ -1,8 +1,12 @@
+> Status: historical
+>
+> This document is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # V2 Minute Autoresearch — Development Plan
 
 > Feature branch: `feature/v2-minute-autoresearch`
 > Merge target: `main-dev`
-> Canonical root: `docs/feature/v2-minute-autoresearch/`
+> Historical root: `docs/feature/v2-minute-autoresearch/`
 > Source brief: `.omx/specs/deep-interview-spec-vs-impl.md`
 > Planning status: all four child issue lanes merged; umbrella closeout completed
 
@@ -18,12 +22,12 @@ The V2 architecture is now clarified:
 - Optional factor mining exists under the same autoresearch loop
 - The backtester remains the final keep/revert authority
 
-This workspace turns that clarified architecture into a merge-ready planning package under one canonical docs root.
+This workspace turns that clarified architecture into a merge-ready planning package under one historical docs root used during the original planning pass.
 
 ## 2. Root And Branch Decision
 
 - Active docs root: `docs/`
-- Canonical workspace: `docs/feature/v2-minute-autoresearch/`
+- Historical workspace: `docs/feature/v2-minute-autoresearch/`
 - Canonical branch: `feature/v2-minute-autoresearch`
 - Merge target: `main-dev`
 
@@ -103,7 +107,7 @@ Repo note:
 ## 10. Verification Plan
 
 - verify branch name and target base
-- verify one canonical docs root
+- verify the original historical docs root used during the planning pass
 - verify every child issue has sprint docs
 - verify issue-card drafts have required sections
 - verify published issue links and local draft sync

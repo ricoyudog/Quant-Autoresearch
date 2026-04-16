@@ -1,3 +1,7 @@
+> Status: historical
+>
+> This workspace is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # V2 Phase 3 — CLI Simplification + Obsidian Notes
 
 ## Overview

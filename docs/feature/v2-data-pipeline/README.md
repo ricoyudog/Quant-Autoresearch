@@ -1,8 +1,12 @@
+> Status: historical
+>
+> This workspace is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # V2 Data Pipeline -- DuckDB + Minute-Level Backtesting
 
 ## Overview
 
-Session 2 of the V2 upgrade. This workspace is the canonical planning surface for umbrella issue
+Session 2 of the V2 upgrade. This workspace is a retained historical planning surface for umbrella issue
 [#11](https://github.com/ricoyudog/Quant-Autoresearch/issues/11) and covers the data-pipeline
 redesign built on the local `massive-minute-aggs` dataset, a DuckDB daily cache, and minute-level
 walk-forward backtesting.
@@ -21,12 +25,12 @@ walk-forward backtesting.
 - The issue-level phase table is the umbrella summary only; implementation belongs in the
   referenced `sprintN/` docs
 
-## Canonical Decisions
+## Historical Decisions
 
 | Item | Decision | Why |
 | --- | --- | --- |
 | Docs root | `docs/` | The live repo tree uses `docs/`; there is no active `document/`, `docs/beta/`, or `docs/dev/` root to reuse |
-| Canonical workspace | `docs/feature/v2-data-pipeline/` | Issue #11 is a feature-scoped V2 session, consistent with the existing `docs/feature/v2-*` workspaces |
+| Historical workspace | `docs/feature/v2-data-pipeline/` | Retained for traceability; current repo navigation now starts at `docs/index.md` and `specs/index.md` |
 | Feature branch | `feature/v2-data-pipeline` | Preserves the repo's current V2 branch naming convention (`feature/v2-cleanup`, `feature/v2-phase1`, ...) |
 | Execution handoff | `sprint1/` -> `sprint3/` backend docs | Keeps the umbrella issue as planning index instead of the execution queue |
 

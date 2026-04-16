@@ -1,8 +1,12 @@
+> Status: historical
+>
+> This document is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # V2 Phase 4 — Development Plan
 
 > Feature branch: `feature/v2-phase4`
 > Umbrella issue: #10
-> Canonical root: `docs/feature/v2-phase4/`
+> Historical root: `docs/feature/v2-phase4/`
 > Base branch: `main-dev`
 > Planning baseline: `uv run pytest --tb=short -q` -> `97 passed`
 
@@ -10,7 +14,7 @@
 
 Issue #10 was still a phase-level index card with one reference to `docs/upgrade-plan-v2.md` and no execution docs, no dedicated feature root, and no feature branch/worktree in place. Phase 4 is the final V2 closeout slice: it does not add new product behavior, but it does need to bring operator-facing docs, repo guidance, service/config surfaces, and verification instructions into alignment with the post-cleanup V2 architecture that now exists on `main-dev`.
 
-## Canonical Root Decision
+## Historical Root Decision
 
 Use `docs/feature/v2-phase4/`.
 
@@ -41,7 +45,7 @@ Reason:
 
 | Phase | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
-| Phase 0 — Spec Alignment | create branch, worktree, canonical docs root, and stale-surface inventory | `feature/v2-phase4`, docs workspace, audit snapshot, rewritten issue index | completed | hand off to sprint planning |
+| Phase 0 — Spec Alignment | create branch, worktree, historical docs root, and stale-surface inventory | `feature/v2-phase4`, docs workspace, audit snapshot, rewritten issue index | completed | hand off to sprint planning |
 | Phase 1 — Agent Guidance Rewrite | replace V1 agent/operator guidance with V2 instructions | updated `CLAUDE.md`, command examples, environment section, architecture summary | completed | execute Sprint 2 backend docs cleanup |
 | Phase 2 — Docs Surface Cleanup | update or archive user-facing V1 docs still on the main path | refreshed `README.md`, `architecture.md` decision, doc cleanup notes | completed | execute Sprint 3 infra and verification |
 | Phase 3 — Repo Hygiene & Verification | align service/config surfaces, confirm `.gitignore`, and run full checks | config decisions, verification evidence, closeout note | completed | Sprint 3 closeout note posted; issue #10 is in `workflow::review` and no additional follow-ups remain |
@@ -51,7 +55,7 @@ Reason:
 | Task ID | Task | Owner | Dependency | Effort | Acceptance |
 | --- | --- | --- | --- | --- | --- |
 | PLAN-01 | Create `feature/v2-phase4` branch and isolated worktree from `main-dev` | Dev | none | 0.1d | branch exists, worktree clean, baseline recorded |
-| PLAN-02 | Create canonical `docs/feature/v2-phase4/` workspace | Dev | PLAN-01 | 0.1d | README + plan + lane docs exist |
+| PLAN-02 | Create historical `docs/feature/v2-phase4/` workspace | Dev | PLAN-01 | 0.1d | README + plan + lane docs exist |
 | PLAN-03 | Rewrite issue #10 as an index card pointing to the workspace | Dev | PLAN-02 | 0.1d | issue contains docs workspace, phase table, task table, references |
 | DOC-01 | Rewrite `CLAUDE.md` to describe V2 architecture and supported commands only | BE | PLAN-03 | 0.3d | no OPENDEV / engine / removed-command guidance remains in `CLAUDE.md` |
 | DOC-02 | Audit `README.md` and decide update vs structural trim for V2 entrypoint | BE | DOC-01 | 0.2d | README reflects V2 commands, setup, and architecture |
@@ -67,7 +71,7 @@ Reason:
 ### Phase 0 — Planning Package
 - [x] confirm `main-dev` includes the other feature branches needed before Phase 4 starts
 - [x] create `feature/v2-phase4` from `main-dev`
-- [x] establish `docs/feature/v2-phase4/` as the canonical root
+- [x] record `docs/feature/v2-phase4/` as the historical root used during the planning pass
 - [x] rewrite issue #10 away from a single-phase prose card toward a docs-backed index
 
 ### Phase 1 — Agent Guidance Rewrite

@@ -1,8 +1,12 @@
+> Status: historical
+>
+> This document is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # V2 Phase 1 — Development Plan
 
 > Feature branch: `feature/v2-phase1`
 > Umbrella issue: #8
-> Canonical root: `docs/feature/v2-phase1/`
+> Historical root: `docs/feature/v2-phase1/`
 
 ## Context
 

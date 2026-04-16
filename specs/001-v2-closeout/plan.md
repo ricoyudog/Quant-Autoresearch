@@ -25,7 +25,7 @@ Create a documentation-first closeout package that consolidates V2 integration s
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-The current `/Users/chunsingyu/softwares/Quant-Autoresearch/.specify/memory/constitution.md` is still an unfilled template, so it does not define enforceable project-specific gates. Until it is ratified, this plan uses the repository's active operating rules as the effective gate set:
+This repository no longer carries a separate Spec Kit constitution file, so the active gate set comes directly from the repository's checked-in guidance and working agreements:
 
 - **Pass**: No new dependencies are introduced by the closeout package.
 - **Pass**: The feature remains documentation-first and keeps implementation changes small, reviewable, and reversible.

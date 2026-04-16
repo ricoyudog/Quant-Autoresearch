@@ -23,7 +23,7 @@ Add a Karpathy-style outer-loop autoresearch runner that uses Claude Code as the
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-`/Users/chunsingyu/softwares/Quant-Autoresearch/.specify/memory/constitution.md` is still an unfilled template, so there are no enforceable constitution-specific gates yet. Until that file is ratified, this plan uses the repository's active working rules as provisional gates:
+This repository no longer carries a separate Spec Kit constitution file, so the repository's active working rules remain the effective provisional gates:
 
 - **Pass**: The design keeps deterministic evaluation and acceptance outside Claude Code's authority.
 - **Pass**: No new product-side agent framework is introduced into repository runtime code.

@@ -1,8 +1,12 @@
+> Status: historical
+>
+> This document is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # V2 Phase 3 — Development Plan
 
 > Feature branch: `feature/v2-phase3`
 > Umbrella issue: #9
-> Canonical root: `docs/feature/v2-phase3/`
+> Historical root: `docs/feature/v2-phase3/`
 > Dependency: Phase 1 (issue #8) must be complete
 > Status: implementation complete, closeout sync verified on 2026-04-03
 

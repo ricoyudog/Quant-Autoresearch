@@ -1,8 +1,12 @@
+> Status: historical
+>
+> This document is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # V2 Data Pipeline -- Development Plan
 
 > Feature branch: `feature/v2-data-pipeline`
 > Umbrella issue: #11
-> Canonical root: `docs/feature/v2-data-pipeline/`
+> Historical root: `docs/feature/v2-data-pipeline/`
 > Last updated: 2026-04-05
 > Planning status: Sprint 3 execution, verification, and post-review correction completed; issue #11 is ready for review
 
@@ -24,7 +28,7 @@ strategy actually wants to trade.
 ## 2. Root And Branch Decision
 
 - Active docs root: `docs/`
-- Canonical workspace: `docs/feature/v2-data-pipeline/`
+- Historical workspace: `docs/feature/v2-data-pipeline/`
 - Canonical branch: `feature/v2-data-pipeline`
 
 Repo drift note: the generic skill reference expects `docs/beta/` and `docs/dev/` planning roots,
@@ -107,7 +111,7 @@ repo's existing V2 naming convention instead of introducing an issue-number-only
 
 | Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
 | --- | --- | --- | --- | --- | --- | --- |
-| PLAN-01 | Confirm the live docs root and choose a single canonical workspace | Planning | none | 0.1d | completed | `docs/feature/v2-data-pipeline/` is the only planning root for this feature |
+| PLAN-01 | Confirm the live docs root and record the historical workspace used during the original planning pass | Planning | none | 0.1d | completed | `docs/feature/v2-data-pipeline/` is the only planning root for this feature |
 | PLAN-02 | Preserve the repo's V2 branch convention and record the dependency gate on issue #8 | Planning | PLAN-01 | 0.05d | completed | branch name and dependency note appear in the README, plan, and issue |
 | PLAN-03 | Expand the workspace with backend, infra, and QA planning surfaces | Planning | PLAN-01 | 0.1d | completed | lane docs and updated test plan are linked from the workspace index |
 | PLAN-04 | Rewrite issue #11 as the umbrella index card | Planning | PLAN-02, PLAN-03 | 0.1d | completed | issue contains required sections, a phase table with status, and workspace references |
@@ -164,7 +168,7 @@ expected before a sprint can be considered complete.
 ## 10. Acceptance Criteria
 
 - [x] The live docs root is confirmed as `docs/` and reused consistently
-- [x] The canonical workspace choice is explicit: `docs/feature/v2-data-pipeline/`
+- [x] The historical workspace used during the original planning pass is explicit: `docs/feature/v2-data-pipeline/`
 - [x] The feature branch is explicitly named as `feature/v2-data-pipeline`
 - [x] The workspace has a local index, a main development plan, backend lane doc, infra lane doc,
       test plan, and sprint execution docs

@@ -33,4 +33,4 @@
 
 - Validation pass completed with no clarification markers.
 - The spec deliberately defines an outer-loop Claude Code workflow and keeps deterministic evaluation as the acceptance authority.
-- Ready for `/speckit.plan`.
+- Ready for implementation planning.

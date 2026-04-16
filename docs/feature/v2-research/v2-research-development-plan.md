@@ -1,8 +1,12 @@
+> Status: historical
+>
+> This document is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # V2 Research -- Development Plan
 
 > Feature branch: `feature/v2-research`
 > Umbrella issue: #13
-> Canonical root: `docs/feature/v2-research/`
+> Historical root: `docs/feature/v2-research/`
 > Last updated: 2026-04-11
 > Planning status: implementation and verification complete; branch retired as a superseded historical closeout record
 
@@ -25,7 +29,7 @@ superseded historical branch instead of carried forward as a live merge target.
 ## 2. Root And Branch Decision
 
 - Active docs root: `docs/`
-- Canonical workspace: `docs/feature/v2-research/`
+- Historical workspace: `docs/feature/v2-research/`
 - Canonical branch: `feature/v2-research`
 
 Repo drift note: the generic planning skill expects `docs/beta/` and `docs/dev/` roots, but the
@@ -125,7 +129,7 @@ repo's current V2 naming convention.
 
 | Task ID | Task | Lane | Dependency | Effort | Status | Acceptance |
 | --- | --- | --- | --- | --- | --- | --- |
-| PLAN-01 | Confirm the live docs root and keep `docs/feature/v2-research/` as the single canonical workspace | Planning | none | 0.1d | completed | no new planning root is introduced under `docs/issue/13/` or legacy paths |
+| PLAN-01 | Confirm the live docs root and record `docs/feature/v2-research/` as the historical workspace used during the original planning pass | Planning | none | 0.1d | completed | no new planning root is introduced under `docs/issue/13/` or legacy paths |
 | PLAN-02 | Preserve the repo's V2 branch convention and record the closed dependency set on issues `#8`, `#9`, `#11`, and `#12` | Planning | PLAN-01 | 0.05d | completed | branch name and dependency status appear in the README, plan, and issue |
 | PLAN-03 | Expand the workspace with backend, infra, and QA planning surfaces | Planning | PLAN-01 | 0.1d | completed | lane docs and refreshed test plan are linked from the workspace index |
 | PLAN-04 | Rewrite issue `#13` as the umbrella index card | Planning | PLAN-02, PLAN-03 | 0.1d | completed | issue contains the required sections, a phase table with status, and workspace references |
@@ -179,7 +183,7 @@ expected before a sprint can be considered complete.
 ## 10. Acceptance Criteria
 
 - [x] The live docs root is confirmed as `docs/` and reused consistently
-- [x] The canonical workspace choice is explicit: `docs/feature/v2-research/`
+- [x] The historical workspace used during the original planning pass is explicit: `docs/feature/v2-research/`
 - [x] The feature branch is explicitly named as `feature/v2-research`
 - [x] The workspace has a local index, a main development plan, backend lane doc, infra lane doc,
       and a refreshed test plan

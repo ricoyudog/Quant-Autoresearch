@@ -33,4 +33,4 @@
 
 - Validation pass 1 completed with no open clarification markers.
 - The specification intentionally describes repository closeout outcomes in stakeholder language and avoids prescribing implementation steps.
-- Ready for `/speckit.plan`.
+- Ready for implementation planning.

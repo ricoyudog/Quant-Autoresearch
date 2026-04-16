@@ -1,3 +1,7 @@
+> Status: historical
+>
+> This document is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # Umbrella Draft — V2 Minute Autoresearch Architecture
 
 **Publication Status**
@@ -49,7 +53,7 @@
 
 | Phase | Goal | Deliverables | Status | Next Step |
 | --- | --- | --- | --- | --- |
-| Phase 0 — Spec Alignment | keep one canonical V2 architecture brief | deep-interview spec, branch choice, root choice | completed | preserve this workspace as source of truth |
+| Phase 0 — Spec Alignment | keep one canonical V2 architecture brief | deep-interview spec, branch choice, root choice | completed | preserve this workspace as a historical traceability record |
 | Sprint 1 — Autoresearch Core | define core loop + idea intake lane | issue #18 + sprint1 docs | completed | merged via PRs #23 and #25 |
 | Sprint 2 — Minute Runtime | define minute-level runtime and validation lane | issue #19 + sprint2 docs | completed | merged via PR #24 |
 | Sprint 3 — Stock Discussion Lane | define strategy-facing stock discussion lane | issue #20 + sprint3 docs + packet contract | completed | merged via PR #26 with post-merge fix PR #27 |
@@ -60,7 +64,7 @@
 
 | Task ID | Task | Owner | Dependency | Effort | Acceptance |
 | --- | --- | --- | --- | --- | --- |
-| UMB-01 | Create canonical workspace | Planning | none | 0.1d | root exists under `docs/feature/` only |
+| UMB-01 | Record historical workspace | Planning | none | 0.1d | root exists under `docs/feature/` only |
 | UMB-02 | Draft child issues A-D | Planning | UMB-01 | 0.2d | four workstream issue drafts exist |
 | UMB-03 | Create sprint docs | Planning | UMB-02 | 0.3d | each child issue maps to sprint docs |
 | UMB-04 | Record GitLab blocker honestly | Infra | UMB-01 | 0.05d | no artifact falsely claims publication |
@@ -84,7 +88,7 @@
 
 **Acceptance Criteria**
 
-- [x] canonical workspace exists
+- [x] historical workspace is recorded
 - [x] umbrella draft exists
 - [x] child issue drafts exist
 - [x] sprint docs exist

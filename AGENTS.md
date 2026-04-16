@@ -6,6 +6,17 @@ This file provides guidelines for agents working in this repository.
 
 Quant Autoresearch is an autonomous quantitative strategy discovery framework using AI agents. It uses Python 3.12+, pytest for testing, and uv for package management.
 
+## Repository Navigation
+
+- `program.md` is the root runtime / agent operating contract
+- `docs/index.md` is the canonical documentation entrypoint
+- `docs/architecture/index.md` is the canonical architecture entrypoint
+- `docs/program/index.md` is the planning and long-horizon hub
+- `specs/index.md` is the canonical execution-spec index
+- `docs/reference/index.md` contains non-canonical background material
+- `docs/archive/index.md` contains historical material
+- `docs/feature/README.md` marks retained legacy V2 feature workspaces
+
 ---
 
 ## Build / Lint / Test Commands
@@ -376,7 +387,7 @@ To check whether embeddings exist, inspect `.gitnexus/meta.json` — the `stats.
 
 ## Active Technologies
 - Python 3.12+ for repository tooling; Markdown and JSON for closeout artifacts + stdlib file handling, git CLI, pytest, uv, Typer-based repo tooling, existing planning docs (001-v2-closeout)
-- Repository files under `/Users/chunsingyu/softwares/Quant-Autoresearch`, especially `specs/`, `docs/feature/`, and git metadata (001-v2-closeout)
+- Repository files under `/Users/chunsingyu/softwares/Quant-Autoresearch`, especially `specs/`, `docs/index.md`, `docs/reference/`, `docs/archive/`, and git metadata (001-v2-closeout)
 - Python 3.12+ for the loop runner and repository tooling; shell wrapper for Claude Code invocation + existing `cli.py` commands, `src/core/backtester.py`, `src/core/research.py`, `src/memory/idea_keep_revert.py`, `src/memory/candidate_generation.py`, Claude Code CLI, git CLI (002-claude-autoresearch-loop)
 - Repository files plus persisted run artifacts under `/Users/chunsingyu/softwares/Quant-Autoresearch/experiments/` and optional vault notes under the configured Obsidian path (002-claude-autoresearch-loop)
 - Python 3.10+ (repo guidance targets Python 3.12+ in active development) + pandas, numpy, pytest, RestrictedPython-compatible strategy surface, existing Typer CLI/backtester stack (003-turnover-reduction)

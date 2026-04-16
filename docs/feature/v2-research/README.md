@@ -1,8 +1,12 @@
+> Status: historical
+>
+> This workspace is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # V2 Research -- Research Capabilities Redesign
 
 ## Overview
 
-Issue #13. This workspace is the canonical planning surface for the V2 research-capabilities
+Issue #13. This workspace is a retained historical planning surface for the V2 research-capabilities
 redesign: Obsidian vault integration, research and analysis CLI flows, static knowledge-base notes,
 4-layer memory guidance, and removal of the legacy SQLite Playbook.
 
@@ -22,12 +26,12 @@ replaces Playbook-era memory with vault-native notes plus `results.tsv`.
   branch was explicitly retired as a superseded historical branch rather than kept as a live merge
   target
 
-## Canonical Decisions
+## Historical Decisions
 
 | Item | Decision | Why |
 | --- | --- | --- |
 | Docs root | `docs/` | The live repo tree uses `docs/`; there is no active `document/`, `docs/beta/`, or `docs/dev/` root to reuse |
-| Canonical workspace | `docs/feature/v2-research/` | Issue #13 is a persistent V2 feature workspace, consistent with the existing `docs/feature/v2-*` layout |
+| Historical workspace | `docs/feature/v2-research/` | Retained for traceability; current repo navigation now starts at `docs/index.md` and `specs/index.md` |
 | Feature branch | `feature/v2-research` | Preserves the repo's current V2 branch naming convention |
 | Execution handoff | `sprint1/` -> `sprint2/` backend docs, plus cross-sprint backend / infra / QA lane docs | Keeps the umbrella issue as a planning index instead of an execution queue |
 | Live issue host | `ricoyudog/Quant-Autoresearch#13` | Existing workspace links and the active umbrella issue currently point to the fork, not the checked-out `origin` remote |

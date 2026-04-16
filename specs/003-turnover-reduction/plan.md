@@ -23,7 +23,7 @@ Reduce fee-driven overtrading in the active minute-level momentum strategy by ad
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-There is no ratified Spec Kit constitution yet — `.specify/memory/constitution.md` still contains placeholders only — so repository policy is taken from AGENTS.md and the existing project guidance.
+There is no separate planning constitution file in this repository, so policy is taken from `AGENTS.md` and the existing project guidance.
 
 Pre-Phase-0 gates:
 - **Test-first discipline** — PASS. Plan requires new/updated unit tests before strategy changes.

@@ -1,8 +1,12 @@
+> Status: historical
+>
+> This document is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # V2 Overfit Defense — Development Plan
 
 > Feature branch: `feature/v2-overfit-defense`
 > Umbrella issue: #12
-> Canonical root: `docs/feature/v2-overfit-defense/`
+> Historical root: `docs/feature/v2-overfit-defense/`
 > Dependency: Phase 1 (issue #8) must be complete
 
 ## Context

@@ -1,3 +1,7 @@
+> Status: historical
+>
+> This document is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # V2 Minute Autoresearch — Test Plan
 
 ## Mission
@@ -8,7 +12,7 @@ Prove the planning package is structurally sound and aligned to the clarified ar
 
 ### Planning integrity
 
-- [ ] one canonical docs root only
+- [ ] one historical docs root recorded for the original planning pass
 - [ ] umbrella + child issue drafts exist
 - [ ] all child issues map to sprint docs
 - [ ] merge target is documented as `main-dev`

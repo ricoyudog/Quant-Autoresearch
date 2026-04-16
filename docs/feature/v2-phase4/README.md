@@ -1,8 +1,12 @@
+> Status: historical
+>
+> This workspace is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # V2 Phase 4 — Closeout Alignment
 
 ## Overview
 
-Phase 4 is the final V2 alignment pass after the Phase 1, Phase 3, and cleanup branches have already landed in `main-dev`. This workspace upgrades issue #10 from a lightweight phase card into a real planning package so the remaining closeout work can be executed from a branch, a canonical docs root, and lane-specific plans instead of from issue prose alone.
+Phase 4 is the final V2 alignment pass after the Phase 1, Phase 3, and cleanup branches have already landed in `main-dev`. This workspace upgrades issue #10 from a lightweight phase card into a real planning package so the remaining closeout work can be executed from a branch, a historical docs root, and lane-specific plans instead of from issue prose alone.
 
 ## Branch
 

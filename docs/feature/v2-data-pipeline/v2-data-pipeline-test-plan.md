@@ -1,3 +1,7 @@
+> Status: historical
+>
+> This document is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
 # V2 Data Pipeline -- Test Plan
 
 > Feature branch: `feature/v2-data-pipeline`

@@ -1,8 +1,12 @@
-# V2 Minute Autoresearch — Canonical Planning Workspace
+> Status: historical
+>
+> This workspace is retained for V2 traceability. Start current navigation at `docs/index.md` and current execution-spec navigation at `specs/index.md`.
+
+# V2 Minute Autoresearch — Historical Planning Workspace
 
 ## Overview
 
-This workspace is the canonical spec-driven planning surface for the clarified V2 architecture:
+This workspace is a retained historical spec-driven planning surface for the clarified V2 architecture:
 
 - **Karpathy-style autoresearch loop** as the core
 - **minute-level strategy discovery/refinement** as the mission
@@ -10,16 +14,16 @@ This workspace is the canonical spec-driven planning surface for the clarified V
 - **optional factor mining** under the same autoresearch loop
 - **backtester-driven keep/revert** as the final success rule
 
-The canonical source of truth for this workspace is:
+The historical governing input used for this workspace was:
 
 - `.omx/specs/deep-interview-spec-vs-impl.md`
 
-## Canonical Decisions
+## Historical Decisions
 
 | Item | Decision | Why |
 | --- | --- | --- |
 | Docs root | `docs/` | This repo's live planning root is `docs/` |
-| Canonical workspace | `docs/feature/v2-minute-autoresearch/` | This is a feature-scoped V2 architecture effort, not a single bugfix |
+| Historical workspace | `docs/feature/v2-minute-autoresearch/` | Retained for traceability; current repo navigation now starts at `docs/index.md` and `specs/index.md` |
 | Feature branch | `feature/v2-minute-autoresearch` | Dedicated planning branch based on `main-dev` |
 | Merge target | `main-dev` | User explicitly wants the docs package ready for `main-dev` integration |
 | Issue topology | one umbrella + four child issues | Smallest issue set that still matches the architecture workstreams |
@@ -68,7 +72,7 @@ The canonical source of truth for this workspace is:
 ## Acceptance Snapshot
 
 - [x] GitHub issue cards are published with real IDs
-- [x] Canonical docs root is explicit
-- [x] One canonical feature workspace exists
+- [x] Historical docs root is explicit
+- [x] One historical feature workspace is recorded
 - [x] Child issue drafts map into `sprintN/` execution docs
 - [x] Planning package is written against `main-dev`

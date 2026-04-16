@@ -17,6 +17,16 @@ The active truth surfaces are:
 - `src/strategies/active_strategy.py` for the strategy under iteration
 - `scripts/autoresearch_runner.py` for the current dry-run iteration-artifact runner
 
+## Repository Navigation
+
+- `docs/index.md` for the canonical documentation map
+- `docs/architecture/index.md` for current architecture guidance
+- `docs/program/index.md` for planning and long-horizon navigation
+- `specs/index.md` for canonical execution specs
+- `docs/reference/index.md` for background/reference material
+- `docs/archive/index.md` for historical material
+- `docs/feature/README.md` for retained legacy V2 feature workspaces
+
 ## Core Workflow
 
 1. Build the DuckDB daily cache with `setup-data`; use `fetch` only when you need a bounded minute-bar inspection slice.
@@ -49,8 +59,21 @@ Current grounded behavior:
 ## Project Structure
 
 ```text
+├── AGENTS.md
 ├── cli.py
 ├── program.md
+├── specs/
+│   ├── 001-v2-closeout/
+│   ├── 002-claude-autoresearch-loop/
+│   └── 003-turnover-reduction/
+├── docs/
+│   ├── index.md
+│   ├── architecture/
+│   ├── program/
+│   ├── standards/
+│   ├── reference/
+│   ├── archive/
+│   └── feature/
 ├── src/
 │   ├── core/
 │   │   ├── backtester.py

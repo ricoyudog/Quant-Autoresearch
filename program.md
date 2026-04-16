@@ -2,6 +2,8 @@
 
 Autonomous quantitative strategy discovery on the V2 local-first data pipeline with overfit-defense validation.
 
+> Planning hub: `docs/program/index.md`
+
 ## Data Pipeline V2
 
 The project uses the local `massive-minute-aggs` US equities dataset as the primary source.
