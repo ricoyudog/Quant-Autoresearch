@@ -132,6 +132,12 @@ def build_hold_minute_frame(ticker: str) -> pd.DataFrame:
     return build_minute_frame(ticker, closes)
 
 
+def build_low_magnitude_trend_frame(ticker: str, start: float, end: float, periods: int = 30) -> pd.DataFrame:
+    """Build a gentle trend where absolute momentum is directional but percent change stays small."""
+    closes = np.linspace(start, end, periods).tolist()
+    return build_minute_frame(ticker, closes)
+
+
 # =============================================================================
 # Dynamic loading tests
 # =============================================================================
@@ -659,6 +665,34 @@ class TestStrategyFile:
         assert signals["MSFT"].iloc[20] == 0.0
         assert signals["AAPL"].iloc[22] == 1.0
         assert signals["MSFT"].iloc[22] == -1.0
+
+    def test_generate_signals_longs_on_small_positive_absolute_momentum(self, strategy_file_path):
+        """Small positive 20-bar momentum should still trigger under the baseline sign-based rule."""
+        from strategies.active_strategy import TradingStrategy
+
+        strategy = TradingStrategy()
+        strategy.select_universe(build_neutral_daily_frame())
+        signals = strategy.generate_signals(
+            {"AAPL": build_low_magnitude_trend_frame("AAPL", 100.0, 100.5)}
+        )
+
+        assert signals["AAPL"].iloc[20] == 0.0
+        assert signals["AAPL"].iloc[21] == 0.0
+        assert signals["AAPL"].iloc[22] == 1.0
+
+    def test_generate_signals_shorts_on_small_negative_absolute_momentum(self, strategy_file_path):
+        """Small negative 20-bar momentum should still trigger under the baseline sign-based rule."""
+        from strategies.active_strategy import TradingStrategy
+
+        strategy = TradingStrategy()
+        strategy.select_universe(build_neutral_daily_frame())
+        signals = strategy.generate_signals(
+            {"AAPL": build_low_magnitude_trend_frame("AAPL", 100.5, 100.0)}
+        )
+
+        assert signals["AAPL"].iloc[20] == 0.0
+        assert signals["AAPL"].iloc[21] == 0.0
+        assert signals["AAPL"].iloc[22] == -1.0
 
     def test_generate_signals_requires_confirmation_bars_before_non_hostile_entry(self, strategy_file_path):
         """Default confirmation bars should delay non-hostile entries until direction persists."""
