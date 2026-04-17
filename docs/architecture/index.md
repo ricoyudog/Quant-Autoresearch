@@ -137,7 +137,7 @@ Its current role is to manage:
 - deterministic evaluation handoff
 
 Its current boundary matters:
-- the current default lane is `autoresearch-first`
+- the current default lane is `omx`
 - the runner is still **dry-run-first**
 - `experiment_note_draft.md` is a derived draft, not raw evidence
 - keep/revert authority remains evaluator/backtester-led
@@ -154,10 +154,13 @@ Its current boundary matters:
   current default operating workflow page.
 
 ## Current Default Operating Direction
-The project’s default operating direction is **autoresearch-first**. The
-current implementation still relies on dry-run artifact generation,
+The project’s default operating direction is the **`omx` lane**. The current
+implementation still relies on dry-run artifact generation,
 deterministic evaluator/backtester output, and human review before a branch is
 promotable knowledge.
+
+Older references to `autoresearch-first` should be treated as legacy wording
+for this same default lane.
 
 Use `docs/architecture/strategy-research-workflow.md` for the current ordered
 lane. This architecture page should stay structural and non-procedural.

@@ -401,9 +401,10 @@ def render_experiment_index(manifest: dict[str, Any]) -> str:
         "This note is the quick-entry map for the current strategy knowledge loop.",
         "",
         "## Artifact Ownership",
-        "- Raw evidence: Obsidian experiment notes remain the source evidence.",
+        "- Raw evidence: Obsidian experiment notes under `quant-autoresearch/experiments/` remain the source evidence.",
         "- `experiments/continuation/current_research_base.json` is the automation manifest.",
         "- This index and any branch summaries are derived, rebuildable views.",
+        "- `experiments/iterations/...` remains an ephemeral audit layer and never replaces raw notes or the manifest.",
         "",
         "## Current Baseline To Continue From",
     ]

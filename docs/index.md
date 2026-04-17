@@ -14,7 +14,7 @@ This is the canonical entrypoint for repository-level documentation.
 
 ## Current Knowledge
 - `docs/architecture/index.md` — architecture, project knowledge, truth surfaces, and runtime boundaries
-- `docs/architecture/strategy-research-workflow.md` — default `autoresearch-first` strategy iteration lane
+- `docs/architecture/strategy-research-workflow.md` — default `omx` strategy iteration lane
 - `docs/program/index.md` — planning hub, long-horizon threads, and initiative map
 - `docs/standards/index.md` — testing, documentation, and governance conventions
 

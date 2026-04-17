@@ -101,4 +101,8 @@ def test_refresh_research_base_pipeline_preserves_raw_notes_and_writes_manifest(
     assert manifest["branch_summary_paths"] == [str(summary_path)]
     assert index_path.exists()
     assert summary_path.exists()
-    assert "raw evidence" in index_path.read_text().lower()
+    index_text = index_path.read_text()
+    assert "raw evidence" in index_text.lower()
+    assert "quant-autoresearch/experiments/" in index_text
+    assert "experiments/continuation/current_research_base.json" in index_text
+    assert "experiments/iterations/..." in index_text

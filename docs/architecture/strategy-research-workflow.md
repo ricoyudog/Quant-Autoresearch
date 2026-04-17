@@ -5,7 +5,10 @@
 This page documents the default operating lane for starting and continuing
 stock-strategy research in Quant Autoresearch.
 
-The default lane is **`autoresearch-first`**.
+The default lane is **`omx`**.
+
+Older references to `autoresearch-first` are legacy transitional wording for
+this same default lane.
 
 Use this page for the ordered workflow. Use `docs/architecture/index.md` for
 stable architecture knowledge and `program.md` for the runtime / agent
@@ -23,7 +26,7 @@ The current workflow is not a fully live autonomous multi-round strategy
 mutation loop.
 
 What the runtime does support:
-- `autoresearch-first` iteration as the default lane
+- `omx` as the default strategy research lane
 - dry-run artifact generation from the outer-loop runner
 - deterministic backtest / validation after candidate work
 - explicit continuation context and experiment-memory refresh
