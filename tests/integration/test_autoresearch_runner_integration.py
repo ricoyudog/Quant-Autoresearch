@@ -189,6 +189,96 @@ def test_run_claude_iteration_success_keeps_stdout_clean_for_runner(tmp_path):
     assert "Claude Code iteration wrapper" in result.stderr
 
 
+def test_run_claude_iteration_passes_default_skip_permissions_flag(tmp_path):
+    program_path = tmp_path / "program.md"
+    strategy_path = tmp_path / "active_strategy.py"
+    state_path = tmp_path / "autoresearch_state.json"
+    output_root = tmp_path / "iterations"
+    fake_claude = tmp_path / "fake_claude_args.sh"
+    args_path = tmp_path / "claude_args.txt"
+
+    program_path.write_text("# Program\n")
+    strategy_path.write_text("VALUE = 0\n")
+    state_path.write_text("{}\n")
+    fake_claude.write_text(
+        "#!/usr/bin/env bash\n"
+        f"printf '%s\\n' \"$@\" > {args_path}\n"
+        "cat >/dev/null\n"
+        "echo '{\"hypothesis\":\"flag check\",\"strategy_change_summary\":\"captured args\"}'\n"
+        "exit 0\n"
+    )
+    fake_claude.chmod(0o755)
+
+    result = subprocess.run(
+        [
+            "bash",
+            "scripts/run_claude_iteration.sh",
+            "1",
+            "--program",
+            str(program_path),
+            "--strategy",
+            str(strategy_path),
+            "--state-file",
+            str(state_path),
+            "--output-dir",
+            str(output_root),
+            "--claude-bin",
+            str(fake_claude),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0
+    assert "--dangerously-skip-permissions" in args_path.read_text().splitlines()
+
+
+def test_run_claude_iteration_sets_sandbox_env_for_claude(tmp_path):
+    program_path = tmp_path / "program.md"
+    strategy_path = tmp_path / "active_strategy.py"
+    state_path = tmp_path / "autoresearch_state.json"
+    output_root = tmp_path / "iterations"
+    fake_claude = tmp_path / "fake_claude_env.sh"
+    env_path = tmp_path / "claude_env.txt"
+
+    program_path.write_text("# Program\n")
+    strategy_path.write_text("VALUE = 0\n")
+    state_path.write_text("{}\n")
+    fake_claude.write_text(
+        "#!/usr/bin/env bash\n"
+        f"printf '%s' \"${{IS_SANDBOX:-}}\" > {env_path}\n"
+        "cat >/dev/null\n"
+        "echo '{\"hypothesis\":\"env check\",\"strategy_change_summary\":\"captured env\"}'\n"
+        "exit 0\n"
+    )
+    fake_claude.chmod(0o755)
+
+    result = subprocess.run(
+        [
+            "bash",
+            "scripts/run_claude_iteration.sh",
+            "1",
+            "--program",
+            str(program_path),
+            "--strategy",
+            str(strategy_path),
+            "--state-file",
+            str(state_path),
+            "--output-dir",
+            str(output_root),
+            "--claude-bin",
+            str(fake_claude),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0
+    assert env_path.read_text() == "1"
+
+
 def test_run_claude_iteration_resolves_default_relative_paths_from_scripts_dir(tmp_path):
     repo_root = Path.cwd()
     program_path = repo_root / "program.md"

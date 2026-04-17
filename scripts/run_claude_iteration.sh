@@ -45,6 +45,7 @@ STATE_FILE="experiments/autoresearch_state.json"
 OUTPUT_DIR="experiments/iterations"
 CONTEXT_FILE=""
 CLAUDE_BIN="${CLAUDE_CODE_BIN:-claude}"
+CLAUDE_DEFAULT_ARGS=("--dangerously-skip-permissions")
 CLAUDE_RATE_LIMIT_EXIT_CODE=75
 DRY_RUN=0
 EXTRA_ARGS=()
@@ -212,15 +213,15 @@ run_claude_with_contract() {
 
   if [ "$INVOKE_MODE" = "stdin" ]; then
     if [ "$EXTRA_ARGS_COUNT" -gt 0 ]; then
-      "$CLAUDE_BIN" "${EXTRA_ARGS[@]}" < "$PROMPT_PATH" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
+      IS_SANDBOX=1 "$CLAUDE_BIN" "${CLAUDE_DEFAULT_ARGS[@]}" "${EXTRA_ARGS[@]}" < "$PROMPT_PATH" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
     else
-      "$CLAUDE_BIN" < "$PROMPT_PATH" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
+      IS_SANDBOX=1 "$CLAUDE_BIN" "${CLAUDE_DEFAULT_ARGS[@]}" < "$PROMPT_PATH" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
     fi
   else
     if [ "$EXTRA_ARGS_COUNT" -gt 0 ]; then
-      "$CLAUDE_BIN" "$PROMPT_PATH" "${EXTRA_ARGS[@]}" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
+      IS_SANDBOX=1 "$CLAUDE_BIN" "${CLAUDE_DEFAULT_ARGS[@]}" "$PROMPT_PATH" "${EXTRA_ARGS[@]}" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
     else
-      "$CLAUDE_BIN" "$PROMPT_PATH" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
+      IS_SANDBOX=1 "$CLAUDE_BIN" "${CLAUDE_DEFAULT_ARGS[@]}" "$PROMPT_PATH" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
     fi
   fi
 
