@@ -135,6 +135,46 @@ class TestCommandRegistration:
         assert result.exit_code == 0
         assert "analyze" in result.stdout
 
+    def test_dashboard_command_exists(self):
+        """Verify dashboard is registered as a read-only local monitor."""
+        result = runner.invoke(app, ["--help"])
+        assert result.exit_code == 0
+        assert "dashboard" in result.stdout
+
+        result = runner.invoke(app, ["dashboard", "--help"])
+        assert result.exit_code == 0
+        assert "--host" in result.stdout
+        assert "--port" in result.stdout
+        assert "--repo-root" in result.stdout
+        assert "--refresh-seconds" in result.stdout
+
+    @patch("cli.serve_dashboard")
+    def test_dashboard_invokes_read_only_server(self, mock_serve_dashboard, tmp_path):
+        """Verify dashboard command launches the read-only local server."""
+        result = runner.invoke(
+            app,
+            [
+                "dashboard",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "9876",
+                "--repo-root",
+                str(tmp_path),
+                "--refresh-seconds",
+                "2.5",
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Dashboard listening on http://127.0.0.1:9876" in result.stdout
+        mock_serve_dashboard.assert_called_once_with(
+            repo_root=tmp_path,
+            host="127.0.0.1",
+            port=9876,
+            refresh_seconds=2.5,
+        )
+
 
 class TestBacktestCommandBehavior:
     """Tests for backtest command behavior with mocked dependencies."""

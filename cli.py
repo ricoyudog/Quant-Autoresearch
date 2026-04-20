@@ -42,6 +42,7 @@ from core.research import (
     search_web,
 )
 from data.cache_connector import CacheConnector
+from dashboard.server import serve_dashboard
 from memory.experiment_memory import CONTINUATION_MANIFEST_PATH, refresh_research_base
 
 app = typer.Typer(help="Quant Autoresearch")
@@ -493,6 +494,32 @@ def analyze(
 
     if output_path is not None:
         typer.echo(f"Wrote analysis note: {output_path}")
+
+
+@app.command()
+def dashboard(
+    host: str = typer.Option("127.0.0.1", "--host", help="Host interface for the local dashboard."),
+    port: int = typer.Option(8765, "--port", help="Port for the local dashboard."),
+    repo_root: Path = typer.Option(Path("."), "--repo-root", help="Repository root to observe."),
+    refresh_seconds: float = typer.Option(3.0, "--refresh-seconds", help="Browser polling interval in seconds."),
+):
+    """Serve the read-only local research dashboard."""
+    if refresh_seconds <= 0:
+        typer.echo("--refresh-seconds must be greater than 0.")
+        raise typer.Exit(code=1)
+
+    resolved_root = repo_root.expanduser().resolve()
+    typer.echo(f"Dashboard listening on http://{host}:{port}")
+    typer.echo(f"Observing repository: {resolved_root}")
+    try:
+        serve_dashboard(
+            repo_root=resolved_root,
+            host=host,
+            port=port,
+            refresh_seconds=refresh_seconds,
+        )
+    except KeyboardInterrupt:
+        typer.echo("Dashboard stopped.")
 
 
 @app.command()
