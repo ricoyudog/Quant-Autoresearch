@@ -1,0 +1,24 @@
+parent:
+  number: 31
+  url: https://github.com/ricoyudog/Quant-Autoresearch/issues/31
+groups:
+  - number: 1
+    name: "Observer Foundation"
+    issue_number: 32
+    url: https://github.com/ricoyudog/Quant-Autoresearch/issues/32
+  - number: 2
+    name: "Home Page Live Monitor"
+    issue_number: 33
+    url: https://github.com/ricoyudog/Quant-Autoresearch/issues/33
+  - number: 3
+    name: "Iteration Analysis Views"
+    issue_number: 34
+    url: https://github.com/ricoyudog/Quant-Autoresearch/issues/34
+  - number: 4
+    name: "Health Diagnostics and Failure UX"
+    issue_number: 35
+    url: https://github.com/ricoyudog/Quant-Autoresearch/issues/35
+  - number: 5
+    name: "Verification and Finish"
+    issue_number: 36
+    url: https://github.com/ricoyudog/Quant-Autoresearch/issues/36
