@@ -17,7 +17,7 @@ from RestrictedPython import compile_restricted
 from RestrictedPython.Guards import safer_getattr, full_write_guard
 from RestrictedPython.Eval import default_guarded_getiter, default_guarded_getitem
 
-from core.backtester import find_strategy_class, security_check
+from core.backtester import StrategyContractError, find_strategy_class, security_check, validate_strategy_class_contract
 import strategies.active_strategy
 
 
@@ -146,18 +146,19 @@ class TestDynamicLoading:
     """Tests for dynamic strategy class loading."""
 
     def test_free_form_class_accepted(self):
-        """Custom class name works via find_strategy_class."""
+        """Custom class name is discoverable before strict contract validation."""
         # Create a custom strategy class
         class MomentumStrategy:
             def generate_signals(self, data):
                 return pd.Series(1, index=data.index)
 
         sandbox_locals = {'MomentumStrategy': MomentumStrategy}
-        strategy_class, has_universe = find_strategy_class(sandbox_locals)
+        strategy_class = find_strategy_class(sandbox_locals)
 
         assert strategy_class is MomentumStrategy
         assert strategy_class.__name__ == 'MomentumStrategy'
-        assert has_universe is False
+        with pytest.raises(StrategyContractError, match="select_universe"):
+            validate_strategy_class_contract(strategy_class)
 
     def test_custom_class_name(self):
         """'MomentumStrategy' loads correctly."""
@@ -172,14 +173,15 @@ class TestDynamicLoading:
             'MomentumStrategy': MomentumStrategy,
             'TradingStrategy': None,
         }
-        strategy_class, has_universe = find_strategy_class(sandbox_locals)
+        strategy_class = find_strategy_class(sandbox_locals)
 
         assert strategy_class is MomentumStrategy
         assert strategy_class.__name__ == 'MomentumStrategy'
-        assert has_universe is False
+        with pytest.raises(StrategyContractError, match="select_universe"):
+            validate_strategy_class_contract(strategy_class)
 
     def test_multiple_methods_allowed(self):
-        """Class with generate_signals + select_universe sets has_universe."""
+        """Class with both hooks passes strict contract validation."""
         class ComplexStrategy:
             def __init__(self):
                 self.param = 10
@@ -201,13 +203,13 @@ class TestDynamicLoading:
                 return signals
 
         sandbox_locals = {'ComplexStrategy': ComplexStrategy}
-        strategy_class, has_universe = find_strategy_class(sandbox_locals)
+        strategy_class = find_strategy_class(sandbox_locals)
 
         assert strategy_class is ComplexStrategy
         assert hasattr(strategy_class, 'generate_signals')
         assert hasattr(strategy_class, '_helper_method')
         assert hasattr(strategy_class, 'another_method')
-        assert has_universe is True
+        assert validate_strategy_class_contract(strategy_class) is ComplexStrategy
 
     def test_no_generate_signals_rejected(self):
         """Class without generate_signals returns None."""
@@ -219,10 +221,11 @@ class TestDynamicLoading:
                 return data
 
         sandbox_locals = {'IncompleteStrategy': IncompleteStrategy}
-        strategy_class, has_universe = find_strategy_class(sandbox_locals)
+        strategy_class = find_strategy_class(sandbox_locals)
 
         assert strategy_class is None
-        assert has_universe is False
+        with pytest.raises(StrategyContractError, match="generate_signals"):
+            validate_strategy_class_contract(strategy_class)
 
     def test_non_class_with_generate_signals_ignored(self):
         """Function named generate_signals ignored."""
@@ -237,11 +240,12 @@ class TestDynamicLoading:
             'generate_signals': generate_signals,  # Function, not class
             'ValidStrategy': ValidStrategy,
         }
-        strategy_class, has_universe = find_strategy_class(sandbox_locals)
+        strategy_class = find_strategy_class(sandbox_locals)
 
         # Should find ValidStrategy, not the function
         assert strategy_class is ValidStrategy
-        assert has_universe is False
+        with pytest.raises(StrategyContractError, match="select_universe"):
+            validate_strategy_class_contract(strategy_class)
 
 
 # =============================================================================
@@ -394,11 +398,11 @@ class TestStrategyFile:
         sandbox_locals = {}
         exec(byte_code, safe_globals, sandbox_locals)
 
-        strategy_class, has_universe = find_strategy_class(sandbox_locals)
+        strategy_class = find_strategy_class(sandbox_locals)
 
         assert strategy_class is not None
         assert strategy_class.__name__ == 'TradingStrategy'
-        assert has_universe is True
+        assert validate_strategy_class_contract(strategy_class) is strategy_class
 
     def test_strategy_returns_signal_dict(self, strategy_file_path):
         """generate_signals returns one signal Series per ticker."""
@@ -857,14 +861,14 @@ class HelperClass:
         sandbox_locals = {}
         exec(byte_code, safe_globals, sandbox_locals)
 
-        strategy_class, has_universe = find_strategy_class(sandbox_locals)
+        strategy_class = find_strategy_class(sandbox_locals)
 
         assert strategy_class is not None
         assert strategy_class.__name__ == 'MyAlphaStrategy'
-        assert has_universe is True
+        assert validate_strategy_class_contract(strategy_class) is strategy_class
 
     def test_multiple_strategies_returns_first(self):
-        """When multiple classes have generate_signals, first is returned with universe flag."""
+        """When multiple classes exist, a full two-hook class is preferred."""
         strategy_code = """
 class StrategyA:
     def select_universe(self, daily_data):
@@ -898,9 +902,9 @@ class StrategyB:
         sandbox_locals = {}
         exec(byte_code, safe_globals, sandbox_locals)
 
-        strategy_class, has_universe = find_strategy_class(sandbox_locals)
+        strategy_class = find_strategy_class(sandbox_locals)
 
         assert strategy_class is not None
         assert hasattr(strategy_class, 'generate_signals')
-        assert strategy_class.__name__ in {'StrategyA', 'StrategyB'}
-        assert has_universe is (strategy_class.__name__ == 'StrategyA')
+        assert strategy_class.__name__ == 'StrategyA'
+        assert validate_strategy_class_contract(strategy_class) is strategy_class

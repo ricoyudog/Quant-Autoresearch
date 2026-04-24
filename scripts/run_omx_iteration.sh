@@ -2,17 +2,17 @@
 
 set -euo pipefail
 
-# Claude Code per-iteration wrapper.
+# OMX/Codex per-iteration wrapper.
 #
-# This wrapper keeps Claude Code outside the repository runtime while giving the
-# outer loop a stable per-iteration invocation contract.
+# This wrapper matches the existing autoresearch runner wrapper contract while
+# routing the strategy-improvement step through `omx exec`.
 
 SCRIPT_DIR="$(CDPATH="" cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(CDPATH="" cd "$SCRIPT_DIR/.." && pwd)"
 
 usage() {
   cat <<'EOF' >&2
-Usage: scripts/run_claude_iteration.sh <iteration-number> [options] [-- <extra claude args>]
+Usage: scripts/run_omx_iteration.sh <iteration-number> [options] [-- <extra omx exec args>]
 
 Options:
   --program <path>        Path to program.md (default: program.md)
@@ -20,8 +20,8 @@ Options:
   --state-file <path>     Path to autoresearch state file (default: experiments/autoresearch_state.json)
   --output-dir <path>     Iteration artifact root (default: experiments/iterations)
   --context-file <path>   Optional markdown context bundle for the round prompt
-  --claude-bin <path>     Claude Code executable (default: $CLAUDE_CODE_BIN or claude)
-  --dry-run               Build prompt artifact and print the planned invocation without executing Claude Code
+  --omx-bin <path>        OMX executable (default: $OMX_BIN or omx)
+  --dry-run               Build prompt artifact and print the planned invocation without executing OMX
   --help                  Show this message
 EOF
 }
@@ -44,9 +44,7 @@ STRATEGY_PATH="src/strategies/active_strategy.py"
 STATE_FILE="experiments/autoresearch_state.json"
 OUTPUT_DIR="experiments/iterations"
 CONTEXT_FILE=""
-CLAUDE_BIN="${CLAUDE_CODE_BIN:-claude}"
-CLAUDE_DEFAULT_ARGS=("--dangerously-skip-permissions")
-CLAUDE_RATE_LIMIT_EXIT_CODE=75
+OMX_BIN="${OMX_BIN:-omx}"
 DRY_RUN=0
 EXTRA_ARGS=()
 EXTRA_ARGS_COUNT=0
@@ -85,8 +83,8 @@ while [ "$#" -gt 0 ]; do
       CONTEXT_FILE="$2"
       shift 2
       ;;
-    --claude-bin)
-      CLAUDE_BIN="$2"
+    --omx-bin)
+      OMX_BIN="$2"
       shift 2
       ;;
     --dry-run)
@@ -137,17 +135,21 @@ fi
 ITERATION_LABEL=$(printf "%04d" "$ITERATION_NUMBER")
 ROUND_DIR="$OUTPUT_DIR/iteration-$ITERATION_LABEL"
 PROMPT_PATH="$ROUND_DIR/claude_prompt.md"
+SUMMARY_PATH="$ROUND_DIR/omx_summary.json"
+OMX_STDOUT_PATH="$ROUND_DIR/omx_exec.stdout.log"
+OMX_STDERR_PATH="$ROUND_DIR/omx_exec.stderr.log"
+SUMMARY_WAIT_SECONDS="${OMX_SUMMARY_WAIT_SECONDS:-300}"
 mkdir -p "$ROUND_DIR"
 
 cat > "$PROMPT_PATH" <<EOF
-# Claude Code Iteration Prompt
+# OMX Codex Iteration Prompt
 
 Iteration: $ITERATION_NUMBER
 Program: $PROGRAM_PATH
 Strategy Target: $STRATEGY_PATH
 State File: $STATE_FILE
 
-You are running one bounded autoresearch iteration for Quant Autoresearch.
+You are running one bounded autoresearch iteration for Quant Autoresearch through OMX/Codex.
 
 Required behavior:
 - Read the repository program from \`$PROGRAM_PATH\`
@@ -159,6 +161,7 @@ Required behavior:
 - Do not decide final keep/revert yourself; the outer runner owns acceptance
 - Do not bypass evaluator-led governance with fallback universes, self-approved keeps, or new governance states
 - Keep edits focused on the strategy-under-iteration unless the outer runner explicitly expands scope
+- Do not edit tests, docs, runner code, metadata, or generated artifacts; run existing checks only
 - Leave enough output for the outer runner to summarize the round hypothesis and strategy change
 - Final response must be a JSON object with keys: hypothesis, strategy_change_summary, files_touched
 EOF
@@ -170,18 +173,16 @@ if [ -n "$CONTEXT_FILE" ]; then
   } >> "$PROMPT_PATH"
 fi
 
-INVOKE_MODE="${CLAUDE_CODE_INVOKE_MODE:-stdin}"
-
 if [ "$DRY_RUN" -eq 1 ]; then
-  echo "Claude Code iteration wrapper"
+  echo "OMX Codex iteration wrapper"
   echo "iteration=$ITERATION_NUMBER"
   echo "program=$PROGRAM_PATH"
   echo "strategy=$STRATEGY_PATH"
   echo "state_file=$STATE_FILE"
   echo "context_file=$CONTEXT_FILE"
   echo "prompt_file=$PROMPT_PATH"
-  echo "invoke_mode=$INVOKE_MODE"
-  echo "claude_bin=$CLAUDE_BIN"
+  echo "summary_file=$SUMMARY_PATH"
+  echo "omx_bin=$OMX_BIN"
   echo "status=dry_run"
   if [ "$EXTRA_ARGS_COUNT" -gt 0 ]; then
     EXTRA_ARGS_JOINED="${EXTRA_ARGS[*]}"
@@ -190,67 +191,111 @@ if [ "$DRY_RUN" -eq 1 ]; then
   exit 0
 fi
 
-if ! command -v "$CLAUDE_BIN" >/dev/null 2>&1; then
-  echo "Claude Code executable not found: $CLAUDE_BIN" >&2
+if ! command -v "$OMX_BIN" >/dev/null 2>&1; then
+  echo "OMX executable not found: $OMX_BIN" >&2
   exit 1
 fi
 
 emit_runtime_banner() {
   {
-    echo "Claude Code iteration wrapper"
+    echo "OMX Codex iteration wrapper"
     echo "iteration=$ITERATION_NUMBER"
     echo "program=$PROGRAM_PATH"
     echo "strategy=$STRATEGY_PATH"
     echo "state_file=$STATE_FILE"
     echo "context_file=$CONTEXT_FILE"
     echo "prompt_file=$PROMPT_PATH"
-    echo "invoke_mode=$INVOKE_MODE"
-    echo "claude_bin=$CLAUDE_BIN"
+    echo "summary_file=$SUMMARY_PATH"
+    echo "omx_stdout=$OMX_STDOUT_PATH"
+    echo "omx_stderr=$OMX_STDERR_PATH"
+    echo "omx_bin=$OMX_BIN"
   } >&2
 }
 
-run_claude_with_contract() {
-  local stdout_file stderr_file exit_code combined_output
-  stdout_file=$(mktemp)
-  stderr_file=$(mktemp)
-  emit_runtime_banner
+emit_runtime_banner
+set +e
+if [ "$EXTRA_ARGS_COUNT" -gt 0 ]; then
+  IS_SANDBOX=1 "$OMX_BIN" exec \
+    --dangerously-bypass-approvals-and-sandbox \
+    -C "$REPO_ROOT" \
+    -o "$SUMMARY_PATH" \
+    "${EXTRA_ARGS[@]}" \
+    < "$PROMPT_PATH" >"$OMX_STDOUT_PATH" 2>"$OMX_STDERR_PATH" &
+else
+  IS_SANDBOX=1 "$OMX_BIN" exec \
+    --dangerously-bypass-approvals-and-sandbox \
+    -C "$REPO_ROOT" \
+    -o "$SUMMARY_PATH" \
+    < "$PROMPT_PATH" >"$OMX_STDOUT_PATH" 2>"$OMX_STDERR_PATH" &
+fi
+OMX_CHILD_PID=$!
 
-  if [ "$INVOKE_MODE" = "stdin" ]; then
-    if [ "$EXTRA_ARGS_COUNT" -gt 0 ]; then
-      IS_SANDBOX=1 "$CLAUDE_BIN" "${CLAUDE_DEFAULT_ARGS[@]}" "${EXTRA_ARGS[@]}" < "$PROMPT_PATH" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
-    else
-      IS_SANDBOX=1 "$CLAUDE_BIN" "${CLAUDE_DEFAULT_ARGS[@]}" < "$PROMPT_PATH" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
-    fi
-  else
-    if [ "$EXTRA_ARGS_COUNT" -gt 0 ]; then
-      IS_SANDBOX=1 "$CLAUDE_BIN" "${CLAUDE_DEFAULT_ARGS[@]}" "$PROMPT_PATH" "${EXTRA_ARGS[@]}" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
-    else
-      IS_SANDBOX=1 "$CLAUDE_BIN" "${CLAUDE_DEFAULT_ARGS[@]}" "$PROMPT_PATH" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
-    fi
-  fi
+summary_is_valid() {
+  python3 - "$SUMMARY_PATH" <<'PY'
+import json
+import sys
+from pathlib import Path
 
-  exit_code=${exit_code:-0}
-  cat "$stdout_file"
-  cat "$stderr_file" >&2
-  combined_output="$(cat "$stdout_file" "$stderr_file")"
-  rm -f "$stdout_file" "$stderr_file"
-
-  if [ "$exit_code" -ne 0 ] && printf '%s' "$combined_output" | grep -Eq 'API Error: 429|Rate limit reached for requests|"code":"1302"|"code": "1302"'; then
-    exit "$CLAUDE_RATE_LIMIT_EXIT_CODE"
-  fi
-
-  exit "$exit_code"
+path = Path(sys.argv[1])
+try:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+except Exception:
+    raise SystemExit(1)
+if not isinstance(payload, dict):
+    raise SystemExit(1)
+if not isinstance(payload.get("hypothesis"), str) or not payload["hypothesis"].strip():
+    raise SystemExit(1)
+if not isinstance(payload.get("strategy_change_summary"), str) or not payload["strategy_change_summary"].strip():
+    raise SystemExit(1)
+files_touched = payload.get("files_touched")
+if not isinstance(files_touched, list) or not all(isinstance(item, str) for item in files_touched):
+    raise SystemExit(1)
+PY
 }
 
-case "$INVOKE_MODE" in
-  stdin)
-    run_claude_with_contract
-    ;;
-  prompt-file)
-    run_claude_with_contract
-    ;;
-  *)
-    echo "Unsupported CLAUDE_CODE_INVOKE_MODE: $INVOKE_MODE" >&2
-    exit 1
-    ;;
-esac
+EXIT_CODE=""
+for _ in $(seq 1 "$SUMMARY_WAIT_SECONDS"); do
+  if [ -s "$SUMMARY_PATH" ] && summary_is_valid; then
+    EXIT_CODE=0
+    break
+  fi
+  if ! kill -0 "$OMX_CHILD_PID" 2>/dev/null; then
+    wait "$OMX_CHILD_PID"
+    EXIT_CODE=$?
+    break
+  fi
+  sleep 1
+done
+
+if [ -z "$EXIT_CODE" ]; then
+  EXIT_CODE=124
+fi
+
+if kill -0 "$OMX_CHILD_PID" 2>/dev/null; then
+  kill -TERM "$OMX_CHILD_PID" 2>/dev/null || true
+  sleep 1
+  if kill -0 "$OMX_CHILD_PID" 2>/dev/null; then
+    kill -KILL "$OMX_CHILD_PID" 2>/dev/null || true
+  fi
+  wait "$OMX_CHILD_PID" 2>/dev/null || true
+fi
+set -e
+
+if [ "$EXIT_CODE" -ne 0 ]; then
+  cat "$OMX_STDOUT_PATH" >&2 || true
+  cat "$OMX_STDERR_PATH" >&2 || true
+  exit "$EXIT_CODE"
+fi
+
+if [ ! -s "$SUMMARY_PATH" ]; then
+  echo "Missing OMX summary: $SUMMARY_PATH" >&2
+  exit 1
+fi
+
+if ! summary_is_valid; then
+  echo "Invalid OMX summary: $SUMMARY_PATH" >&2
+  exit 1
+fi
+
+cat "$SUMMARY_PATH"
+printf '\n'

@@ -8,6 +8,8 @@ def _write_strategy_file(tmp_path):
     strategy_path = tmp_path / "strategy.py"
     strategy_path.write_text(
         "class TradingStrategy:\n"
+        "    def select_universe(self, daily_data):\n"
+        "        return ['TEST']\n"
         "    def generate_signals(self, data):\n"
         "        return pd.Series(1, index=data.index)\n"
     )

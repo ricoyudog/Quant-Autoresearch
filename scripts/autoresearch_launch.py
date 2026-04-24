@@ -28,13 +28,16 @@ def run_command(command: Sequence[str], cwd: str | Path | None = None) -> subpro
 def build_parser() -> argparse.ArgumentParser:
     """Build the lane-selection CLI parser."""
     parser = argparse.ArgumentParser(
-        description="Route autoresearch to the OMX runtime lane or the repo Claude runner.",
+        description=(
+            "Route autoresearch to the OMX runtime lane or the repo Claude runner "
+            "under the shared mandatory two-hook strategy contract."
+        ),
     )
     parser.add_argument(
         "--lane",
         choices=("omx", "claude"),
         default="omx",
-        help="Which executor lane to launch. Defaults to the OMX runtime lane.",
+        help="Which executor lane to launch. Both lanes share the mandatory select_universe/generate_signals contract.",
     )
     parser.add_argument(
         "--dry-run",
@@ -60,6 +63,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.dry_run:
         print(f"lane={args.lane}")
+        print("strategy_contract=select_universe(daily_data),generate_signals(minute_data)")
         print(f"command={shlex.join(command)}")
         return 0
 

@@ -18,8 +18,8 @@
 | 4 | Symbol 範圍 | 全自由（11K+ tickers） |
 | 5 | 數據準備 | 即時查詢（DuckDB），無中間快取（日線除外） |
 | 6 | 特徵工程 | 只提供原始 OHLCV，策略自行計算所有指標 |
-| 7 | 策略介面 | 雙方法：`select_universe(daily_data)` + `generate_signals(minute_data)` |
-| 8 | 選股邏輯 | 策略驅動（日線摘要 → 篩選 tickers → 載入分鐘數據） |
+| 7 | 策略介面 | 強制雙方法：`select_universe(daily_data)` + `generate_signals(minute_data)` |
+| 8 | 選股邏輯 | 策略驅動；資料管道只提供數據，不負責選股 |
 | 9 | 日線快取 | 預計算 DuckDB 資料庫（11K tickers 日線聚合） |
 | 10 | 日線快取建構 | CLI 命令初始化（setup_data），只跑一次 |
 | 11 | 分鐘數據查詢 | CLI subprocess + CSV 解析 |
@@ -105,7 +105,7 @@ minute-aggs bars --symbols AAPL --start 2025-11-03 --end 2025-11-05 --output /pa
 │ strategy.py      │    │  (固定 — agent 不可改)             │
 │ (全檔案可改)     │    │                                   │
 │                  │    │  Phase A: 載入日線 DuckDB          │
-│ • select_universe│    │  Phase B: select_universe()       │
+│ • select_universe│    │  Phase B: select_universe()（由策略定義） │
 │ • generate_      │    │  Phase C: 查詢分鐘數據 (CLI)      │
 │   signals        │    │  Phase D: generate_signals()      │
 │                  │    │  Phase E: Walk-Forward 評估        │
@@ -314,8 +314,7 @@ def query_minute_data(tickers: list[str], start_date: str, end_date: str) -> dic
 ```python
 class MyStrategy:
     """
-    策略必須（至少）定義 generate_signals 方法。
-    select_universe 是可選的 — 如果沒有定義，backtester 使用所有可用 tickers。
+    策略必須同時定義 select_universe 與 generate_signals。
     """
 
     def select_universe(self, daily_data: pd.DataFrame) -> list[str]:
@@ -367,9 +366,8 @@ class MyStrategy:
 def find_strategy_methods(sandbox_locals: dict):
     """動態掃描 sandbox 載入的策略 class"""
     for name, obj in sandbox_locals.items():
-        if isinstance(obj, type) and hasattr(obj, 'generate_signals'):
-            has_universe = hasattr(obj, 'select_universe')
-            return obj, has_universe
+        if isinstance(obj, type) and hasattr(obj, 'select_universe') and hasattr(obj, 'generate_signals'):
+            return obj, True
     return None, False
 ```
 

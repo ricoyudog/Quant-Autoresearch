@@ -102,7 +102,7 @@ def load_strategy_class(strategy_path: str):
     from RestrictedPython.Eval import default_guarded_getitem, default_guarded_getiter
     from RestrictedPython.Guards import safer_getattr
 
-    from core.backtester import find_strategy_class, security_check
+    from core.backtester import find_strategy_class, security_check, validate_strategy_class_contract
 
     is_safe, message = security_check(strategy_path)
     if not is_safe:
@@ -126,6 +126,8 @@ def load_strategy_class(strategy_path: str):
         "_getitem_": default_guarded_getitem,
         "__name__": "sandbox",
         "__metaclass__": type,
+        "max": max,
+        "min": min,
         "pd": pd,
         "np": np,
     }
@@ -134,9 +136,7 @@ def load_strategy_class(strategy_path: str):
     byte_code = compile_restricted("".join(sanitized_code), filename="strategy.py", mode="exec")
     exec(byte_code, safe_globals, sandbox_locals)
 
-    strategy_class, _ = find_strategy_class(sandbox_locals)
-    if not strategy_class:
-        raise ValueError("No class with generate_signals found in strategy file")
+    strategy_class = validate_strategy_class_contract(find_strategy_class(sandbox_locals))
 
     return strategy_class
 

@@ -14,11 +14,13 @@ from pathlib import Path
 
 import core.backtester as backtester
 from core.backtester import (
+    StrategyContractError,
     apply_signal_lag,
     find_strategy_class,
     calculate_metrics,
     calculate_baseline_sharpe,
     run_per_symbol_analysis,
+    validate_strategy_class_contract,
 )
 
 
@@ -106,23 +108,25 @@ class TestFindStrategyClass:
     """Tests for find_strategy_class function."""
 
     def test_find_strategy_class_found(self):
-        """Mock class with generate_signals is found and has_universe is False."""
+        """A partial strategy candidate is still discoverable before contract validation."""
         sandbox_locals = {
             'DummyStrategy': DummyStrategy,
             'other_var': 42,
         }
-        strategy_class, has_universe = find_strategy_class(sandbox_locals)
+        strategy_class = find_strategy_class(sandbox_locals)
         assert strategy_class is DummyStrategy
-        assert has_universe is False
+        with pytest.raises(StrategyContractError, match="select_universe"):
+            validate_strategy_class_contract(strategy_class)
 
     def test_find_strategy_class_not_found(self):
-        """Empty dict returns (None, False)."""
-        strategy_class, has_universe = find_strategy_class({})
+        """Empty dict returns None and fails contract validation."""
+        strategy_class = find_strategy_class({})
         assert strategy_class is None
-        assert has_universe is False
+        with pytest.raises(StrategyContractError, match="generate_signals"):
+            validate_strategy_class_contract(strategy_class)
 
     def test_find_strategy_class_multiple(self):
-        """First matching class returned with universe detection."""
+        """A full two-hook class is preferred over a partial candidate."""
         class UniverseStrategy:
             def select_universe(self, daily_data):
                 return ['SPY']
@@ -134,14 +138,13 @@ class TestFindStrategyClass:
             'UniverseStrategy': UniverseStrategy,
             'DummyStrategy': DummyStrategy,
         }
-        strategy_class, has_universe = find_strategy_class(sandbox_locals)
-        # First matching class in iteration order
-        assert strategy_class in (UniverseStrategy, DummyStrategy)
+        strategy_class = find_strategy_class(sandbox_locals)
+        assert strategy_class is UniverseStrategy
         assert hasattr(strategy_class, 'generate_signals')
-        assert has_universe is (strategy_class is UniverseStrategy)
+        assert validate_strategy_class_contract(strategy_class) is UniverseStrategy
 
     def test_find_strategy_class_non_class_ignored(self):
-        """Functions/variables ignored and no strategy returns False flag."""
+        """Functions/variables are ignored and no candidate means no strategy class."""
         def generate_signals(data):
             return pd.Series(1, index=data.index)
 
@@ -150,9 +153,10 @@ class TestFindStrategyClass:
             'generate_signals': generate_signals,
             'some_number': 42,
         }
-        strategy_class, has_universe = find_strategy_class(sandbox_locals)
+        strategy_class = find_strategy_class(sandbox_locals)
         assert strategy_class is None
-        assert has_universe is False
+        with pytest.raises(StrategyContractError, match="generate_signals"):
+            validate_strategy_class_contract(strategy_class)
 
 
 # =============================================================================
@@ -462,8 +466,8 @@ class WindowAwareStrategy:
     ]
 
 
-def test_walk_forward_validation_fallback_universe_excludes_stale_tickers(monkeypatch, tmp_path, capsys):
-    """Fallback universe should ignore tickers missing from the latest training session."""
+def test_walk_forward_validation_rejects_strategy_missing_select_universe(monkeypatch, tmp_path, capsys):
+    """Strategies missing select_universe should fail with contract_invalid before querying minute data."""
     strategy_script = """
 class MinuteStrategy:
     def generate_signals(self, data):
@@ -548,12 +552,14 @@ class MinuteStrategy:
     )
     monkeypatch.setattr(backtester, "calculate_baseline_sharpe", lambda data: 0.1)
 
-    backtester.walk_forward_validation()
-    capsys.readouterr()
+    with pytest.raises(SystemExit) as excinfo:
+        backtester.walk_forward_validation()
+    output = capsys.readouterr().out
 
-    assert query_calls == [
-        (["AAA", "BBB"], "2025-11-07", "2025-11-07"),
-    ]
+    assert excinfo.value.code == 1
+    assert not query_calls
+    assert "STRATEGY ERROR:" in output
+    assert "select_universe" in output
 
 
 class TestWalkForwardValidationMinutePipelineContinued:
@@ -738,12 +744,15 @@ class MinuteStrategy:
         assert "AAA:" in output
         assert "BBB:" in output
 
-    def test_walk_forward_validation_falls_back_to_ranked_daily_universe(self, monkeypatch, tmp_path, capsys):
-        """Without select_universe, walk_forward_validation should use a safe ranked fallback universe."""
+    def test_walk_forward_validation_reports_no_trade_universe_for_empty_selection(self, monkeypatch, tmp_path, capsys):
+        """An empty selected universe should fail deterministically as no_trade_universe."""
         strategy_path = tmp_path / "strategy.py"
         strategy_path.write_text(
             """
 class MinuteStrategy:
+    def select_universe(self, daily_data):
+        return []
+
     def generate_signals(self, data):
         signals = {}
         for ticker, frame in data.items():
@@ -753,34 +762,7 @@ class MinuteStrategy:
         )
 
         query_calls = []
-        rows = []
-        session_dates = pd.to_datetime(
-            [
-                "2025-11-03",
-                "2025-11-04",
-                "2025-11-05",
-                "2025-11-06",
-                "2025-11-07",
-                "2025-11-10",
-            ]
-        )
-        tickers = [f"T{idx:02d}" for idx in range(31)]
-        for session in session_dates:
-            for idx, ticker in enumerate(tickers):
-                rows.append(
-                    {
-                        "ticker": ticker,
-                        "session_date": session,
-                        "open": 100 + idx,
-                        "high": 101 + idx,
-                        "low": 99 + idx,
-                        "close": 100.5 + idx,
-                        "volume": 10_000 - idx * 100,
-                        "transactions": 50 + idx,
-                        "vwap": 100.2 + idx,
-                    }
-                )
-        daily_data = pd.DataFrame(rows)
+        daily_data = build_daily_universe_frame()
 
         monkeypatch.setenv("STRATEGY_FILE", str(strategy_path))
         monkeypatch.setattr(backtester, "security_check", lambda file_path=None: (True, ""))
@@ -821,14 +803,13 @@ class MinuteStrategy:
         )
         monkeypatch.setattr(backtester, "calculate_baseline_sharpe", lambda data: 0.55)
 
-        backtester.walk_forward_validation()
+        with pytest.raises(SystemExit) as excinfo:
+            backtester.walk_forward_validation()
         output = capsys.readouterr().out
 
-        assert len(query_calls) == 1
-        assert len(query_calls[0][0]) == 30
-        assert query_calls[0][0][:3] == ["T00", "T01", "T02"]
-        assert "T30" not in query_calls[0][0]
-        assert "BASELINE_SHARPE: 0.5500" in output
+        assert excinfo.value.code == 1
+        assert not query_calls
+        assert "no_trade_universe" in output
 
     def test_walk_forward_validation_handles_real_metrics_with_multiple_tickers(self, monkeypatch, tmp_path, capsys):
         """Real metric calculation should work for multi-ticker minute windows."""

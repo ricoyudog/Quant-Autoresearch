@@ -178,10 +178,16 @@ def _is_instantiable_without_args(strategy_class: type) -> bool:
     return True
 
 
-def find_strategy_class(sandbox_locals: dict) -> tuple[type | None, bool]:
-    """Find the most concrete zero-arg strategy class and universe support flag."""
-    direct_candidates = []
-    inherited_candidates = []
+class StrategyContractError(ValueError):
+    """Raised when a strategy does not satisfy the repo strategy contract."""
+
+
+def find_strategy_class(sandbox_locals: dict) -> type | None:
+    """Find the most concrete zero-arg strategy class candidate."""
+    full_direct_candidates = []
+    full_inherited_candidates = []
+    partial_direct_candidates = []
+    partial_inherited_candidates = []
 
     for obj in sandbox_locals.values():
         if not isinstance(obj, type):
@@ -191,21 +197,52 @@ def find_strategy_class(sandbox_locals: dict) -> tuple[type | None, bool]:
         if not _is_instantiable_without_args(obj):
             continue
 
+        has_universe = hasattr(obj, "select_universe")
         if "generate_signals" in obj.__dict__:
-            direct_candidates.append(obj)
+            if has_universe:
+                full_direct_candidates.append(obj)
+            else:
+                partial_direct_candidates.append(obj)
         else:
-            inherited_candidates.append(obj)
+            if has_universe:
+                full_inherited_candidates.append(obj)
+            else:
+                partial_inherited_candidates.append(obj)
 
-    strategy_class = None
-    if direct_candidates:
-        strategy_class = direct_candidates[-1]
-    elif inherited_candidates:
-        strategy_class = inherited_candidates[-1]
+    for candidate_bucket in (
+        full_direct_candidates,
+        full_inherited_candidates,
+        partial_direct_candidates,
+        partial_inherited_candidates,
+    ):
+        if candidate_bucket:
+            return candidate_bucket[-1]
 
+    return None
+
+
+def validate_strategy_class_contract(strategy_class: type | None) -> type:
+    """Require the repo's two-hook strategy contract."""
     if strategy_class is None:
-        return None, False
+        raise StrategyContractError(
+            "Strategy contract requires a class with generate_signals(minute_data) "
+            "and select_universe(daily_data)."
+        )
 
-    return strategy_class, hasattr(strategy_class, "select_universe")
+    missing_methods = []
+    if not hasattr(strategy_class, "select_universe"):
+        missing_methods.append("select_universe(daily_data)")
+    if not hasattr(strategy_class, "generate_signals"):
+        missing_methods.append("generate_signals(minute_data)")
+
+    if missing_methods:
+        raise StrategyContractError(
+            "Strategy contract requires "
+            + " and ".join(missing_methods)
+            + "."
+        )
+
+    return strategy_class
 
 
 def apply_signal_lag(signals_by_ticker: dict[str, pd.Series]) -> dict[str, pd.Series]:
@@ -217,49 +254,15 @@ def apply_signal_lag(signals_by_ticker: dict[str, pd.Series]) -> dict[str, pd.Se
     return lagged_signals
 
 
-def default_universe_from_daily_data(daily_data: pd.DataFrame, max_tickers: int = 30) -> list[str]:
-    """Select a safe fallback ticker subset from the full daily frame."""
-    if daily_data is None or daily_data.empty or "ticker" not in daily_data.columns:
-        return []
-
-    ranked = daily_data.dropna(subset=["ticker"]).copy()
-    if ranked.empty:
-        return []
-
-    if "session_date" in ranked.columns:
-        ranked["ticker"] = ranked["ticker"].astype(str)
-        latest_session = pd.to_datetime(ranked["session_date"]).max()
-        active_tickers = (
-            ranked.loc[pd.to_datetime(ranked["session_date"]) == latest_session, "ticker"]
-            .dropna()
-            .astype(str)
-            .tolist()
-        )
-        if active_tickers:
-            ranked = ranked[ranked["ticker"].isin(active_tickers)].copy()
-        if ranked.empty:
-            return []
-
-    if "volume" in ranked.columns:
-        ranked = ranked.dropna(subset=["volume"])
-        if not ranked.empty:
-            universe = (
-                ranked.groupby("ticker", as_index=False)["volume"]
-                .mean()
-                .sort_values(["volume", "ticker"], ascending=[False, True], kind="mergesort")
-            )
-            return universe["ticker"].astype(str).head(max_tickers).tolist()
-
-    return ranked["ticker"].astype(str).drop_duplicates().head(max_tickers).tolist()
-
-
-def normalize_universe_selection(selected_tickers, daily_data: pd.DataFrame) -> list[str]:
-    """Sanitize strategy-selected tickers and fall back to a safe ranked subset."""
+def normalize_universe_selection(selected_tickers) -> list[str]:
+    """Sanitize strategy-selected tickers without synthesizing a fallback universe."""
     if isinstance(selected_tickers, str):
         selected_tickers = [selected_tickers]
 
     if not isinstance(selected_tickers, (list, tuple, set, pd.Index, np.ndarray)):
-        return default_universe_from_daily_data(daily_data)
+        raise StrategyContractError(
+            "select_universe(daily_data) must return a sequence of ticker strings."
+        )
 
     normalized = []
     for ticker in selected_tickers:
@@ -269,7 +272,7 @@ def normalize_universe_selection(selected_tickers, daily_data: pd.DataFrame) -> 
         if value and value not in normalized:
             normalized.append(value)
 
-    return normalized or default_universe_from_daily_data(daily_data)
+    return normalized
 
 
 def prepare_minute_frame(frame: pd.DataFrame) -> pd.DataFrame:
@@ -697,6 +700,8 @@ def _load_strategy_instance(strategy_file: str) -> tuple[type, object]:
             "__metaclass__": type,
             "dict": dict,
             "list": list,
+            "max": max,
+            "min": min,
             "set": set,
             "pd": pd,
             "np": np,
@@ -706,12 +711,12 @@ def _load_strategy_instance(strategy_file: str) -> tuple[type, object]:
         sandbox_locals = {}
         exec(byte_code, safe_globals, sandbox_locals)
 
-        strategy_class, _ = find_strategy_class(sandbox_locals)
-        if not strategy_class:
-            print("STRATEGY ERROR: No class with generate_signals found in strategy.py")
-            sys.exit(1)
+        strategy_class = validate_strategy_class_contract(find_strategy_class(sandbox_locals))
 
         return strategy_class, strategy_class()
+    except StrategyContractError as exc:
+        print(f"STRATEGY ERROR: {exc}")
+        sys.exit(1)
     except SystemExit:
         raise
     except Exception as exc:
@@ -867,19 +872,20 @@ def _minute_pipeline_walk_forward_validation(
             sys.exit(1)
 
         try:
-            selected_tickers = (
+            selected_tickers = normalize_universe_selection(
                 strategy_instance.select_universe(training_daily_data)
-                if hasattr(strategy_instance, "select_universe")
-                else None
             )
-        except Exception:
-            selected_tickers = None
+        except StrategyContractError as exc:
+            print(f"DATA ERROR ({window['test_start']}..{window['test_end']}): contract_invalid: {exc}")
+            sys.exit(1)
+        except Exception as exc:
+            print(f"DATA ERROR ({window['test_start']}..{window['test_end']}): contract_invalid: {exc}")
+            sys.exit(1)
 
-        selected_tickers = normalize_universe_selection(selected_tickers, training_daily_data)
         if universe_size_override is not None:
             selected_tickers = selected_tickers[:universe_size_override]
         if not selected_tickers:
-            print(f"DATA ERROR ({window['test_start']}..{window['test_end']}): no tickers available for minute backtest.")
+            print(f"DATA ERROR ({window['test_start']}..{window['test_end']}): no_trade_universe")
             sys.exit(1)
 
         try:

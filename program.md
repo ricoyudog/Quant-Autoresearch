@@ -56,10 +56,11 @@ Notes:
 - `backtest` accepts `--strategy`, `--start`, `--end`, and `--universe-size`.
 - `validate` accepts `--method cpcv|regime|stability` plus method-specific flags.
 - `setup-data` and `update-data` are the live Typer command names; underscored spellings are not valid CLI commands.
+- `--universe-size` caps strategy-selected tickers; it does not replace strategy-owned universe selection.
 
 ## Strategy Interface
 
-The V2 backtester uses a dual-method contract.
+The V2 backtester uses a mandatory two-hook contract.
 
 ```python
 class TradingStrategy:
@@ -72,8 +73,9 @@ class TradingStrategy:
 
 Contract details:
 
-- `select_universe(daily_data)` is optional and receives the full DuckDB `daily_bars` frame.
-- `generate_signals(minute_data)` receives a dictionary keyed by ticker.
+- `select_universe(daily_data)` is required and receives the full DuckDB `daily_bars` frame.
+- `generate_signals(minute_data)` is required and receives a dictionary keyed by ticker.
+- Universe selection belongs to strategy code; the data pipeline provides data only.
 - Each signal series must align to the source minute-frame index for that ticker.
 - The backtester applies the enforced 1-bar lag. Strategies should emit raw signals and not self-lag.
 - For validation helpers, `generate_signals(pd.DataFrame)` compatibility is still supported.
@@ -83,7 +85,7 @@ Contract details:
 The minute-mode walk-forward runtime is:
 
 1. Phase A: load daily bars from `data/daily_cache.duckdb`
-2. Phase B: run `select_universe(daily_data)` or fall back to the safe ranked universe
+2. Phase B: run `select_universe(daily_data)` inside the strategy to define the trade universe
 3. Phase C: query minute bars for the selected tickers and current test window through `minute-aggs`
 4. Phase D: run `generate_signals(minute_data)`
 5. Phase E: apply the enforced 1-bar lag and evaluate walk-forward metrics

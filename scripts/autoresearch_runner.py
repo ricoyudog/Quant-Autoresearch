@@ -39,6 +39,34 @@ DEFAULT_CLAUDE_WRAPPER = Path("scripts/run_claude_iteration.sh")
 CLAUDE_RATE_LIMIT_EXIT_CODE = 75
 CLAUDE_MAX_RETRY_ATTEMPTS = 3
 CLAUDE_RETRY_BASE_DELAY_SECONDS = 5
+MANDATORY_STRATEGY_HOOKS = (
+    "select_universe(daily_data)",
+    "generate_signals(minute_data)",
+)
+FAILED_DECISION_REASONS = [
+    "contract_invalid",
+    "no_trade_universe",
+    "backtest_failed",
+    "scenario_evaluation_incomplete",
+]
+FAILED_DECISION_REASON_PATTERNS = {
+    "contract_invalid": (
+        "contract_invalid",
+        "strategy contract",
+        "must implement both",
+        "missing select_universe",
+        "missing generate_signals",
+        "no class with generate_signals",
+    ),
+    "no_trade_universe": (
+        "no_trade_universe",
+        "no tickers available for minute backtest",
+        "no trade universe",
+        "no tradable universe",
+        "selected universe is empty",
+        "empty selected universe",
+    ),
+}
 METRIC_PATTERN = re.compile(r"^(?P<name>[A-Z_]+):\s*(?P<value>-?\d+(?:\.\d+)?)\s*$")
 RUN_STATE_TEMPLATE = {
     "run_id": None,
@@ -352,6 +380,18 @@ def assemble_iteration_context(
             "results_file": str(results_path),
             "notes_dir": str(notes_dir),
         },
+        "strategy_contract": {
+            "required_hooks": list(MANDATORY_STRATEGY_HOOKS),
+            "research_focus": (
+                "Treat universe selection and minute-level signal generation as one connected strategy surface."
+            ),
+            "ownership": "Universe selection belongs to strategy code; runner and evaluator never synthesize it.",
+            "governance": (
+                "Evaluator owns keep/revert; contract_invalid, no_trade_universe, "
+                "and scenario_evaluation_incomplete stay bounded failed decisions."
+            ),
+            "failed_decision_reasons": list(FAILED_DECISION_REASONS),
+        },
         "program_excerpt": read_text_excerpt(program_path),
         "strategy_excerpt": read_text_excerpt(strategy_path, max_chars=2000),
         "results_excerpt": read_results_excerpt(results_path),
@@ -377,6 +417,14 @@ def render_context_markdown(context: dict[str, Any]) -> str:
         f"- Strategy: {context['sources']['strategy']}",
         f"- Results ledger: {context['sources']['results_file']}",
         f"- Notes dir: {context['sources']['notes_dir']}",
+        "",
+        "## Strategy Contract",
+        f"- Required hooks: {', '.join(context['strategy_contract']['required_hooks'])}",
+        f"- Research focus: {context['strategy_contract']['research_focus']}",
+        f"- Ownership: {context['strategy_contract']['ownership']}",
+        f"- Governance: {context['strategy_contract']['governance']}",
+        "- Failed-decision reasons: "
+        + ", ".join(context["strategy_contract"]["failed_decision_reasons"]),
         "",
         "## Program Excerpt",
         "```markdown",
@@ -514,7 +562,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--claude-wrapper",
         default=str(DEFAULT_CLAUDE_WRAPPER),
-        help="Shell wrapper used to invoke one Claude Code iteration.",
+        help="Shell wrapper used to invoke one iteration lane with the shared strategy contract.",
     )
     parser.add_argument(
         "--continuation-manifest",
@@ -570,7 +618,7 @@ def validate_args(args: argparse.Namespace) -> None:
 
     wrapper_path = resolve_wrapper_path(args.claude_wrapper)
     if not wrapper_path.exists():
-        raise SystemExit(f"Claude wrapper not found: {wrapper_path}")
+        raise SystemExit(f"Iteration wrapper not found: {wrapper_path}")
 
 
 def summarize_contract(args: argparse.Namespace) -> str:
@@ -583,7 +631,7 @@ def summarize_contract(args: argparse.Namespace) -> str:
     failed_count = len(continuation_manifest.get("failed_branches", [])) if continuation_manifest else 0
     return "\n".join(
         [
-            "Claude Code autoresearch runner scaffold",
+            "Autoresearch iteration runner scaffold",
             f"iterations={args.iterations}",
             f"strategy={args.strategy}",
             f"state_file={args.state_file}",
@@ -593,6 +641,8 @@ def summarize_contract(args: argparse.Namespace) -> str:
             f"notes_dir={args.notes_dir}",
             f"recent_notes_limit={args.recent_notes_limit}",
             f"claude_wrapper={args.claude_wrapper}",
+            f"strategy_contract={','.join(MANDATORY_STRATEGY_HOOKS)}",
+            "failed_decision_reasons=" + ",".join(FAILED_DECISION_REASONS),
             f"continuation_manifest={continuation_manifest_path}",
             f"continuation_manifest_exists={continuation_manifest is not None}",
             (
