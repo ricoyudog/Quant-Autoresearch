@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -24,7 +25,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from config.vault import get_vault_paths
 from src.memory.idea_keep_revert import decide_keep_revert
-from src.memory.experiment_memory import CONTINUATION_MANIFEST_PATH, load_continuation_manifest
+from src.memory.experiment_memory import CONTINUATION_MANIFEST_PATH, load_continuation_manifest, refresh_research_base
 from src.memory.iteration_artifacts import render_experiment_note_draft, write_text
 
 
@@ -351,6 +352,122 @@ def collect_recent_notes(notes_dir: Path, limit: int) -> list[dict[str, Any]]:
     return notes
 
 
+def collect_strategy_notes(limit: int) -> list[dict[str, Any]]:
+    """Collect bounded research/knowledge notes for strategy-context grounding."""
+    if limit <= 0:
+        return []
+
+    try:
+        vault_paths = get_vault_paths()
+    except Exception:
+        return []
+
+    candidates: list[tuple[str, Path]] = []
+    for source_type, directory in (
+        ("research", vault_paths.research),
+        ("knowledge", vault_paths.knowledge),
+    ):
+        if not directory.exists() or not directory.is_dir():
+            continue
+        for note_path in directory.rglob("*"):
+            if note_path.is_file() and note_path.suffix.lower() in {".md", ".txt"}:
+                candidates.append((source_type, note_path))
+
+    candidates.sort(key=lambda item: item[1].stat().st_mtime, reverse=True)
+    notes: list[dict[str, Any]] = []
+    for source_type, note_path in candidates[:limit]:
+        notes.append(
+            {
+                "source_type": source_type,
+                "path": str(note_path),
+                "name": note_path.name,
+                "excerpt": read_text_excerpt(note_path, max_chars=800),
+            }
+        )
+    return notes
+
+
+def build_rejection_map_path(run_root: Path) -> Path:
+    """Return the run-level rejection-memory artifact path."""
+    return run_root / "rejection_map.json"
+
+
+def load_rejection_map(run_root: Path) -> dict[str, Any]:
+    """Load prior run-level rejection memory if present."""
+    path = build_rejection_map_path(run_root)
+    if not path.exists():
+        return {
+            "rejections": [],
+            "anti_repeat_guidance": "Avoid materially equivalent repeats of reverted or failed strategy families.",
+        }
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        return {"rejections": [], "anti_repeat_guidance": "Avoid materially equivalent repeats."}
+    payload.setdefault("rejections", [])
+    payload.setdefault(
+        "anti_repeat_guidance",
+        "Avoid materially equivalent repeats of reverted or failed strategy families.",
+    )
+    return payload
+
+
+def build_strategy_knowledge_pack(
+    continuation_context: dict[str, Any],
+    notes_dir: Path,
+    recent_notes_limit: int,
+    rejection_map: dict[str, Any],
+) -> dict[str, Any]:
+    """Assemble bounded proof sources for the next strategy-search epoch."""
+    recent_experiment_notes = collect_recent_notes(notes_dir, recent_notes_limit)
+    strategy_notes = collect_strategy_notes(max(recent_notes_limit, 3))
+    current_baseline = continuation_context.get("current_baseline")
+    failed_branches = continuation_context.get("failed_branches") or []
+
+    sources: list[dict[str, Any]] = []
+    if current_baseline:
+        sources.append(
+            {
+                "source_type": "continuation_baseline",
+                "path": current_baseline.get("raw_note_path"),
+                "title": current_baseline.get("title"),
+                "decision": current_baseline.get("decision"),
+                "validation_status": current_baseline.get("validation_status"),
+                "inclusion_reason": "current baseline from continuation manifest",
+            }
+        )
+
+    for record in failed_branches[:5]:
+        decision = record.get("decision")
+        sources.append(
+            {
+                "source_type": "rejection_memory",
+                "path": record.get("raw_note_path"),
+                "title": record.get("title"),
+                "decision": decision,
+                "decision_reasons": record.get("decision_reasons") or [],
+                "inclusion_reason": (
+                    "avoid repeating failed strategy family"
+                    if decision == "failed"
+                    else "avoid repeating reverted strategy family"
+                ),
+            }
+        )
+
+    for note in recent_experiment_notes:
+        sources.append({**note, "source_type": "recent_experiment_note", "inclusion_reason": "recent raw note context"})
+    for note in strategy_notes:
+        sources.append({**note, "inclusion_reason": "broader research/knowledge strategy context"})
+
+    return {
+        "pack_version": 1,
+        "source_count": len(sources),
+        "bounded_source_limit": recent_notes_limit,
+        "sources": sources,
+        "rejection_map": rejection_map,
+        "next_recommended_experiment": continuation_context.get("next_recommended_experiment"),
+    }
+
+
 def assemble_iteration_context(
     state: dict[str, Any],
     args: argparse.Namespace,
@@ -361,6 +478,17 @@ def assemble_iteration_context(
     program_path = resolve_program_path(args.program)
     results_path = resolve_results_path(args.results_file)
     notes_dir = resolve_notes_path(args.notes_dir)
+    continuation_context = build_continuation_context(
+        getattr(args, "continuation_manifest", DEFAULT_CONTINUATION_MANIFEST_PATH)
+    )
+    run_root = get_run_root(args.iteration_root, state["run_id"]) if state.get("run_id") else resolve_iteration_root(args.iteration_root)
+    rejection_map = load_rejection_map(run_root)
+    strategy_knowledge_pack = build_strategy_knowledge_pack(
+        continuation_context,
+        notes_dir,
+        args.recent_notes_limit,
+        rejection_map,
+    )
 
     return {
         "run": {
@@ -396,6 +524,9 @@ def assemble_iteration_context(
         "strategy_excerpt": read_text_excerpt(strategy_path, max_chars=2000),
         "results_excerpt": read_results_excerpt(results_path),
         "recent_notes": collect_recent_notes(notes_dir, args.recent_notes_limit),
+        "continuation_context": continuation_context,
+        "strategy_knowledge_pack": strategy_knowledge_pack,
+        "rejection_map": rejection_map,
     }
 
 
@@ -441,8 +572,30 @@ def render_context_markdown(context: dict[str, Any]) -> str:
         context["results_excerpt"] or "(missing)",
         "```",
         "",
-        "## Recent Notes",
+        "## Strategy Knowledge Pack",
+        f"- Source count: {context.get('strategy_knowledge_pack', {}).get('source_count', 0)}",
+        f"- Next recommended experiment: {context.get('strategy_knowledge_pack', {}).get('next_recommended_experiment') or '(missing)'}",
+        "- Anti-repeat guidance: "
+        + str((context.get("rejection_map") or {}).get("anti_repeat_guidance") or "(missing)"),
+        "",
+        "### Proof Sources",
     ]
+
+    for source in (context.get("strategy_knowledge_pack") or {}).get("sources", [])[:12]:
+        lines.extend(
+            [
+                f"- [{source.get('source_type')}] {source.get('title') or source.get('name') or '(untitled)'}",
+                f"  - path: {source.get('path') or '(missing)'}",
+                f"  - reason: {source.get('inclusion_reason') or '(missing)'}",
+            ]
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Recent Notes",
+        ]
+    )
 
     if context["recent_notes"]:
         for note in context["recent_notes"]:
@@ -478,6 +631,8 @@ def parse_iteration_summary(output: str) -> dict[str, Any]:
         return {
             "hypothesis": "No hypothesis reported.",
             "strategy_change_summary": "No strategy change summary reported.",
+            "universe_selection_summary": "No universe selection summary reported.",
+            "proofable_idea_sources": [],
             "files_touched": [],
         }
 
@@ -490,6 +645,8 @@ def parse_iteration_summary(output: str) -> dict[str, Any]:
         return {
             "hypothesis": hypothesis,
             "strategy_change_summary": summary,
+            "universe_selection_summary": "No universe selection summary reported.",
+            "proofable_idea_sources": [],
             "files_touched": [],
         }
 
@@ -497,6 +654,8 @@ def parse_iteration_summary(output: str) -> dict[str, Any]:
         return {
             "hypothesis": str(payload),
             "strategy_change_summary": str(payload),
+            "universe_selection_summary": "No universe selection summary reported.",
+            "proofable_idea_sources": [],
             "files_touched": [],
         }
 
@@ -507,6 +666,12 @@ def parse_iteration_summary(output: str) -> dict[str, Any]:
             or payload.get("change_summary")
             or "No strategy change summary reported."
         ),
+        "universe_selection_summary": str(
+            payload.get("universe_selection_summary")
+            or payload.get("selection_summary")
+            or "No universe selection summary reported."
+        ),
+        "proofable_idea_sources": payload.get("proofable_idea_sources") or [],
         "files_touched": payload.get("files_touched") or [],
         "notes": payload.get("notes"),
     }
@@ -811,6 +976,7 @@ def invoke_claude_iteration_with_retries(
 
 def run_backtest(
     strategy_file: str | Path,
+    universe_selection_path: str | Path | None = None,
     runner: CommandRunner | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Run the deterministic repository backtest for the active strategy."""
@@ -824,7 +990,11 @@ def run_backtest(
         "--strategy",
         str(resolve_strategy_path(strategy_file)),
     ]
-    return command_runner(command, cwd=REPO_ROOT)
+    env = None
+    if universe_selection_path is not None:
+        env = os.environ.copy()
+        env["BACKTEST_UNIVERSE_SELECTION_PATH"] = str(Path(universe_selection_path).expanduser())
+    return command_runner(command, cwd=REPO_ROOT, env=env)
 
 
 def build_failed_decision(
@@ -900,6 +1070,8 @@ def execute_dry_run(args: argparse.Namespace) -> int:
     summary = {
         "hypothesis": "Dry-run artifact generation only; no live hypothesis was proposed.",
         "strategy_change_summary": "No strategy changes were attempted because this run only generated audit artifacts.",
+        "universe_selection_summary": "Dry-run only; no stock/ETF universe was selected.",
+        "proofable_idea_sources": [],
         "files_touched": [],
     }
     decision = {
@@ -1006,6 +1178,249 @@ def write_iteration_record(iteration_dir: Path, record: dict[str, Any]) -> Path:
     return write_json(iteration_dir / "iteration_record.json", record)
 
 
+def _slugify(value: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", value.strip().lower())
+    return slug.strip("-") or "autoresearch-iteration"
+
+
+def _yaml_scalar(value: Any) -> str:
+    text = str(value if value is not None else "").replace('"', '\\"')
+    return f'"{text}"'
+
+
+def _yaml_list_items(values: list[Any]) -> list[str]:
+    return [f"  - {_yaml_scalar(item.get('path') if isinstance(item, dict) else item)}" for item in values]
+
+
+def infer_vault_root_from_notes_dir(notes_dir: Path) -> Path | None:
+    """Infer the Obsidian vault root when notes_dir is the project experiments directory."""
+    resolved = notes_dir.expanduser()
+    if resolved.name != "experiments":
+        return None
+    project_root = resolved.parent
+    if project_root.name != "quant-autoresearch":
+        return None
+    return project_root.parent
+
+
+def render_raw_experiment_note(record: dict[str, Any]) -> str:
+    """Render canonical raw experiment evidence for a live autoresearch round."""
+    summary = record.get("summary") or {}
+    decision_payload = record.get("decision_payload") or {}
+    artifact_paths = record.get("artifact_paths") or {}
+    continuation = record.get("continuation_context") or {}
+    current_baseline = continuation.get("current_baseline") or {}
+    bounded_result = decision_payload.get("bounded_result") or {}
+    unrestricted_result = decision_payload.get("unrestricted_result") or {}
+    proof_sources = summary.get("proofable_idea_sources") or []
+    proof_source_paths: list[str] = []
+    for source in proof_sources:
+        source_path = source.get("path") if isinstance(source, dict) else source
+        source_path_text = str(source_path).strip()
+        if source_path_text:
+            proof_source_paths.append(source_path_text)
+    experiment_slug = _slugify(
+        f"autoresearch-{record.get('run_id')}-iteration-{int(record.get('iteration_number') or 0):04d}"
+    )
+    status = "completed" if record.get("artifact_status") == "completed" else "blocked"
+    validation_status = decision_payload.get("validation_status", "candidate")
+    decision = decision_payload.get("decision") or record.get("decision")
+    baseline_reference = (
+        current_baseline.get("raw_note_path")
+        or current_baseline.get("experiment_slug")
+        or current_baseline.get("title")
+        or "No prior baseline recorded."
+    )
+    analysis_context = artifact_paths.get("context_markdown") or artifact_paths.get("context_json") or ""
+    idea_trace = "; ".join(proof_source_paths) or summary.get("hypothesis") or "No proof source reported."
+    turnover_fee_lesson = (
+        decision_payload.get("turnover_fee_lesson")
+        or record.get("turnover_fee_lesson")
+        or "Not recorded by this iteration; review bounded/unrestricted trade counts before promotion."
+    )
+    next_experiment = (
+        decision_payload.get("next_experiment")
+        or continuation.get("next_recommended_experiment")
+        or "Review this iteration's decision reasons and choose a materially different proof source, universe rule, or signal mechanism."
+    )
+    raw_note_path = artifact_paths.get("raw_experiment_note") or ""
+
+    frontmatter = [
+        "---",
+        "note_type: experiment",
+        f"experiment_slug: {_yaml_scalar(experiment_slug)}",
+        f"run_id: {_yaml_scalar(record.get('run_id'))}",
+        f"iteration_number: {record.get('iteration_number')}",
+        f"status: {_yaml_scalar(status)}",
+        f"baseline_reference: {_yaml_scalar(baseline_reference)}",
+        f"analysis_context: {_yaml_scalar(analysis_context)}",
+        f"idea_trace: {_yaml_scalar(idea_trace)}",
+        f"decision: {_yaml_scalar(decision)}",
+        f"validation_status: {_yaml_scalar(validation_status)}",
+        f"turnover_fee_lesson: {_yaml_scalar(turnover_fee_lesson)}",
+        f"next_experiment: {_yaml_scalar(next_experiment)}",
+        f"raw_note_path: {_yaml_scalar(raw_note_path)}",
+        f"date: {_yaml_scalar(datetime.now(timezone.utc).date().isoformat())}",
+        f"universe_selection_summary: {_yaml_scalar(summary.get('universe_selection_summary') or '')}",
+        f"universe_selection_artifact: {_yaml_scalar(artifact_paths.get('universe_selection') or '')}",
+    ]
+    if proof_sources:
+        frontmatter.extend(["proofable_idea_sources:", *_yaml_list_items(proof_sources)])
+    else:
+        frontmatter.append("proofable_idea_sources: []")
+    frontmatter.extend(["---", ""])
+
+    lines = [
+        *frontmatter,
+        f"# Autoresearch Iteration {record.get('iteration_number')} - {summary.get('hypothesis') or 'No hypothesis reported'}",
+        "",
+        "## Baseline Reference",
+        f"- Current baseline: `{baseline_reference}`",
+        f"- Current baseline title: {current_baseline.get('title') or '(none recorded)'}",
+        "",
+        "## Analysis Context",
+        f"- Iteration context: `{analysis_context or '(missing)'}`",
+        f"- Iteration record: `{artifact_paths.get('iteration_record') or '(missing)'}`",
+        "",
+        "## Objective",
+        summary.get("hypothesis") or "No hypothesis reported.",
+        "",
+        "## Idea Trace / Hypothesis",
+        f"- Hypothesis: {summary.get('hypothesis') or 'No hypothesis reported.'}",
+        f"- Idea trace: {idea_trace}",
+        "",
+        "## Proofable Idea Sources",
+    ]
+    if proof_sources:
+        for source in proof_sources:
+            lines.append(f"- {source.get('path') if isinstance(source, dict) else source}")
+    else:
+        lines.append("- No proofable idea source reported by the iteration agent.")
+
+    lines.extend(
+        [
+            "",
+            "## Universe Selection",
+            summary.get("universe_selection_summary") or "No universe selection summary reported.",
+            f"- Universe audit artifact: `{artifact_paths.get('universe_selection') or '(missing)'}`",
+            "- Instrument scope: stocks and ETFs are allowed when intentionally selected by the strategy thesis.",
+            "",
+            "## Proposed Change",
+            summary.get("strategy_change_summary") or "No strategy change summary reported.",
+            "",
+            "## Evaluation Evidence",
+            f"- Iteration record: `{artifact_paths.get('iteration_record') or '(missing)'}`",
+            f"- Decision payload: `{artifact_paths.get('decision') or '(missing)'}`",
+            f"- Backtest stdout: `{artifact_paths.get('backtest_stdout') or '(missing)'}`",
+            "",
+            "## Bounded Result",
+        ]
+    )
+    if bounded_result:
+        for key, value in bounded_result.items():
+            lines.append(f"- {key.upper()}: `{value}`")
+    else:
+        lines.append("- No bounded result recorded.")
+
+    lines.extend(["", "## Unrestricted Result"])
+    if unrestricted_result:
+        for key, value in unrestricted_result.items():
+            lines.append(f"- {key.upper()}: `{value}`")
+    else:
+        lines.append("- No unrestricted result recorded.")
+
+    lines.extend(["", "## Decision", f"- Decision: `{decision}`"])
+    for reason in decision_payload.get("reasons", []):
+        lines.append(f"- Reason: {reason}")
+    lines.extend(
+        [
+            "",
+            "## Turnover / Fee Lesson",
+            turnover_fee_lesson,
+            "",
+            "## Next Experiment",
+            f"- {next_experiment}",
+            "",
+            "## Raw Note Path",
+            f"- `{raw_note_path or '(missing)'}`",
+            "",
+            "## Continuation Linkage",
+            f"- Continuation manifest: `{continuation.get('manifest_path') or '(missing)'}`",
+            "- This raw note is canonical experiment evidence; iteration artifacts remain runtime evidence.",
+        ]
+    )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def materialize_raw_experiment_note(
+    args: argparse.Namespace,
+    iteration_record: dict[str, Any],
+) -> Path:
+    """Write a canonical raw experiment note for a live iteration."""
+    notes_dir = resolve_notes_path(args.notes_dir)
+    notes_dir.mkdir(parents=True, exist_ok=True)
+    iteration_number = int(iteration_record.get("iteration_number") or 0)
+    hypothesis = (iteration_record.get("summary") or {}).get("hypothesis") or "autoresearch"
+    note_name = (
+        f"{datetime.now(timezone.utc).date().isoformat()}-"
+        f"autoresearch-{iteration_record.get('run_id')}-"
+        f"iteration-{iteration_number:04d}-{_slugify(hypothesis)[:48]}.md"
+    )
+    note_path = notes_dir / note_name
+    render_record = {
+        **iteration_record,
+        "artifact_paths": {
+            **(iteration_record.get("artifact_paths") or {}),
+            "raw_experiment_note": str(note_path),
+        },
+    }
+    note_path.write_text(render_raw_experiment_note(render_record), encoding="utf-8")
+    return note_path
+
+
+def refresh_continuation_after_note(args: argparse.Namespace) -> dict[str, Any]:
+    """Refresh continuation memory after materializing a raw note when the vault can be inferred."""
+    notes_dir = resolve_notes_path(args.notes_dir)
+    vault_root = infer_vault_root_from_notes_dir(notes_dir)
+    if vault_root is None:
+        return {
+            "status": "skipped",
+            "reason": "notes_dir is not an Obsidian quant-autoresearch experiments directory",
+        }
+    manifest = refresh_research_base(vault_root=vault_root, manifest_path=args.continuation_manifest)
+    return {
+        "status": "refreshed",
+        "manifest_path": manifest.get("manifest_path"),
+        "experiment_count": len(manifest.get("experiments") or []),
+    }
+
+
+def update_rejection_map(run_root: Path, iteration_record: dict[str, Any]) -> Path:
+    """Persist rejected candidate families as anti-repeat guidance."""
+    rejection_map = load_rejection_map(run_root)
+    decision_payload = iteration_record.get("decision_payload") or {}
+    decision = decision_payload.get("decision") or iteration_record.get("decision")
+    if decision in {"revert", "failed"}:
+        rejection_map["rejections"].append(
+            {
+                "run_id": iteration_record.get("run_id"),
+                "iteration_number": iteration_record.get("iteration_number"),
+                "decision": decision,
+                "hypothesis": iteration_record.get("hypothesis"),
+                "strategy_change_summary": iteration_record.get("strategy_change_summary"),
+                "universe_selection_summary": (iteration_record.get("summary") or {}).get("universe_selection_summary"),
+                "decision_reasons": decision_payload.get("reasons") or iteration_record.get("decision_reason") or [],
+                "universe_selection_artifact": (iteration_record.get("artifact_paths") or {}).get("universe_selection"),
+            }
+        )
+    rejection_map["updated_at"] = utc_now()
+    rejection_map["anti_repeat_guidance"] = (
+        "Avoid materially equivalent repeats of reverted or failed strategy families; "
+        "change the proofable idea, universe-selection rule, or signal mechanism before retrying."
+    )
+    return write_json(build_rejection_map_path(run_root), rejection_map)
+
+
 def summarize_run(state: dict[str, Any]) -> str:
     """Render a concise operator-facing summary of the current run."""
     return "\n".join(
@@ -1027,7 +1442,6 @@ def run_autoresearch(args: argparse.Namespace, runner: CommandRunner | None = No
     """Execute the bounded multi-round autoresearch loop."""
     command_runner = resolve_command_runner(runner)
     state = load_or_initialize_run(args)
-    continuation_context = build_continuation_context(getattr(args, "continuation_manifest", DEFAULT_CONTINUATION_MANIFEST_PATH))
     run_root = get_run_root(args.iteration_root, state["run_id"])
     run_root.mkdir(parents=True, exist_ok=True)
 
@@ -1041,6 +1455,7 @@ def run_autoresearch(args: argparse.Namespace, runner: CommandRunner | None = No
         iteration_dir.mkdir(parents=True, exist_ok=True)
 
         context = assemble_iteration_context(state, args, iteration_number)
+        continuation_context = context["continuation_context"]
         context_json_path, context_md_path = write_context_bundle(iteration_dir, context)
         snapshot = create_strategy_snapshot(args.strategy, iteration_number, run_root)
 
@@ -1059,9 +1474,11 @@ def run_autoresearch(args: argparse.Namespace, runner: CommandRunner | None = No
         claude_stdout_path.write_text(claude_result.stdout or "")
         claude_stderr_path.write_text(claude_result.stderr or "")
         iteration_summary = parse_iteration_summary(claude_result.stdout)
+        candidate_evidence_completed = claude_result.returncode == 0
 
         backtest_stdout_path = iteration_dir / "backtest.stdout.log"
         backtest_stderr_path = iteration_dir / "backtest.stderr.log"
+        universe_selection_path = iteration_dir / "universe_selection.json"
         if claude_result.returncode != 0:
             backtest_stdout_path.write_text("")
             backtest_stderr_path.write_text("")
@@ -1077,7 +1494,11 @@ def run_autoresearch(args: argparse.Namespace, runner: CommandRunner | None = No
             }
             decision["validation_status"] = "candidate"
         else:
-            backtest_result = run_backtest(args.strategy, runner=command_runner)
+            backtest_result = run_backtest(
+                args.strategy,
+                universe_selection_path=universe_selection_path,
+                runner=command_runner,
+            )
             backtest_stdout_path.write_text(backtest_result.stdout or "")
             backtest_stderr_path.write_text(backtest_result.stderr or "")
 
@@ -1120,21 +1541,26 @@ def run_autoresearch(args: argparse.Namespace, runner: CommandRunner | None = No
         iteration_record = {
             "run_id": state["run_id"],
             "iteration_number": iteration_number,
-            "artifact_status": "completed" if claude_result.returncode == 0 else "failed",
+            "artifact_status": "completed" if candidate_evidence_completed else "blocked",
             "execution_mode": "live",
             "summary": {
                 "hypothesis": iteration_summary["hypothesis"],
                 "strategy_change_summary": iteration_summary["strategy_change_summary"],
+                "universe_selection_summary": iteration_summary["universe_selection_summary"],
+                "proofable_idea_sources": iteration_summary.get("proofable_idea_sources") or [],
                 "files_touched": iteration_summary.get("files_touched") or [],
             },
             "hypothesis": iteration_summary["hypothesis"],
             "strategy_change_summary": iteration_summary["strategy_change_summary"],
+            "universe_selection_summary": iteration_summary["universe_selection_summary"],
+            "proofable_idea_sources": iteration_summary.get("proofable_idea_sources") or [],
             "files_touched": iteration_summary.get("files_touched") or [],
             "claude_attempts": claude_attempts,
             "claude_retry_delays": claude_retry_delays,
             "evaluation_summary": evaluation_summary,
             "decision": decision["decision"],
             "decision_reason": decision.get("reasons", []),
+            "decision_payload": decision,
             "continuation_context": continuation_context,
             "artifact_paths": {
                 "context_json": str(context_json_path),
@@ -1144,6 +1570,7 @@ def run_autoresearch(args: argparse.Namespace, runner: CommandRunner | None = No
                 "claude_stderr": str(claude_stderr_path),
                 "backtest_stdout": str(backtest_stdout_path),
                 "backtest_stderr": str(backtest_stderr_path),
+                "universe_selection": str(universe_selection_path),
             },
         }
 
@@ -1159,17 +1586,10 @@ def run_autoresearch(args: argparse.Namespace, runner: CommandRunner | None = No
             iteration_record["artifact_paths"]["decision"] = str(decision_path)
             iteration_record_path = write_iteration_record(iteration_dir, iteration_record)
             iteration_record["artifact_paths"]["iteration_record"] = str(iteration_record_path)
-            note_draft_path = write_text(iteration_dir / "experiment_note_draft.md", render_experiment_note_draft({
-                "run_id": state["run_id"],
-                "iteration_number": iteration_number,
-                "artifact_status": iteration_record["artifact_status"],
-                "execution_mode": iteration_record["execution_mode"],
-                "summary": iteration_record["summary"],
-                "decision": decision,
-                "continuation_context": continuation_context,
-                "artifact_paths": {**iteration_record["artifact_paths"], "iteration_record": str(iteration_record_path)},
-            }))
-            iteration_record["artifact_paths"]["experiment_note_draft"] = str(note_draft_path)
+            iteration_record["canonical_note_status"] = {
+                "status": "skipped",
+                "reason": "pre-evidence blocked run; no strategy/universe/backtest chain completed",
+            }
             write_json(iteration_record_path, iteration_record)
             save_run_state(args.state_file, state)
             return 1
@@ -1193,17 +1613,17 @@ def run_autoresearch(args: argparse.Namespace, runner: CommandRunner | None = No
         iteration_record["artifact_paths"]["decision"] = str(decision_path)
         iteration_record_path = write_iteration_record(iteration_dir, iteration_record)
         iteration_record["artifact_paths"]["iteration_record"] = str(iteration_record_path)
-        note_draft_path = write_text(iteration_dir / "experiment_note_draft.md", render_experiment_note_draft({
-            "run_id": state["run_id"],
-            "iteration_number": iteration_number,
-            "artifact_status": iteration_record["artifact_status"],
-            "execution_mode": iteration_record["execution_mode"],
-            "summary": iteration_record["summary"],
-            "decision": decision,
-            "continuation_context": continuation_context,
-            "artifact_paths": {**iteration_record["artifact_paths"], "iteration_record": str(iteration_record_path)},
-        }))
-        iteration_record["artifact_paths"]["experiment_note_draft"] = str(note_draft_path)
+        if candidate_evidence_completed:
+            raw_note_path = materialize_raw_experiment_note(args, iteration_record)
+            iteration_record["artifact_paths"]["raw_experiment_note"] = str(raw_note_path)
+            iteration_record["continuation_refresh"] = refresh_continuation_after_note(args)
+            rejection_map_path = update_rejection_map(run_root, iteration_record)
+            iteration_record["artifact_paths"]["rejection_map"] = str(rejection_map_path)
+        else:
+            iteration_record["canonical_note_status"] = {
+                "status": "skipped",
+                "reason": "worker failed before producing a strategy/universe/backtest evidence chain",
+            }
         write_json(iteration_record_path, iteration_record)
 
         should_end, stop_reason = should_stop(state)

@@ -108,7 +108,13 @@ def test_build_continuation_context_prefers_latest_keep_and_preserves_failures(m
     )
     _write_note(
         experiments_dir,
-        "2026-04-16-keep-gamma.md",
+        "2026-04-16-failed-delta.md",
+        "note_type: experiment\nexperiment_slug: failed-delta\nstatus: completed\ndecision: failed\n",
+        "# Delta\n\n## Decision\nStatus: **failed**\nReason:\n- Backtest output was invalid\n",
+    )
+    _write_note(
+        experiments_dir,
+        "2026-04-17-keep-gamma.md",
         "note_type: experiment\nexperiment_slug: keep-gamma\nstatus: completed\ndecision: keep\n",
         "# Gamma\n\n## Decision\nStatus: **keep**\n\n## Next Experiment\n- Validate gamma on unrestricted universe\n",
     )
@@ -117,8 +123,7 @@ def test_build_continuation_context_prefers_latest_keep_and_preserves_failures(m
 
     assert context["current_baseline"]["title"] == "Gamma"
     assert context["recent_winning_branch"]["title"] == "Gamma"
-    assert len(context["failed_branches"]) == 1
-    assert context["failed_branches"][0]["title"] == "Beta"
+    assert [record["title"] for record in context["failed_branches"]] == ["Delta", "Beta"]
     assert context["next_recommended_experiment"] == "Validate gamma on unrestricted universe"
 
 
@@ -178,3 +183,47 @@ def test_collect_experiment_memory_ignores_iteration_drafts(monkeypatch, tmp_pat
 
     assert len(records) == 1
     assert records[0]["title"] == "Real Note"
+
+
+def test_collect_experiment_memory_ignores_top_level_experiment_draft_notes(monkeypatch, tmp_path):
+    """Top-level draft artifacts must not enter the canonical continuation manifest."""
+    vault_root = tmp_path / "vault"
+    experiments_dir = vault_root / "quant-autoresearch" / "experiments"
+    experiments_dir.mkdir(parents=True)
+    (experiments_dir / "2026-04-20-final.md").write_text(
+        "---\nnote_type: experiment\nexperiment_slug: final\ndecision: keep\n---\n\n# Final\n"
+    )
+    (experiments_dir / "2026-04-20-draft.md").write_text(
+        "---\nnote_type: experiment_draft\ndraft_type: derived_iteration_artifact\n---\n\n# Draft\n"
+    )
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(vault_root))
+
+    records = collect_experiment_memory()
+
+    assert [record["title"] for record in records] == ["Final"]
+
+
+def test_collect_experiment_memory_parses_universe_selection_fields(monkeypatch, tmp_path):
+    """Canonical raw notes should expose universe-selection evidence to continuation context."""
+    vault_root = tmp_path / "vault"
+    experiments_dir = vault_root / "quant-autoresearch" / "experiments"
+    experiments_dir.mkdir(parents=True)
+    (experiments_dir / "2026-04-20-etf-keep.md").write_text(
+        "---\n"
+        "note_type: experiment\n"
+        "experiment_slug: etf-keep\n"
+        "decision: keep\n"
+        "universe_selection_summary: SPY ETF plus AAPL momentum basket\n"
+        "universe_selection_artifact: experiments/iterations/run-x/iteration-0001/universe_selection.json\n"
+        "proofable_idea_sources:\n"
+        "  - vault/research/etf-momentum.md\n"
+        "---\n\n"
+        "# ETF Keep\n"
+    )
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(vault_root))
+
+    records = collect_experiment_memory()
+
+    assert records[0]["universe_selection_summary"] == "SPY ETF plus AAPL momentum basket"
+    assert records[0]["universe_selection_artifact"].endswith("universe_selection.json")
+    assert records[0]["proofable_idea_sources"] == ["vault/research/etf-momentum.md"]

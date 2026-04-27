@@ -1,15 +1,19 @@
 # Strategy Knowledge Loop Upgrade Plan
 
-> Status: target-state design package / planning-only before cutover
+> Status: transition design package / first cutover slice implemented
 > Source evidence: `run-20260424T085227108335Z` live-run audit and deep-interview design update
 > Scope: strategy context, rejection memory, strategic stock/ETF universe selection, backtest auditability, raw-note/continuation linkage, and docs/runtime cutover governance
 
-## Pre-cutover authority notice
+## Cutover authority notice
 
-This artifact is **planning/design only** and is **non-normative before cutover**.
-It describes the future-state package that should be implemented later; it does not claim the current runtime already supports the target behavior.
+This artifact is a transition record. The first implementation cutover slice has
+landed for the core runner/backtester/memory surfaces, so this file should no
+longer be treated as the active runtime contract.
 
-Current authority remains with `program.md`, `docs/architecture/strategy-research-workflow.md`, `.omx/specs/strategy-knowledge-loop-artifact-contract.md`, and `docs/program/index.md` until all supersession trigger conditions are satisfied.
+Current authority remains with the updated `program.md`,
+`docs/architecture/strategy-research-workflow.md`,
+`.omx/specs/strategy-knowledge-loop-artifact-contract.md`, and
+`docs/program/index.md`.
 
 ## Current-state vs target-state authority
 
@@ -17,6 +21,17 @@ Current authority remains with `program.md`, `docs/architecture/strategy-researc
 |---|---|---|---|---|
 | Pre-cutover / current state | Current runtime/docs are authoritative | `program.md`; `docs/architecture/strategy-research-workflow.md`; `.omx/specs/strategy-knowledge-loop-artifact-contract.md`; `docs/program/index.md` | `docs/program/strategy-knowledge-loop-upgrade-plan.md`; `.omx/plans/prd-strategy-knowledge-loop-full-autonomous-iteration.md`; `.omx/plans/test-spec-strategy-knowledge-loop-full-autonomous-iteration.md` | None; this package remains planning/design only |
 | Post-cutover / future state | Updated runtime/docs become authoritative | Updated current-state docs/specs after implementation and verification | Historical planning package retained only as planning record unless explicitly retired/archived | Supersession trigger: implementation lands, verification passes, current docs are updated or retired, and collateral disposition is recorded |
+
+First cutover slice now implemented:
+- live runner summaries carry `universe_selection_summary` and
+  `proofable_idea_sources`
+- the backtester writes `universe_selection.json` with raw per-window
+  strategy-selected tickers and any runtime cap
+- live iterations materialize raw Obsidian experiment notes and refresh
+  continuation memory when the notes directory maps to the configured vault
+- run-level `rejection_map.json` preserves reverted/failed candidate families
+  as anti-repeat guidance
+- dry-run remains preview-only with `experiment_note_draft.md`
 
 ## Collateral Disposition Matrix
 
@@ -112,9 +127,13 @@ proofable idea / evidence source
   -> candidate strategy research/change
   -> backtest and universe audit
   -> keep/revert/failed/blocked decision
-  -> raw note + continuation memory
+  -> raw note + continuation memory when candidate evidence exists
   -> next-epoch anti-repeat guidance
 ```
+
+Pre-evidence operational blocks, such as persistent model rate limits before an
+iteration agent returns a candidate, remain runtime audit records only; they do
+not become canonical Obsidian raw experiment notes.
 
 ## Target architecture and responsibility boundaries
 
@@ -207,7 +226,7 @@ Canonical live-round notes should include:
 - link to `universe_selection.json`
 - backtest data/window summary
 - keep/revert/failed/blocked decision
-- rejection-map update when the decision is `revert`
+- rejection-map update when the decision is `revert` or candidate-level `failed`
 - anti-repeat guidance for the next experiment
 - continuation manifest linkage
 
@@ -246,7 +265,7 @@ These criteria apply to this docs/plans update itself, before code implementatio
 | 1 | Live context includes a bounded strategy-knowledge pack beyond the latest three experiment notes. |
 | 2 | Each included strategy source records path, category, excerpt, and inclusion reason. |
 | 3 | Every epoch/iteration references at least one proofable idea or evidence source. |
-| 4 | Reverted candidates update a rejection map with score, baseline comparison, turnover/trades, PF, drawdown, decision, reasons, and anti-repeat guidance. |
+| 4 | Reverted and candidate-level failed candidates update rejection memory with score/baseline evidence when available, decision, reasons, and anti-repeat guidance. |
 | 5 | Repeated failed strategy families generate anti-repeat guidance for the next round. |
 | 6 | Live backtest artifacts persist raw per-window `selected_tickers` from `select_universe()` before minute-data validation. |
 | 7 | Universe artifacts record cap effects and distinguish raw selected tickers, after-cap tickers, after-validation tickers, and `PER_SYMBOL` evaluation output. |

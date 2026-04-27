@@ -157,15 +157,27 @@ Red flags:
 - Minute queries are window-scoped to keep memory use bounded.
 - The security gate still blocks dangerous imports, forbidden builtins, and look-ahead patterns such as `.shift(-1)`.
 
-## Claude Code Outer-Loop Contract
+## Autoresearch Outer-Loop Contract
 
 Current 003 branch status for `scripts/autoresearch_runner.py`:
 
 - `--dry-run` writes one machine-first iteration artifact bundle for audit and review.
-- The bundle includes context, prompt, decision, iteration record, and a derived `experiment_note_draft.md`.
-- The draft is **not** raw evidence and requires an explicit finalize step before becoming a real vault experiment note.
-- The evaluator remains the only authority for any future keep/revert decision.
-- Full live multi-round execution and richer resume semantics remain follow-up work.
+- Dry-run bundles include context, prompt, decision, iteration record, and a
+  derived `experiment_note_draft.md`; the draft is **not** raw evidence.
+- Live iterations write `universe_selection.json` so raw per-window
+  `select_universe(daily_data)` outputs are auditable separately from
+  `PER_SYMBOL`.
+- Live iterations require the worker summary to include
+  `universe_selection_summary` and `proofable_idea_sources`, so each epoch
+  links idea source -> stock/ETF screening thesis -> strategy change.
+- Live iterations materialize a raw Obsidian experiment note under
+  `quant-autoresearch/experiments/`, refresh the continuation manifest when
+  the vault root is inferable, and update run-level `rejection_map.json` for
+  reverted/failed candidates.
+- Pre-evidence operational blocks, including persistent model rate limits before
+  a candidate strategy/universe chain exists, remain runtime audit artifacts and
+  must not be promoted into raw experiment notes or continuation memory.
+- The evaluator remains the only authority for keep/revert decisions.
 
 ## Experiment Logging
 
@@ -210,6 +222,11 @@ Strategy knowledge loop rules:
 - Derived summaries such as `experiment-index.md` and kickoff notes may be auto-refreshed, but they must link back to raw notes and never replace them.
 - A single improved backtest is follow-up evidence, not proof, and it must not automatically stop exploration of other branches.
 - Generic intake stays anchored to `research/` + `knowledge/`; experiment memory is only loaded through an explicit continuation mode.
+- Stock/ETF universe selection is part of the strategy thesis: ETFs are
+  allowed when intentionally selected, and `universe_selection.json` plus the
+  raw note must explain the selection rule.
+- Reverted/failed candidate families must be retained as rejection memory so
+  later epochs do not repeat materially equivalent ideas.
 
 Before proposing strategy changes:
 - consume a minimum structured context bundle before proposing strategy changes

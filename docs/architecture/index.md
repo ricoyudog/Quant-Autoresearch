@@ -114,6 +114,9 @@ Generic research intake and explicit continuation state are separate.
   keep/revert decisions
 - `src/memory/experiment_memory.py` rebuilds the continuation manifest and
   derived summaries from raw experiment evidence
+- live autoresearch iterations materialize raw experiment notes after
+  evaluator/backtester decisions and preserve reverted/failed branches in
+  rejection memory
 
 The artifact hierarchy is defined by
 `.omx/specs/strategy-knowledge-loop-artifact-contract.md`:
@@ -125,6 +128,9 @@ The artifact hierarchy is defined by
 Outside that hierarchy, the runtime may emit rebuildable iteration artifacts
 under `experiments/iterations/...`; those files are audit artifacts, not raw
 notes and not the canonical continuation manifest.
+Important audit artifacts now include `universe_selection.json`, which records
+raw per-window `select_universe(daily_data)` outputs before minute-data
+validation and before any runtime universe cap.
 
 ### 6. Autoresearch Orchestration Boundary
 `scripts/autoresearch_runner.py` is the current outer-loop orchestration surface.
@@ -132,17 +138,22 @@ notes and not the canonical continuation manifest.
 Its current role is to manage:
 - run state
 - continuation context loading
+- bounded strategy-knowledge pack assembly
+- rejection-map anti-repeat guidance
 - strategy snapshots
 - context bundles and per-iteration audit artifacts
 - deterministic evaluation handoff
+- live raw-note materialization and continuation refresh
 
 Its current boundary matters:
 - the current default lane is `omx`
-- the runner is still **dry-run-first**
-- `experiment_note_draft.md` is a derived draft, not raw evidence
+- dry-run is still preview-only and emits `experiment_note_draft.md`
+- live runs write raw experiment notes and keep dry-run drafts out of generic
+  intake
+- `universe_selection.json` is the first-class stock/ETF screener audit
+  artifact; `PER_SYMBOL` is not enough to prove screener behavior
 - keep/revert authority remains evaluator/backtester-led
-- the current system should not be described as a fully live autonomous
-  multi-round mutation loop
+- ETFs are allowed when the strategy thesis intentionally selects them
 
 ## Canonical Boundaries
 - `program.md` owns the runtime contract and command-level operational truth.

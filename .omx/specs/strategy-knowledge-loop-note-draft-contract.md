@@ -4,8 +4,9 @@
 
 This contract defines the **derived note draft** surface used by runner iteration artifacts.
 
-The note draft exists to make a round human-auditable before any explicit finalize step
-creates or updates a raw Obsidian experiment note.
+The note draft exists as a **dry-run/operator preview** convenience. Live
+iterations materialize canonical raw Obsidian experiment notes directly after
+evaluator/backtester decision; dry-runs remain non-canonical.
 
 ## Hierarchy Position
 
@@ -24,12 +25,12 @@ It is:
 - rebuildable
 - disposable
 - excluded from generic intake
-- excluded from summary refresh unless an explicit continuation/finalize path opts in
+- excluded from summary refresh
 
 It is not:
 - raw evidence
 - the canonical continuation manifest
-- a substitute for explicit raw-note finalization
+- a normal live-path artifact
 
 ## Required Fields
 
@@ -60,4 +61,7 @@ Frontmatter should include at minimum:
 - A draft must explicitly say when the round is dry-run or simulated.
 - Placeholders must not look like real evaluator conclusions.
 - The draft must not claim `validated` unless an explicit promotion rule sets it.
-- The draft must remind the operator that final raw-note materialization is a separate explicit step.
+- The draft must remind the operator that dry-run previews are non-canonical.
+- Live-path raw-note materialization is governed by
+  `.omx/specs/strategy-knowledge-loop-artifact-contract.md`, not this preview
+  draft contract.

@@ -268,6 +268,16 @@ def _derive_next_experiment(frontmatter: dict[str, Any], sections: dict[str, str
     return " ".join(cleaned_lines)
 
 
+def _coerce_string_list(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value] if value.strip() else []
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    return [str(value).strip()] if str(value).strip() else []
+
+
 def _derive_validation_status(frontmatter: dict[str, Any], decision: str) -> str:
     explicit_value = frontmatter.get("validation_status")
     if isinstance(explicit_value, str) and explicit_value.strip():
@@ -321,10 +331,25 @@ def _parse_experiment_note(note_path: Path) -> dict[str, Any]:
             body,
             ("daily-research-kickoff", "analysis", "spy-analysis", "kickoff"),
         ),
+        "proofable_idea_sources": _coerce_string_list(frontmatter.get("proofable_idea_sources")),
+        "universe_selection_summary": frontmatter.get("universe_selection_summary"),
+        "universe_selection_artifact": frontmatter.get("universe_selection_artifact"),
         "results_tsv_path": "experiments/results.tsv",
         "related_links": _extract_wiki_links(body),
     }
     return record
+
+
+def _is_draft_artifact_note(note_path: Path) -> bool:
+    frontmatter = read_frontmatter(note_path)
+    note_type = str(frontmatter.get("note_type") or "").strip().lower()
+    draft_type = str(frontmatter.get("draft_type") or "").strip().lower()
+    materialization = str(frontmatter.get("raw_note_materialization") or "").strip().lower()
+    return (
+        note_type in {"experiment_draft", "draft"}
+        or draft_type == "derived_iteration_artifact"
+        or materialization == "pending_explicit_finalize"
+    )
 
 
 def collect_experiment_memory(vault_root: str | Path | None = None) -> list[dict[str, Any]]:
@@ -332,6 +357,8 @@ def collect_experiment_memory(vault_root: str | Path | None = None) -> list[dict
     records: list[dict[str, Any]] = []
     for note_path in sorted(paths.experiments.glob("*.md")):
         if note_path.name == "experiment-index.md":
+            continue
+        if _is_draft_artifact_note(note_path):
             continue
         records.append(_parse_experiment_note(note_path))
     records.sort(key=lambda item: (item.get("note_date") or "", item["raw_note_path"]))
@@ -354,7 +381,9 @@ def build_continuation_context(records: list[dict[str, Any]]) -> dict[str, Any]:
     ]
     baseline_pool = terminal_keeps or keep_records
     current_baseline = baseline_pool[-1] if baseline_pool else None
-    failed_branches = [record for record in reversed(sorted_records) if record["decision"] == "revert"]
+    failed_branches = [
+        record for record in reversed(sorted_records) if record["decision"] in {"revert", "failed"}
+    ]
     next_experiment = None
     if current_baseline is not None:
         next_experiment = current_baseline.get("next_experiment")

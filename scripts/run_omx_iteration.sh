@@ -162,8 +162,8 @@ Required behavior:
 - Do not bypass evaluator-led governance with fallback universes, self-approved keeps, or new governance states
 - Keep edits focused on the strategy-under-iteration unless the outer runner explicitly expands scope
 - Do not edit tests, docs, runner code, metadata, or generated artifacts; run existing checks only
-- Leave enough output for the outer runner to summarize the round hypothesis and strategy change
-- Final response must be a JSON object with keys: hypothesis, strategy_change_summary, files_touched
+- Leave enough output for the outer runner to summarize the round hypothesis, proofable idea sources, stock/ETF universe selection thesis, and strategy change
+- Final response must be a JSON object with keys: hypothesis, strategy_change_summary, universe_selection_summary, proofable_idea_sources, files_touched
 EOF
 
 if [ -n "$CONTEXT_FILE" ]; then
@@ -246,6 +246,11 @@ if not isinstance(payload, dict):
 if not isinstance(payload.get("hypothesis"), str) or not payload["hypothesis"].strip():
     raise SystemExit(1)
 if not isinstance(payload.get("strategy_change_summary"), str) or not payload["strategy_change_summary"].strip():
+    raise SystemExit(1)
+if not isinstance(payload.get("universe_selection_summary"), str) or not payload["universe_selection_summary"].strip():
+    raise SystemExit(1)
+proofable_sources = payload.get("proofable_idea_sources")
+if not isinstance(proofable_sources, list) or not all(isinstance(item, (str, dict)) for item in proofable_sources):
     raise SystemExit(1)
 files_touched = payload.get("files_touched")
 if not isinstance(files_touched, list) or not all(isinstance(item, str) for item in files_touched):

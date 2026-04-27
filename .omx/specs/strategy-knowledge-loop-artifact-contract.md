@@ -43,14 +43,23 @@ layer 1 as part of summarization.
 Raw notes are human-readable evidence. They are append-only and may be
 summarized, but not deleted or replaced by summaries.
 
+Only rounds that complete the proof chain at least through worker-produced
+strategy/universe evidence should become raw notes. Pre-evidence operational
+blocks (for example persistent model rate limits before a candidate is
+produced) stay in runtime audit artifacts and must not be promoted into
+canonical experiment memory.
+
 Required content:
 - baseline reference
 - analysis context
 - idea trace / hypothesis
+- proofable idea sources
 - strategy changes
+- stock/ETF universe-selection thesis
+- universe-selection artifact path when produced
 - bounded result
 - unrestricted result
-- decision (`keep` / `revert` / `follow_up`)
+- decision (`keep` / `revert` / `failed` / `blocked` / `follow_up_required`)
 - decision reasons
 - turnover / fee lesson
 - next experiment
@@ -80,6 +89,9 @@ Required fields:
 - `decision_reasons`
 - `turnover_fee_lesson`
 - `next_experiment`
+- `proofable_idea_sources`
+- `universe_selection_summary`
+- `universe_selection_artifact`
 
 Recommended `validation_status` values:
 - `candidate`
@@ -106,13 +118,24 @@ Examples:
 - `claude_prompt.md`
 - `decision.json`
 - `iteration_record.json`
+- `universe_selection.json`
+- run-level `rejection_map.json`
 - `experiment_note_draft.md`
 
 Rules:
 - These files may explain one round end-to-end.
 - They must remain excluded from generic intake.
-- `experiment_note_draft.md` is a derived draft, not a raw experiment note.
-- Only an explicit finalize flow may materialize a raw vault note from them.
+- `universe_selection.json` records raw per-window
+  `select_universe(daily_data)` outputs before minute-data validation and any
+  runtime `--universe-size` cap.
+- `rejection_map.json` records reverted/failed candidate families so later
+  epochs can avoid materially equivalent repeats.
+- `experiment_note_draft.md` is a dry-run/operator-preview draft, not a raw
+  experiment note.
+- A **live** runner iteration may materialize a raw vault note directly after
+  evaluator/backtester decision, then refresh the continuation manifest.
+- A **dry-run** iteration must remain preview-only and must not materialize a
+  raw vault note.
 
 ## Continuation Modes
 
@@ -134,11 +157,53 @@ Continuation mode may consume:
 - raw experiment notes
 - the canonical manifest
 - derived summaries
+- bounded strategy knowledge packs assembled from current baseline, raw
+  experiment evidence, relevant `research/` and `knowledge/` notes, and
+  rejection memory
 
 Continuation mode must still preserve the distinction between:
 - promising improvement
 - candidate baseline
 - validated strategy
+
+## Universe Selection Evidence
+
+Stock/ETF selection is a first-class strategy output.
+
+Rules:
+- `select_universe(daily_data)` owns the trade universe.
+- ETFs are allowed when the strategy thesis intentionally selects them.
+- The evaluator/backtester must not replace an empty or invalid strategy
+  universe with a synthetic fallback.
+- `PER_SYMBOL` output remains evaluation evidence, but it is not sufficient as
+  screener evidence.
+- Live iterations must link a plain-language `universe_selection_summary` to
+  machine-readable raw per-window `selected_tickers` evidence.
+
+The `universe_selection.json` artifact should include:
+- `instrument_scope: stocks_or_etfs`
+- `selection_owner`
+- `selection_thesis`
+- `universe_size_cap`
+- per-window `raw_selected_tickers`
+- per-window post-cap `selected_tickers`
+- whether a cap was applied
+
+## Rejection Memory
+
+Reverted and failed candidates are retained as anti-repeat guidance.
+
+The run-level `rejection_map.json` should include:
+- hypothesis
+- strategy-change summary
+- universe-selection summary
+- decision
+- decision reasons
+- universe-selection artifact path when available
+
+Subsequent iteration contexts should surface the rejection map so the next
+agent changes the proofable idea, universe rule, or signal mechanism before
+retrying.
 
 ## Fee / Turnover Lesson Capture
 

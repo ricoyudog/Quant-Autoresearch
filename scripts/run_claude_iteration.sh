@@ -159,8 +159,8 @@ Required behavior:
 - Do not decide final keep/revert yourself; the outer runner owns acceptance
 - Do not bypass evaluator-led governance with fallback universes, self-approved keeps, or new governance states
 - Keep edits focused on the strategy-under-iteration unless the outer runner explicitly expands scope
-- Leave enough output for the outer runner to summarize the round hypothesis and strategy change
-- Final response must be a JSON object with keys: hypothesis, strategy_change_summary, files_touched
+- Leave enough output for the outer runner to summarize the round hypothesis, proofable idea sources, stock/ETF universe selection thesis, and strategy change
+- Final response must be a JSON object with keys: hypothesis, strategy_change_summary, universe_selection_summary, proofable_idea_sources, files_touched
 EOF
 
 if [ -n "$CONTEXT_FILE" ]; then

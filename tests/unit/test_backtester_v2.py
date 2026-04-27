@@ -7,6 +7,8 @@ Tests cover the new functions added to the backtester:
 - run_per_symbol_analysis
 """
 
+import json
+
 import pytest
 import pandas as pd
 import numpy as np
@@ -909,6 +911,105 @@ class MinuteStrategy:
 
         assert "SCORE:" in output
         assert "PER_SYMBOL:" in output
+
+
+
+def test_get_backtest_runtime_config_rejects_non_integer_universe_size(monkeypatch):
+    """BACKTEST_UNIVERSE_SIZE must be an integer before any data is loaded."""
+    monkeypatch.delenv("BACKTEST_START_DATE", raising=False)
+    monkeypatch.delenv("BACKTEST_END_DATE", raising=False)
+    monkeypatch.setenv("BACKTEST_UNIVERSE_SIZE", "not-an-int")
+
+    with pytest.raises(ValueError, match="BACKTEST_UNIVERSE_SIZE must be a positive integer"):
+        backtester.get_backtest_runtime_config()
+
+
+def test_normalize_universe_selection_deduplicates_and_drops_blank_entries():
+    """Universe normalization should preserve intentional ETF symbols while removing blanks and duplicates."""
+    selected = backtester.normalize_universe_selection(["SPY", "AAPL", "", "SPY", None, "  MSFT  "])
+
+    assert selected == ["SPY", "AAPL", "MSFT"]
+
+
+def test_normalize_universe_selection_rejects_scalar_non_sequence():
+    """A scalar non-sequence is not a valid select_universe output."""
+    with pytest.raises(StrategyContractError, match="select_universe"):
+        backtester.normalize_universe_selection(123)
+
+
+def test_walk_forward_validation_writes_universe_selection_artifact(monkeypatch, tmp_path, capsys):
+    """Backtester should persist raw per-window selected tickers separately from PER_SYMBOL output."""
+    strategy_path = tmp_path / "strategy.py"
+    strategy_path.write_text(
+        """
+class ETFAllowedStrategy:
+    universe_selection_thesis = "Select liquid risk-on ETFs and stocks by training-window momentum."
+
+    def select_universe(self, daily_data):
+        return ["SPY", "AAPL", "SPY", "", "MSFT"]
+
+    def generate_signals(self, data):
+        return {
+            ticker: pd.Series([1.0, 0.0, -1.0], index=frame.index)
+            for ticker, frame in data.items()
+        }
+""".strip()
+    )
+    artifact_path = tmp_path / "universe_selection.json"
+    daily_data = build_daily_universe_frame()
+    windows = [
+        {
+            "train_start": "2025-11-03",
+            "train_end": "2025-11-05",
+            "test_start": "2025-11-06",
+            "test_end": "2025-11-07",
+        }
+    ]
+    query_calls = []
+
+    monkeypatch.setenv("STRATEGY_FILE", str(strategy_path))
+    monkeypatch.setenv("BACKTEST_UNIVERSE_SIZE", "2")
+    monkeypatch.setenv("BACKTEST_UNIVERSE_SELECTION_PATH", str(artifact_path))
+    monkeypatch.delenv("BACKTEST_START_DATE", raising=False)
+    monkeypatch.delenv("BACKTEST_END_DATE", raising=False)
+    monkeypatch.setattr(backtester, "security_check", lambda file_path=None: (True, ""))
+    monkeypatch.setattr(backtester, "load_daily_data", lambda start_date=None, end_date=None: daily_data.copy())
+    monkeypatch.setattr(backtester, "calculate_walk_forward_windows", lambda start_date, end_date, n_windows=5: list(windows))
+
+    def fake_query_minute_data(symbols, start_date, end_date):
+        query_calls.append(list(symbols))
+        return build_window_minute_data(list(symbols), start_date)
+
+    monkeypatch.setattr(backtester, "query_minute_data", fake_query_minute_data)
+    monkeypatch.setattr(
+        backtester,
+        "calculate_metrics",
+        lambda combined_returns, trades, trade_activity=None: {
+            "sharpe": 1.0,
+            "sortino": 1.0,
+            "calmar": 1.0,
+            "drawdown": -0.1,
+            "max_dd_days": 1,
+            "trades": 2,
+            "win_rate": 0.5,
+            "profit_factor": 1.1,
+            "avg_win": 0.01,
+            "avg_loss": -0.01,
+        },
+    )
+    monkeypatch.setattr(backtester, "calculate_baseline_sharpe", lambda data: 0.5)
+
+    backtester.walk_forward_validation()
+    capsys.readouterr()
+
+    payload = json.loads(artifact_path.read_text())
+    assert query_calls == [["SPY", "AAPL"]]
+    assert payload["instrument_scope"] == "stocks_or_etfs"
+    assert payload["universe_size_cap"] == 2
+    assert payload["selection_thesis"] == "Select liquid risk-on ETFs and stocks by training-window momentum."
+    assert payload["windows"][0]["raw_selected_tickers"] == ["SPY", "AAPL", "MSFT"]
+    assert payload["windows"][0]["selected_tickers"] == ["SPY", "AAPL"]
+    assert payload["windows"][0]["cap_applied"] is True
 
 
 class TestPrepareMinuteFrame:

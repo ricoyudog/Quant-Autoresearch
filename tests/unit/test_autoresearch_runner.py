@@ -89,6 +89,34 @@ BASELINE_SHARPE: 0.4500
     assert metrics["deflated_sr"] == 0.62
 
 
+
+def test_parse_iteration_summary_preserves_strategy_knowledge_fields():
+    """Iteration summaries should carry proofable idea and universe-selection explanations."""
+    runner = _load_runner_module()
+    payload = {
+        "hypothesis": "Exploit volume-confirmed momentum after market-wide risk-on days.",
+        "strategy_change_summary": "Rank daily momentum and trade intraday continuation.",
+        "universe_selection_summary": "Select SPY plus liquid high-momentum stocks; ETFs are intentional regime instruments.",
+        "proofable_idea_sources": ["vault/research/momentum.md", {"path": "vault/experiments/baseline.md"}],
+        "files_touched": ["src/strategies/active_strategy.py"],
+    }
+
+    summary = runner.parse_iteration_summary(json.dumps(payload))
+
+    assert summary["universe_selection_summary"] == payload["universe_selection_summary"]
+    assert summary["proofable_idea_sources"] == payload["proofable_idea_sources"]
+
+
+def test_parse_iteration_summary_defaults_missing_strategy_knowledge_fields():
+    """Older wrapper output should stay parseable but be marked as unspecified."""
+    runner = _load_runner_module()
+
+    summary = runner.parse_iteration_summary(json.dumps({"hypothesis": "h", "strategy_change_summary": "s"}))
+
+    assert summary["universe_selection_summary"] == "No universe selection summary reported."
+    assert summary["proofable_idea_sources"] == []
+
+
 def test_default_run_state_matches_expected_schema():
     runner = _load_runner_module()
 
@@ -550,6 +578,41 @@ def test_run_autoresearch_blocks_on_persistent_rate_limit_without_consuming_iter
         runner.CLAUDE_RETRY_BASE_DELAY_SECONDS * 2,
     ]
     assert iteration_record["snapshot"]["restored"] is True
+    assert iteration_record["artifact_status"] == "blocked"
+    assert iteration_record["canonical_note_status"]["status"] == "skipped"
+    assert "pre-evidence blocked" in iteration_record["canonical_note_status"]["reason"]
+    assert "raw_experiment_note" not in iteration_record["artifact_paths"]
+    assert "continuation_refresh" not in iteration_record
+    assert not (run_root / "rejection_map.json").exists()
+
+
+def test_worker_failure_skips_canonical_memory_promotion(tmp_path, monkeypatch):
+    """Worker failures before candidate evidence should remain runtime audit, not experiment memory."""
+    runner = _load_runner_module()
+    args = _build_args(tmp_path, iterations=1)
+
+    def fake_run_command(command, cwd=None, env=None):
+        if "run_claude_iteration.sh" in command:
+            return subprocess.CompletedProcess(command, 2, stdout="", stderr="wrapper crashed before candidate")
+
+        pytest.fail("Backtest should not run when the iteration worker fails before producing a candidate")
+
+    monkeypatch.setattr(runner, "run_command", fake_run_command)
+
+    exit_code = runner.run_autoresearch(args)
+
+    saved_state = json.loads(Path(args.state_file).read_text())
+    run_root = Path(args.iteration_root) / saved_state["run_id"]
+    iteration_record = json.loads((run_root / "iteration-0001" / "iteration_record.json").read_text())
+
+    assert exit_code == 0
+    assert saved_state["current_iteration"] == 1
+    assert iteration_record["artifact_status"] == "blocked"
+    assert iteration_record["canonical_note_status"]["status"] == "skipped"
+    assert "worker failed before producing" in iteration_record["canonical_note_status"]["reason"]
+    assert "raw_experiment_note" not in iteration_record["artifact_paths"]
+    assert "continuation_refresh" not in iteration_record
+    assert not (run_root / "rejection_map.json").exists()
 
 
 def test_main_status_only_does_not_require_iterations(tmp_path, capsys):
@@ -783,3 +846,135 @@ def test_execute_dry_run_writes_iteration_bundle(tmp_path):
     draft = (iteration_dir / "experiment_note_draft.md").read_text()
     assert "pending_explicit_finalize" in draft
     assert "Current baseline: Experiment - Minimum Hold Duration v1" in draft
+
+
+def test_run_autoresearch_writes_universe_selection_and_raw_note(tmp_path, monkeypatch):
+    """A live completed round should link summary, universe audit, raw note, and continuation refresh evidence."""
+    runner = _load_runner_module()
+    vault_root = tmp_path / "vault"
+    notes_dir = vault_root / "quant-autoresearch" / "experiments"
+    notes_dir.mkdir(parents=True)
+    args = _build_args(tmp_path, iterations=1)
+    args.notes_dir = str(notes_dir)
+    args.continuation_manifest = str(tmp_path / "current_research_base.json")
+    Path(args.strategy).write_text("VALUE = 7\n")
+
+    def fake_run_command(command, cwd=None, env=None):
+        if "run_claude_iteration.sh" in command:
+            strategy_path = Path(_command_arg(command, "--strategy"))
+            output_dir = Path(_command_arg(command, "--output-dir"))
+            round_dir = output_dir / "iteration-0001"
+            round_dir.mkdir(parents=True, exist_ok=True)
+            (round_dir / "claude_prompt.md").write_text("prompt")
+            strategy_path.write_text("VALUE = 42\n")
+            return subprocess.CompletedProcess(
+                command,
+                0,
+                stdout=json.dumps(
+                    {
+                        "hypothesis": "ETF-aware continuation idea",
+                        "strategy_change_summary": "Select ETF plus stock momentum basket",
+                        "universe_selection_summary": "SPY is intentionally selected as an ETF regime anchor.",
+                        "proofable_idea_sources": ["vault/research/etf-momentum.md"],
+                        "files_touched": [str(strategy_path)],
+                    }
+                ),
+                stderr="",
+            )
+
+        universe_path = Path(env["BACKTEST_UNIVERSE_SELECTION_PATH"])
+        universe_path.write_text(
+            json.dumps(
+                {
+                    "instrument_scope": "stocks_or_etfs",
+                    "universe_size_cap": None,
+                    "selection_thesis": "SPY is intentionally selected as an ETF regime anchor.",
+                    "windows": [
+                        {
+                            "window_index": 1,
+                            "raw_selected_tickers": ["SPY", "AAPL"],
+                            "selected_tickers": ["SPY", "AAPL"],
+                        }
+                    ],
+                }
+            )
+        )
+        stdout = "SCORE: 0.81\nBASELINE_SHARPE: 0.50\nDEFLATED_SR: 0.72\nNW_SHARPE_BIAS: 0.08\n"
+        return subprocess.CompletedProcess(command, 0, stdout=stdout, stderr="")
+
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", str(vault_root))
+    monkeypatch.setattr(runner, "run_command", fake_run_command)
+
+    exit_code = runner.run_autoresearch(args)
+
+    saved_state = json.loads(Path(args.state_file).read_text())
+    run_root = Path(args.iteration_root) / saved_state["run_id"]
+    iteration_dir = run_root / "iteration-0001"
+    record = json.loads((iteration_dir / "iteration_record.json").read_text())
+    raw_notes = sorted(notes_dir.glob("*.md"))
+    manifest = json.loads(Path(args.continuation_manifest).read_text())
+
+    assert exit_code == 0
+    assert (iteration_dir / "universe_selection.json").exists()
+    assert record["summary"]["universe_selection_summary"].startswith("SPY is intentionally")
+    assert record["summary"]["proofable_idea_sources"] == ["vault/research/etf-momentum.md"]
+    assert record["artifact_paths"]["universe_selection"].endswith("universe_selection.json")
+    assert record["artifact_paths"]["raw_experiment_note"].endswith(raw_notes[0].name)
+    raw_note_text = raw_notes[0].read_text()
+    assert raw_note_text.count("SPY is intentionally selected") >= 1
+    assert "baseline_reference:" in raw_note_text
+    assert "analysis_context:" in raw_note_text
+    assert "idea_trace:" in raw_note_text
+    assert "turnover_fee_lesson:" in raw_note_text
+    assert "next_experiment:" in raw_note_text
+    assert "raw_note_path:" in raw_note_text
+    assert str(raw_notes[0]) in raw_note_text
+    assert "## Unrestricted Result" in raw_note_text
+    assert "## Turnover / Fee Lesson" in raw_note_text
+    assert manifest["experiments"][0]["universe_selection_summary"].startswith("SPY is intentionally")
+
+
+def test_revert_round_updates_rejection_map_for_next_iteration(tmp_path, monkeypatch):
+    """A reverted candidate should be persisted as anti-repeat guidance for later contexts."""
+    runner = _load_runner_module()
+    args = _build_args(tmp_path, iterations=1)
+    Path(args.strategy).write_text("VALUE = 7\n")
+
+    def fake_run_command(command, cwd=None, env=None):
+        if "run_claude_iteration.sh" in command:
+            strategy_path = Path(_command_arg(command, "--strategy"))
+            output_dir = Path(_command_arg(command, "--output-dir"))
+            round_dir = output_dir / "iteration-0001"
+            round_dir.mkdir(parents=True, exist_ok=True)
+            (round_dir / "claude_prompt.md").write_text("prompt")
+            strategy_path.write_text("VALUE = 99\n")
+            return subprocess.CompletedProcess(
+                command,
+                0,
+                stdout=json.dumps(
+                    {
+                        "hypothesis": "Repeat a high-churn momentum variant",
+                        "strategy_change_summary": "Raised churn via narrow momentum threshold",
+                        "universe_selection_summary": "Select high-churn momentum names from the daily cache.",
+                    }
+                ),
+                stderr="",
+            )
+
+        Path(env["BACKTEST_UNIVERSE_SELECTION_PATH"]).write_text(
+            json.dumps({"windows": [{"selected_tickers": ["AAA"], "raw_selected_tickers": ["AAA"]}]})
+        )
+        stdout = "SCORE: 0.35\nBASELINE_SHARPE: 0.40\nDEFLATED_SR: 0.70\nNW_SHARPE_BIAS: 0.05\n"
+        return subprocess.CompletedProcess(command, 0, stdout=stdout, stderr="")
+
+    monkeypatch.setattr(runner, "run_command", fake_run_command)
+
+    runner.run_autoresearch(args)
+
+    saved_state = json.loads(Path(args.state_file).read_text())
+    rejection_map = json.loads((Path(args.iteration_root) / saved_state["run_id"] / "rejection_map.json").read_text())
+
+    assert rejection_map["rejections"][0]["decision"] == "revert"
+    assert rejection_map["rejections"][0]["hypothesis"] == "Repeat a high-churn momentum variant"
+    assert "score_not_above_baseline" in rejection_map["rejections"][0]["decision_reasons"]
+    assert "avoid materially equivalent repeats" in rejection_map["anti_repeat_guidance"].lower()

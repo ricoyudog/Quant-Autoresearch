@@ -1,5 +1,6 @@
 import ast
 import inspect
+import json
 import os
 import sys
 from pathlib import Path
@@ -35,6 +36,7 @@ STRATEGY_FILE = DEFAULT_STRATEGY_FILE
 FORBIDDEN_BUILTINS = {"exec", "eval", "open", "getattr", "setattr", "delattr"}
 FORBIDDEN_MODULES = {"socket", "requests", "urllib", "os", "sys", "shutil", "subprocess"}
 RESULTS_TSV_CANDIDATES = ("experiments/results.tsv", "results.tsv")
+UNIVERSE_SELECTION_OUTPUT_ENV = "BACKTEST_UNIVERSE_SELECTION_PATH"
 
 
 def calculate_naive_sharpe(returns: pd.Series) -> float:
@@ -161,6 +163,14 @@ def get_backtest_runtime_config() -> tuple[str | None, str | None, int | None]:
     return start_date, end_date, universe_size
 
 
+def get_universe_selection_output_path() -> Path | None:
+    """Return the optional audit-artifact path for raw universe selections."""
+    raw_path = os.environ.get(UNIVERSE_SELECTION_OUTPUT_ENV)
+    if not raw_path:
+        return None
+    return Path(raw_path).expanduser()
+
+
 def _is_instantiable_without_args(strategy_class: type) -> bool:
     """Return True when a strategy class can be instantiated with no required args."""
     try:
@@ -273,6 +283,32 @@ def normalize_universe_selection(selected_tickers) -> list[str]:
             normalized.append(value)
 
     return normalized
+
+
+def _get_universe_selection_thesis(strategy_instance) -> str:
+    """Return a plain-language thesis for why the strategy selects its universe."""
+    for attribute in ("universe_selection_thesis", "selection_thesis"):
+        value = getattr(strategy_instance, attribute, None)
+        if callable(value):
+            try:
+                value = value()
+            except TypeError:
+                value = None
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+
+    return (
+        "Strategy select_universe(daily_data) defines the tradable stock/ETF universe; "
+        "the backtester records it without applying a stock-only fallback filter."
+    )
+
+
+def _write_universe_selection_artifact(path: Path | None, payload: dict) -> None:
+    """Persist the current universe-selection audit payload when requested."""
+    if path is None:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def prepare_minute_frame(frame: pd.DataFrame) -> pd.DataFrame:
@@ -863,8 +899,16 @@ def _minute_pipeline_walk_forward_validation(
     per_symbol_signals: dict[str, list[pd.Series]] = {}
     n_trials = count_experiment_trials()
     daily_session_dates = pd.to_datetime(daily_data["session_date"])
+    universe_selection_path = get_universe_selection_output_path()
+    universe_selection_payload = {
+        "instrument_scope": "stocks_or_etfs",
+        "selection_owner": "strategy.select_universe(daily_data)",
+        "selection_thesis": _get_universe_selection_thesis(strategy_instance),
+        "universe_size_cap": universe_size_override,
+        "windows": [],
+    }
 
-    for window in windows:
+    for window_index, window in enumerate(windows, start=1):
         train_end = pd.Timestamp(window["train_end"])
         training_daily_data = daily_data.loc[daily_session_dates <= train_end].copy()
         if training_daily_data.empty:
@@ -872,7 +916,7 @@ def _minute_pipeline_walk_forward_validation(
             sys.exit(1)
 
         try:
-            selected_tickers = normalize_universe_selection(
+            raw_selected_tickers = normalize_universe_selection(
                 strategy_instance.select_universe(training_daily_data)
             )
         except StrategyContractError as exc:
@@ -882,8 +926,26 @@ def _minute_pipeline_walk_forward_validation(
             print(f"DATA ERROR ({window['test_start']}..{window['test_end']}): contract_invalid: {exc}")
             sys.exit(1)
 
+        selected_tickers = list(raw_selected_tickers)
         if universe_size_override is not None:
             selected_tickers = selected_tickers[:universe_size_override]
+        universe_selection_payload["windows"].append(
+            {
+                "window_index": window_index,
+                "train_start": window.get("train_start"),
+                "train_end": window.get("train_end"),
+                "test_start": window.get("test_start"),
+                "test_end": window.get("test_end"),
+                "raw_selected_tickers": raw_selected_tickers,
+                "selected_tickers": selected_tickers,
+                "raw_selected_count": len(raw_selected_tickers),
+                "selected_count": len(selected_tickers),
+                "universe_size_cap": universe_size_override,
+                "cap_applied": universe_size_override is not None
+                and len(raw_selected_tickers) > len(selected_tickers),
+            }
+        )
+        _write_universe_selection_artifact(universe_selection_path, universe_selection_payload)
         if not selected_tickers:
             print(f"DATA ERROR ({window['test_start']}..{window['test_end']}): no_trade_universe")
             sys.exit(1)
