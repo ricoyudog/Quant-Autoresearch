@@ -44,6 +44,18 @@ REQUIRED_SIGNAL_FIELDS = {
     "entry_trigger",
     "data_status",
 }
+REQUIRED_REPRODUCED_DIAGNOSTICS = {
+    "r_multiple",
+    "mae",
+    "mae_unit",
+    "mfe",
+    "mfe_unit",
+    "stop_width_pct",
+    "entry_type",
+    "trim_type",
+    "exit_type",
+}
+OPEN_EXIT_NULLABLE_DIAGNOSTICS = {"r_multiple", "trim_type"}
 DATA_MISSING_STATUSES = {"missing", "unavailable", "not_available"}
 ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -140,6 +152,57 @@ def signal_matches_case(case: dict[str, Any], signal: dict[str, Any]) -> bool:
     )
 
 
+def _field_missing_or_null(payload: dict[str, Any], field: str) -> bool:
+    return field not in payload or payload[field] is None
+
+
+def validate_reproduced_signal_diagnostics(
+    signal: dict[str, Any],
+    signal_ref: str,
+) -> list[str]:
+    diagnostic_errors: list[str] = []
+    exit_type = signal.get("exit_type")
+    is_open_trade = exit_type == "open"
+    nullable_fields = OPEN_EXIT_NULLABLE_DIAGNOSTICS if is_open_trade else set()
+
+    if isinstance(signal.get("diagnostics"), dict):
+        diagnostic_errors.append(
+            f"{signal_ref} diagnostics must live directly on the signal entry; "
+            "nested diagnostics objects require a schema_version decision"
+        )
+
+    for field in sorted(REQUIRED_REPRODUCED_DIAGNOSTICS):
+        if field in nullable_fields:
+            if field not in signal:
+                diagnostic_errors.append(
+                    f"{signal_ref} reproduced signal missing diagnostic field: {field}"
+                )
+            continue
+        if _field_missing_or_null(signal, field):
+            diagnostic_errors.append(
+                f"{signal_ref} reproduced signal missing diagnostic field: {field}"
+            )
+
+    has_holding_period_bars = not _field_missing_or_null(
+        signal, "holding_period_bars"
+    )
+    has_holding_period_minutes = not _field_missing_or_null(
+        signal, "holding_period_minutes"
+    )
+    if not has_holding_period_bars and not has_holding_period_minutes:
+        diagnostic_errors.append(
+            f"{signal_ref} reproduced signal missing diagnostic field: "
+            "holding_period_bars or holding_period_minutes"
+        )
+
+    if "mae" in signal and _field_missing_or_null(signal, "mae_unit"):
+        diagnostic_errors.append(f"{signal_ref} mae requires mae_unit")
+    if "mfe" in signal and _field_missing_or_null(signal, "mfe_unit"):
+        diagnostic_errors.append(f"{signal_ref} mfe requires mfe_unit")
+
+    return diagnostic_errors
+
+
 def validate_signal_trace(
     signals_path: Path,
     cases: list[dict[str, Any]],
@@ -182,15 +245,26 @@ def validate_signal_trace(
             signals_by_case.setdefault(signal_case_id, []).append(signal)
 
     case_results: list[dict[str, Any]] = []
+    diagnostic_errors: list[str] = []
     for case in cases:
         case_id = str(case.get("case_id", ""))
         candidate_signals = signals_by_case.get(case_id, [])
         evidence_reasons = missing_evidence_reasons(case)
-        matched_signal_ids = [
-            str(signal.get("signal_id", f"{case_id}#{idx}"))
+        matched_signals = [
+            (idx, signal)
             for idx, signal in enumerate(candidate_signals)
             if signal_matches_case(case, signal)
         ]
+        matched_signal_ids = [
+            str(signal.get("signal_id", f"{case_id}#{idx}"))
+            for idx, signal in matched_signals
+        ]
+
+        for idx, signal in matched_signals:
+            signal_ref = str(signal.get("signal_id", f"{case_id}#{idx}"))
+            diagnostic_errors.extend(
+                validate_reproduced_signal_diagnostics(signal, signal_ref)
+            )
 
         if evidence_reasons:
             classification = "insufficient_evidence"
@@ -234,6 +308,7 @@ def validate_signal_trace(
     }
     reproduced_count = classification_counts["reproduced"]
     required_reproduced_count = 5
+    trace_errors.extend(diagnostic_errors)
     passed = not errors and not trace_errors and reproduced_count >= required_reproduced_count
     if trace_errors:
         status = "failed"
@@ -263,6 +338,7 @@ def validate_signal_trace(
         "classification_counts": classification_counts,
         "case_results": case_results,
         "unsupported_cases": unsupported_cases,
+        "diagnostic_errors": diagnostic_errors,
         "errors": trace_errors,
     }
 
