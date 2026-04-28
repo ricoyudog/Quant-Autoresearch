@@ -138,6 +138,66 @@ def build_low_magnitude_trend_frame(ticker: str, start: float, end: float, perio
     return build_minute_frame(ticker, closes)
 
 
+def build_leader_daily_frame() -> pd.DataFrame:
+    """Build deterministic daily bars for the Phase 4 hot-leader ranking heuristic."""
+    sessions = pd.date_range("2024-01-01", periods=21, freq="B")
+    specs = {
+        "MOMO": {"start": 10.0, "end": 18.0, "volume": 900_000, "range_pct": 0.070},
+        "DOLLAR": {"start": 20.0, "end": 36.0, "volume": 2_000_000, "range_pct": 0.080},
+        "ALPHA": {"start": 8.0, "end": 11.0, "volume": 1_500_000, "range_pct": 0.060},
+        "BETA": {"start": 12.0, "end": 16.5, "volume": 1_500_000, "range_pct": 0.060},
+        "SLOW": {"start": 40.0, "end": 42.0, "volume": 5_000_000, "range_pct": 0.055},
+        "LOWADR": {"start": 30.0, "end": 39.0, "volume": 6_000_000, "range_pct": 0.030},
+        "FALL": {"start": 50.0, "end": 45.0, "volume": 9_000_000, "range_pct": 0.090},
+        "OLD": {"start": 5.0, "end": 15.0, "volume": 10_000_000, "range_pct": 0.100},
+    }
+    rows = []
+    for ticker, spec in specs.items():
+        ticker_sessions = sessions[:-1] if ticker == "OLD" else sessions
+        closes = np.linspace(spec["start"], spec["end"], len(ticker_sessions))
+        for session, close in zip(ticker_sessions, closes):
+            half_range = close * spec["range_pct"] / 2.0
+            rows.append(
+                {
+                    "ticker": ticker,
+                    "session_date": session,
+                    "open": close * 0.99,
+                    "high": close + half_range,
+                    "low": close - half_range,
+                    "close": close,
+                    "volume": spec["volume"],
+                    "transactions": 100,
+                    "vwap": close,
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def build_orh_minute_frame(
+    ticker: str,
+    closes: list[float],
+    highs: list[float],
+    lows: list[float],
+) -> pd.DataFrame:
+    """Build a minute frame with explicit OHLC values for ORH/stop/EMA tests."""
+    row_count = len(closes)
+    start = pd.Timestamp("2024-05-14 09:30")
+    timestamps = pd.date_range(start, periods=row_count, freq="min")
+    return pd.DataFrame(
+        {
+            "ticker": [ticker] * row_count,
+            "session_date": pd.to_datetime([start.date()] * row_count),
+            "window_start_ns": timestamps.view("int64"),
+            "open": np.array(closes, dtype=float),
+            "high": np.array(highs, dtype=float),
+            "low": np.array(lows, dtype=float),
+            "close": np.array(closes, dtype=float),
+            "volume": np.linspace(10_000, 20_000, row_count),
+            "transactions": np.arange(1, row_count + 1),
+        }
+    )
+
+
 # =============================================================================
 # Dynamic loading tests
 # =============================================================================
