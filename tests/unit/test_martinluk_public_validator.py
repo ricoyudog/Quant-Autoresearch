@@ -12,6 +12,7 @@ MODULE_PATH = (
     / "004-martinluk-primitive"
     / "validate_public_cases.py"
 )
+PUBLIC_CASE_ROOT = MODULE_PATH.parent
 
 
 def load_validator_module() -> Any:
@@ -160,3 +161,29 @@ def test_trace_data_missing_is_explicit_not_silent_pass(tmp_path: Path) -> None:
     case_result = result["signal_validation"]["case_results"][0]
     assert case_result["classification"] == "data_missing"
     assert case_result in result["signal_validation"]["unsupported_cases"]
+
+
+def test_public_fixture_keeps_unknown_dates_insufficient() -> None:
+    validator = load_validator_module()
+    signals_path = (
+        PUBLIC_CASE_ROOT
+        / "fixtures"
+        / "signal-trace-public-cases-insufficient-evidence.json"
+    )
+
+    result = validator.validate(PUBLIC_CASE_ROOT, signals_path)
+
+    assert result["status"] == "insufficient_evidence"
+    assert result["passed"] is False
+    expected_case_ids = set(json.loads(signals_path.read_text())[
+        "expected_insufficient_evidence_case_ids"
+    ])
+    case_results = {
+        case_result["case_id"]: case_result
+        for case_result in result["signal_validation"]["case_results"]
+    }
+    assert expected_case_ids <= set(case_results)
+    assert {
+        case_results[case_id]["classification"]
+        for case_id in expected_case_ids
+    } == {"insufficient_evidence"}
