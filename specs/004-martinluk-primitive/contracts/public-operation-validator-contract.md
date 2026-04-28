@@ -21,6 +21,27 @@ The validator protects the project from treating Martin Luk public strategy desc
 
 ## Future Signal Validation Rules
 
+Signal traces supplied with `--signals-path` use this deterministic shape:
+
+```json
+{
+  "schema_version": "martinluk_public_signal_trace_v1",
+  "replication_target": "public_operation_reproducibility",
+  "signals": [
+    {
+      "signal_id": "stable optional identifier",
+      "case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "symbol": "SOFI",
+      "direction": "long",
+      "date": "YYYY-MM-DD",
+      "setup_type": "leader_pullback_prior_day_high",
+      "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+      "data_status": "available"
+    }
+  ]
+}
+```
+
 When signal traces exist, each case should evaluate to one of:
 
 - `reproduced`: expected direction and trigger appear inside expected window;

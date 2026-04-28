@@ -33,6 +33,12 @@ pytest tests/unit/test_strategy_interface.py -q
 python3 specs/004-martinluk-primitive/validate_public_cases.py --signals-path <path>
 ```
 
+`<path>` must point to a JSON document with
+`schema_version: "martinluk_public_signal_trace_v1"`, replication target
+`public_operation_reproducibility`, and a `signals` list containing stable
+`case_id`, `symbol`, `direction`, `date`, `setup_type`, `entry_trigger`, and
+`data_status` fields.
+
 ## Promotion rule
 
 A broad backtest or live autoresearch run is allowed only after:

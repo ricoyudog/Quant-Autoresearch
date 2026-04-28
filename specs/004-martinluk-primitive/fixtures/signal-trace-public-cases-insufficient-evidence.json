@@ -1,0 +1,13 @@
+{
+  "schema_version": "martinluk_public_signal_trace_v1",
+  "replication_target": "public_operation_reproducibility",
+  "fixture_note": "Current public artifacts name these cases, but exact public dates/timestamps have not been reconstructed. This fixture intentionally emits no dated strategy signals so the validator must classify them as insufficient_evidence rather than invent dates.",
+  "expected_insufficient_evidence_case_ids": [
+    "MLUK-SOFI-PULLBACK-PDH-001",
+    "MLUK-AMC-ORH-REENTRY-002",
+    "MLUK-COIN-BTC-INSIDEDAY-003",
+    "MLUK-LMND-HIGHTIGHTFLAG-004",
+    "MLUK-SMCI-WEEKLYBASE-005"
+  ],
+  "signals": []
+}
