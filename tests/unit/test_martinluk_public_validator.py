@@ -24,7 +24,7 @@ def load_validator_module() -> Any:
 
 
 def write_public_case_root(root: Path, cases: list[dict[str, Any]]) -> None:
-    root.mkdir()
+    root.mkdir(exist_ok=True)
     (root / "source-ledger.json").write_text(
         json.dumps(
             {
@@ -158,4 +158,3 @@ def test_trace_data_missing_is_explicit_not_silent_pass(tmp_path: Path) -> None:
     case_result = result["signal_validation"]["case_results"][0]
     assert case_result["classification"] == "data_missing"
     assert case_result in result["signal_validation"]["unsupported_cases"]
-
