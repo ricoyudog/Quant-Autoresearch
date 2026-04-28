@@ -453,365 +453,160 @@ class TestStrategyFile:
             for val in unique_values:
                 assert val in {-1.0, 0.0, 1.0}, f"Unexpected signal value: {val}"
 
-    def test_select_universe_returns_ranked_ticker_list(self, strategy_file_path):
-        """select_universe returns ticker strings ranked by average daily volume."""
+    def test_select_universe_ranks_latest_hot_leaders(self, strategy_file_path):
+        """Phase 4 universe selection ranks latest active hot leaders by return, dollar volume, and ticker."""
         from strategies.active_strategy import TradingStrategy
 
-        daily_data = pd.DataFrame(
-            {
-                'ticker': ['AAPL', 'MSFT', 'TSLA', 'AAPL', 'MSFT', 'TSLA'],
-                'session_date': pd.to_datetime(
-                    ['2024-01-02', '2024-01-02', '2024-01-02', '2024-01-03', '2024-01-03', '2024-01-03']
-                ),
-                'open': [100, 200, 300, 101, 201, 301],
-                'high': [101, 201, 301, 102, 202, 302],
-                'low': [99, 199, 299, 100, 200, 300],
-                'close': [100.5, 200.5, 300.5, 101.5, 201.5, 301.5],
-                'volume': [1000, 1100, 900, 2500, 4000, 1800],
-                'transactions': [10, 11, 9, 25, 40, 18],
-                'vwap': [100.2, 200.2, 300.2, 101.2, 201.2, 301.2],
-            }
-        )
+        strategy = TradingStrategy()
+        universe = strategy.select_universe(build_leader_daily_frame())
 
+        assert universe[:4] == ["DOLLAR", "MOMO", "ALPHA", "BETA"]
+        assert universe.index("ALPHA") < universe.index("BETA")
+        assert "SLOW" in universe
+        assert "LOWADR" not in universe
+        assert "FALL" not in universe
+        assert "OLD" not in universe
+        assert all(isinstance(ticker, str) for ticker in universe)
+
+    def test_select_universe_excludes_tickers_missing_latest_session(self, strategy_file_path):
+        """Phase 4 only considers tickers active in the latest daily session."""
+        from strategies.active_strategy import TradingStrategy
+
+        daily_data = build_leader_daily_frame()
         strategy = TradingStrategy()
         universe = strategy.select_universe(daily_data)
 
-        assert universe[:3] == ['MSFT', 'AAPL', 'TSLA']
-        assert all(isinstance(ticker, str) for ticker in universe)
+        latest_session = daily_data["session_date"].max()
+        latest_tickers = set(daily_data.loc[daily_data["session_date"] == latest_session, "ticker"])
 
-    def test_select_universe_uses_20_day_average_volume(self, strategy_file_path):
-        """The example strategy ranks tickers by the latest 20-session average volume."""
-        from strategies.active_strategy import TradingStrategy
-
-        session_dates = pd.date_range("2024-01-01", periods=21, freq="B")
-        rows = []
-        for idx, session_date in enumerate(session_dates):
-            rows.extend(
-                [
-                    {
-                        "ticker": "AAA",
-                        "session_date": session_date,
-                        "open": 10.0,
-                        "high": 10.5,
-                        "low": 9.5,
-                        "close": 10.2,
-                        "volume": 10_000 if idx == 0 else 1,
-                        "transactions": 10,
-                        "vwap": 10.1,
-                    },
-                    {
-                        "ticker": "BBB",
-                        "session_date": session_date,
-                        "open": 20.0,
-                        "high": 20.5,
-                        "low": 19.5,
-                        "close": 20.2,
-                        "volume": 200,
-                        "transactions": 20,
-                        "vwap": 20.1,
-                    },
-                    {
-                        "ticker": "CCC",
-                        "session_date": session_date,
-                        "open": 30.0,
-                        "high": 30.5,
-                        "low": 29.5,
-                        "close": 30.2,
-                        "volume": 0 if idx == 0 else 300,
-                        "transactions": 30,
-                        "vwap": 30.1,
-                    },
-                ]
-            )
-
-        strategy = TradingStrategy()
-        universe = strategy.select_universe(pd.DataFrame(rows))
-
-        assert universe[:3] == ["CCC", "BBB", "AAA"]
-
-    def test_select_universe_excludes_tickers_missing_latest_session(self, strategy_file_path):
-        """The example strategy should ignore stale tickers absent from the latest session."""
-        from strategies.active_strategy import TradingStrategy
-
-        rows = [
-            {
-                "ticker": "AAA",
-                "session_date": pd.Timestamp("2024-01-01"),
-                "open": 10.0,
-                "high": 10.5,
-                "low": 9.5,
-                "close": 10.2,
-                "volume": 1_000,
-                "transactions": 10,
-                "vwap": 10.1,
-            },
-            {
-                "ticker": "AAA",
-                "session_date": pd.Timestamp("2024-01-02"),
-                "open": 10.0,
-                "high": 10.5,
-                "low": 9.5,
-                "close": 10.2,
-                "volume": 1_000,
-                "transactions": 10,
-                "vwap": 10.1,
-            },
-            {
-                "ticker": "AAA",
-                "session_date": pd.Timestamp("2024-01-03"),
-                "open": 10.0,
-                "high": 10.5,
-                "low": 9.5,
-                "close": 10.2,
-                "volume": 1_000,
-                "transactions": 10,
-                "vwap": 10.1,
-            },
-            {
-                "ticker": "BBB",
-                "session_date": pd.Timestamp("2024-01-01"),
-                "open": 20.0,
-                "high": 20.5,
-                "low": 19.5,
-                "close": 20.2,
-                "volume": 500,
-                "transactions": 20,
-                "vwap": 20.1,
-            },
-            {
-                "ticker": "BBB",
-                "session_date": pd.Timestamp("2024-01-02"),
-                "open": 20.0,
-                "high": 20.5,
-                "low": 19.5,
-                "close": 20.2,
-                "volume": 500,
-                "transactions": 20,
-                "vwap": 20.1,
-            },
-            {
-                "ticker": "BBB",
-                "session_date": pd.Timestamp("2024-01-03"),
-                "open": 20.0,
-                "high": 20.5,
-                "low": 19.5,
-                "close": 20.2,
-                "volume": 500,
-                "transactions": 20,
-                "vwap": 20.1,
-            },
-            {
-                "ticker": "OLD",
-                "session_date": pd.Timestamp("2024-01-01"),
-                "open": 30.0,
-                "high": 30.5,
-                "low": 29.5,
-                "close": 30.2,
-                "volume": 5_000_000,
-                "transactions": 30,
-                "vwap": 30.1,
-            },
-            {
-                "ticker": "OLD",
-                "session_date": pd.Timestamp("2024-01-02"),
-                "open": 30.0,
-                "high": 30.5,
-                "low": 29.5,
-                "close": 30.2,
-                "volume": 5_000_000,
-                "transactions": 30,
-                "vwap": 30.1,
-            },
-        ]
-
-        strategy = TradingStrategy()
-        universe = strategy.select_universe(pd.DataFrame(rows))
-
+        assert set(universe).issubset(latest_tickers)
         assert "OLD" not in universe
-        assert universe[:2] == ["AAA", "BBB"]
 
-    def test_select_universe_marks_bear_volatile_when_spy_is_weak_and_volatile(self, strategy_file_path):
-        """SPY daily context should set the simple bear-volatile regime gate."""
+    def test_generate_signals_enters_long_on_orh_breakout_after_opening_range(self, strategy_file_path):
+        """Phase 4 enters long only after an opening-range-high close above the 9 EMA."""
         from strategies.active_strategy import TradingStrategy
 
-        strategy = TradingStrategy()
-        universe = strategy.select_universe(build_spy_regime_daily_frame())
-
-        assert strategy.market_regime == "bear_volatile"
-        assert "AAA" in universe
-        assert "BBB" in universe
-
-    def test_select_universe_defaults_to_neutral_without_spy_context(self, strategy_file_path):
-        """Without SPY daily context the strategy should keep the neutral regime."""
-        from strategies.active_strategy import TradingStrategy
-
-        strategy = TradingStrategy()
-        universe = strategy.select_universe(build_neutral_daily_frame())
-
-        assert strategy.market_regime == "neutral"
-        assert universe[:2] == ["AAA", "BBB"]
-
-    def test_generate_signals_uses_20_bar_momentum(self, strategy_file_path):
-        """The example strategy uses 20-bar momentum and emits only after confirmation."""
-        from strategies.active_strategy import TradingStrategy
-
-        minute_data = {
-            "AAPL": build_minute_frame("AAPL", list(range(100, 125))),
-            "MSFT": build_minute_frame("MSFT", list(range(200, 175, -1))),
-        }
-
-        strategy = TradingStrategy()
-        signals = strategy.generate_signals(minute_data)
-
-        assert signals["AAPL"].iloc[19] == 0.0
-        assert signals["MSFT"].iloc[19] == 0.0
-        assert signals["AAPL"].iloc[20] == 0.0
-        assert signals["MSFT"].iloc[20] == 0.0
-        assert signals["AAPL"].iloc[22] == 1.0
-        assert signals["MSFT"].iloc[22] == -1.0
-
-    def test_generate_signals_longs_on_small_positive_absolute_momentum(self, strategy_file_path):
-        """Small positive 20-bar momentum should still trigger under the baseline sign-based rule."""
-        from strategies.active_strategy import TradingStrategy
-
-        strategy = TradingStrategy()
-        strategy.select_universe(build_neutral_daily_frame())
-        signals = strategy.generate_signals(
-            {"AAPL": build_low_magnitude_trend_frame("AAPL", 100.0, 100.5)}
+        frame = build_orh_minute_frame(
+            "ORH",
+            closes=[10.00, 10.05, 10.00, 10.10, 10.00, 10.35, 10.45, 10.55],
+            highs=[10.20, 10.25, 10.15, 10.30, 10.20, 10.45, 10.55, 10.65],
+            lows=[9.80, 9.85, 9.82, 9.88, 9.84, 10.25, 10.35, 10.45],
         )
 
-        assert signals["AAPL"].iloc[20] == 0.0
-        assert signals["AAPL"].iloc[21] == 0.0
-        assert signals["AAPL"].iloc[22] == 1.0
+        strategy = TradingStrategy(max_stop_pct=10.0)
+        signals = strategy.generate_signals({"ORH": frame})
 
-    def test_generate_signals_shorts_on_small_negative_absolute_momentum(self, strategy_file_path):
-        """Small negative 20-bar momentum should still trigger under the baseline sign-based rule."""
+        series = signals["ORH"]
+        assert series.iloc[: strategy.opening_range_bars].eq(0.0).all()
+        assert series.iloc[strategy.opening_range_bars] == 1.0
+        assert series.iloc[-1] == 1.0
+
+    def test_generate_signals_hard_stop_flattens_at_opening_range_low(self, strategy_file_path):
+        """After ORH entry, a low breach of the setup low flattens the long."""
         from strategies.active_strategy import TradingStrategy
 
-        strategy = TradingStrategy()
-        strategy.select_universe(build_neutral_daily_frame())
-        signals = strategy.generate_signals(
-            {"AAPL": build_low_magnitude_trend_frame("AAPL", 100.5, 100.0)}
+        frame = build_orh_minute_frame(
+            "STOP",
+            closes=[10.00, 10.05, 10.00, 10.10, 10.00, 10.35, 10.45, 10.40, 9.85],
+            highs=[10.20, 10.25, 10.15, 10.30, 10.20, 10.45, 10.55, 10.50, 9.95],
+            lows=[9.80, 9.85, 9.82, 9.88, 9.84, 10.25, 10.35, 10.30, 9.75],
         )
 
-        assert signals["AAPL"].iloc[20] == 0.0
-        assert signals["AAPL"].iloc[21] == 0.0
-        assert signals["AAPL"].iloc[22] == -1.0
+        strategy = TradingStrategy(max_stop_pct=10.0)
+        signals = strategy.generate_signals({"STOP": frame})
+        trace = strategy.get_signal_trace()
 
-    def test_generate_signals_requires_confirmation_bars_before_non_hostile_entry(self, strategy_file_path):
-        """Default confirmation bars should delay non-hostile entries until direction persists."""
+        series = signals["STOP"]
+        assert series.iloc[5] == 1.0
+        assert series.iloc[6] == 1.0
+        assert series.iloc[7] == 1.0
+        assert series.iloc[8] == 0.0
+
+        assert trace["schema_version"] == "martinluk_public_signal_trace_v1"
+        assert trace["replication_target"] == "public_operation_reproducibility"
+        assert len(trace["signals"]) == 1
+        signal = trace["signals"][0]
+        assert signal["symbol"] == "STOP"
+        assert signal["setup_type"] == "leader_pullback_orh"
+        assert signal["entry_trigger"] == "opening_range_high_breakout"
+        assert signal["entry_type"] == "opening_range_high_breakout"
+        assert signal["trim_type"] == "no_partial_trim_phase4"
+        assert signal["exit_type"] == "hard_stop"
+        assert signal["mae_unit"] == "R"
+        assert signal["mfe_unit"] == "R"
+        assert signal["stop_width_pct"] > 0.0
+        assert signal["holding_period_bars"] == 4
+
+    def test_generate_signals_exits_on_9ema_close_break(self, strategy_file_path):
+        """If the hard stop is not hit, a close below the 9 EMA flattens the long."""
         from strategies.active_strategy import TradingStrategy
 
-        strategy = TradingStrategy()
-        strategy.select_universe(build_neutral_daily_frame())
-        signals = strategy.generate_signals(build_confirmation_minute_data())
+        frame = build_orh_minute_frame(
+            "EMA",
+            closes=[10.00, 10.05, 10.00, 10.10, 10.00, 10.35, 11.20, 11.30, 10.20],
+            highs=[10.20, 10.25, 10.15, 10.30, 10.20, 10.45, 11.35, 11.40, 10.30],
+            lows=[9.80, 9.85, 9.82, 9.88, 9.84, 10.25, 11.05, 11.20, 10.15],
+        )
 
-        assert signals["AAPL"].iloc[20] == 0.0
-        assert signals["MSFT"].iloc[20] == 0.0
-        assert signals["AAPL"].iloc[21] == 0.0
-        assert signals["MSFT"].iloc[21] == 0.0
-        assert signals["AAPL"].iloc[22] == 1.0
-        assert signals["MSFT"].iloc[22] == -1.0
+        strategy = TradingStrategy(max_stop_pct=10.0)
+        signals = strategy.generate_signals({"EMA": frame})
+        trace = strategy.get_signal_trace()
 
-    def test_generate_signals_supports_custom_confirmation_length(self, strategy_file_path):
-        """Researchers can shorten or lengthen the confirmation window explicitly."""
+        series = signals["EMA"]
+        assert series.iloc[5] == 1.0
+        assert series.iloc[6] == 1.0
+        assert series.iloc[7] == 1.0
+        assert series.iloc[8] == 0.0
+        assert trace["signals"][0]["exit_type"] == "nine_ema_close_break"
+        assert trace["signals"][0]["trim_type"] == "no_partial_trim_phase4"
+
+    def test_generate_signals_keeps_validator_trace_side_band(self, strategy_file_path):
+        """generate_signals keeps returning runtime Series while trace data is exposed through a getter."""
         from strategies.active_strategy import TradingStrategy
 
-        strategy = TradingStrategy(confirmation_bars=2)
-        strategy.select_universe(build_neutral_daily_frame())
-        signals = strategy.generate_signals(build_confirmation_minute_data())
+        frame = build_orh_minute_frame(
+            "TRACE",
+            closes=[10.00, 10.05, 10.00, 10.10, 10.00, 10.35, 10.45, 9.85],
+            highs=[10.20, 10.25, 10.15, 10.30, 10.20, 10.45, 10.55, 9.95],
+            lows=[9.80, 9.85, 9.82, 9.88, 9.84, 10.25, 10.35, 9.75],
+        )
 
-        assert strategy.confirmation_bars == 2
-        assert signals["AAPL"].iloc[20] == 0.0
-        assert signals["MSFT"].iloc[20] == 0.0
-        assert signals["AAPL"].iloc[21] == 1.0
-        assert signals["MSFT"].iloc[21] == -1.0
+        strategy = TradingStrategy(max_stop_pct=10.0)
+        signals = strategy.generate_signals(frame)
+        trace = strategy.get_signal_trace()
 
-    def test_generate_signals_holds_confirmed_position_for_minimum_bars(self, strategy_file_path):
-        """After entry, the strategy should hold the confirmed position for the configured minimum bars."""
-        from strategies.active_strategy import TradingStrategy
-
-        strategy = TradingStrategy(min_hold_bars=5)
-        strategy.select_universe(build_neutral_daily_frame())
-        signals = strategy.generate_signals({"AAPL": build_hold_minute_frame("AAPL")})
-
-        assert signals["AAPL"].iloc[22] == 1.0
-        assert signals["AAPL"].iloc[23] == 1.0
-        assert signals["AAPL"].iloc[24] == 1.0
-        assert signals["AAPL"].iloc[25] == 1.0
-        assert signals["AAPL"].iloc[26] == 1.0
-        assert signals["AAPL"].iloc[27] == 0.0
-        assert signals["AAPL"].iloc[28] == 0.0
-        assert signals["AAPL"].iloc[29] == -1.0
-
-    def test_generate_signals_supports_custom_minimum_hold_length(self, strategy_file_path):
-        """Researchers can tune the minimum hold length explicitly."""
-        from strategies.active_strategy import TradingStrategy
-
-        strategy = TradingStrategy(min_hold_bars=2)
-        strategy.select_universe(build_neutral_daily_frame())
-        signals = strategy.generate_signals({"AAPL": build_hold_minute_frame("AAPL")})
-
-        assert strategy.min_hold_bars == 2
-        assert signals["AAPL"].iloc[22] == 1.0
-        assert signals["AAPL"].iloc[23] == 1.0
-        assert signals["AAPL"].iloc[24] == 0.0
-        assert signals["AAPL"].iloc[25] == 0.0
-        assert signals["AAPL"].iloc[26] == -1.0
-
-    def test_generate_signals_go_flat_before_reversing_after_brief_contradiction(self, strategy_file_path):
-        """Without an added hold layer, confirmation-only logic should still go flat before reversing."""
-        from strategies.active_strategy import TradingStrategy
-
-        strategy = TradingStrategy(min_hold_bars=1)
-        strategy.select_universe(build_neutral_daily_frame())
-        signals = strategy.generate_signals({"AAPL": build_whipsaw_minute_frame("AAPL")})
-
-        assert signals["AAPL"].iloc[22] == 1.0
-        assert signals["AAPL"].iloc[23] == 0.0
-        assert signals["AAPL"].iloc[24] == 0.0
-        assert signals["AAPL"].iloc[25] == -1.0
-
-    def test_generate_signals_flatten_when_market_regime_is_bear_volatile(self, strategy_file_path):
-        """The simple regime gate should flatten all minute signals in bear-volatile conditions."""
-        from strategies.active_strategy import TradingStrategy
-
-        strategy = TradingStrategy()
-        strategy.market_regime = "bear_volatile"
-        signals = strategy.generate_signals(build_confirmation_minute_data())
-
-        assert signals["AAPL"].eq(0.0).all()
-        assert signals["MSFT"].eq(0.0).all()
-
-    def test_bear_volatile_overrides_minimum_hold_immediately(self, strategy_file_path):
-        """The hostile regime gate should still flatten even when a hold would otherwise be active."""
-        from strategies.active_strategy import TradingStrategy
-
-        strategy = TradingStrategy(min_hold_bars=5)
-        strategy.market_regime = "bear_volatile"
-        signals = strategy.generate_signals({"AAPL": build_hold_minute_frame("AAPL")})
-
-        assert signals["AAPL"].eq(0.0).all()
+        assert isinstance(signals, pd.Series)
+        assert signals.index.equals(frame.index)
+        assert isinstance(trace, dict)
+        assert trace["signals"][0]["case_id"] == "PHASE4-TRACE-ORH"
+        assert trace["signals"][0]["direction"] == "long"
+        assert trace["signals"][0]["data_status"] == "available"
+        assert "diagnostics" not in trace["signals"][0]
 
     def test_strategy_class_init(self, strategy_file_path):
-        """TradingStrategy can be instantiated."""
+        """TradingStrategy exposes bounded Phase 4 primitive parameters and trace state."""
         from strategies.active_strategy import TradingStrategy
 
-        # Should be able to instantiate with defaults
         strategy = TradingStrategy()
-        assert hasattr(strategy, 'fast_ma')
-        assert hasattr(strategy, 'slow_ma')
-        assert hasattr(strategy, 'confirmation_bars')
-        assert hasattr(strategy, 'min_hold_bars')
-        assert strategy.confirmation_bars == 3
-        assert strategy.min_hold_bars == 5
+        assert strategy.risk_per_trade_pct == pytest.approx(0.5)
+        assert strategy.max_stop_pct == pytest.approx(2.5)
+        assert strategy.opening_range_bars == 5
+        assert strategy.ema_exit_period == 9
+        assert strategy.leader_adr_min_pct == pytest.approx(5.0)
+        assert strategy.get_signal_trace()["signals"] == []
 
-        # Should be able to instantiate with custom params
-        strategy_custom = TradingStrategy(fast_ma=10, slow_ma=30, confirmation_bars=2, min_hold_bars=4)
-        assert strategy_custom.fast_ma == 10
-        assert strategy_custom.slow_ma == 30
-        assert strategy_custom.confirmation_bars == 2
-        assert strategy_custom.min_hold_bars == 4
+        strategy_custom = TradingStrategy(
+            risk_per_trade_pct=1.0,
+            max_stop_pct=4.0,
+            opening_range_bars=3,
+            ema_exit_period=4,
+            leader_adr_min_pct=6.5,
+        )
+        assert strategy_custom.risk_per_trade_pct == pytest.approx(1.0)
+        assert strategy_custom.max_stop_pct == pytest.approx(4.0)
+        assert strategy_custom.opening_range_bars == 3
+        assert strategy_custom.ema_exit_period == 4
+        assert strategy_custom.leader_adr_min_pct == pytest.approx(6.5)
 
 
 # =============================================================================
