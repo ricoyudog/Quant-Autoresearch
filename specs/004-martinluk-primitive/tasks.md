@@ -15,10 +15,15 @@
 
 ## Phase 2: Public-Case Reproduction Validator
 
-- [ ] T006 Add signal-trace input support to `specs/004-martinluk-primitive/validate_public_cases.py`
-- [ ] T007 Define expected windows for SOFI, AMC, COIN, LMND, and SMCI after date reconstruction
-- [ ] T008 Add fixtures or trace examples for at least five public cases
-- [ ] T009 Verify unsupported cases report missing evidence instead of failing silently
+- [X] T006 Add signal-trace input support to `specs/004-martinluk-primitive/validate_public_cases.py`
+- [X] T007 Define expected windows for SOFI, AMC, COIN, LMND, and SMCI after date reconstruction
+- [X] T008 Add fixtures or trace examples for at least five public cases
+- [X] T009 Verify unsupported cases report missing evidence instead of failing silently
+
+Phase 2 closeout note: T007/T008 are complete as a public-evidence research gate,
+not as positive private-ledger reproduction. The current public fixture proves
+the validator stops at `insufficient_evidence` when exact fills/timestamps remain
+unsupported; see `phase2-acceptance-review.md` for gaps before strategy mutation.
 
 ## Phase 3: Strategy Diagnostics
 
