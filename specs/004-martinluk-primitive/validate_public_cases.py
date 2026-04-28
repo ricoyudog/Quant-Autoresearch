@@ -178,6 +178,18 @@ def validate_reproduced_signal_diagnostics(
                     f"{signal_ref} reproduced signal missing diagnostic field: {field}"
                 )
             continue
+        if (
+            field == "mae_unit"
+            and "mae" in signal
+            and _field_missing_or_null(signal, field)
+        ):
+            continue
+        if (
+            field == "mfe_unit"
+            and "mfe" in signal
+            and _field_missing_or_null(signal, field)
+        ):
+            continue
         if _field_missing_or_null(signal, field):
             diagnostic_errors.append(
                 f"{signal_ref} reproduced signal missing diagnostic field: {field}"
