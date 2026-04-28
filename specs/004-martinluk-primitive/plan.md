@@ -15,7 +15,7 @@ Replace the exhausted broad 20-bar minute momentum research family with a Martin
 **Testing**: JSON schema checks first; later public-operation reproduction validator and focused strategy-interface tests
 **Target Platform**: Local developer environment running Quant-Autoresearch backtests and validators
 **Project Type**: Single-repository research system with strategy module, specs, and experiment artifacts
-**Performance Goals**: Establish a public-case reproducibility gate before any broad backtest or live autoresearch mutation
+**Performance Goals**: Establish a public-case reproducibility gate before any post-Phase-4 promotion, backtest, or live autoresearch mutation
 **Constraints**: No exact USIC trade-ledger replication claims without complete broker/VOD/chart data; no live trading; no new dependencies; do not edit `src/strategies/active_strategy.py` until case validator exists
 **Scale/Scope**: Phase 0/1 covers documentation and ledger artifacts only; later phases add validator and dry-run primitive
 
