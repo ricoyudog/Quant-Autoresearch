@@ -22,7 +22,7 @@ class TradingStrategy:
         self.max_universe_size = max(int(max_universe_size), 1)
         self.avg_dollar_volume_min = float(avg_dollar_volume_min)
         self.market_regime = "neutral"
-        self._signal_trace_entries = []
+        self.signal_trace_entries = []
 
     def classify_market_regime(self, daily_data: "pd.DataFrame") -> "str":
         """Classify a simple broad-market regime from SPY daily bars."""
@@ -160,10 +160,10 @@ class TradingStrategy:
         return {
             "schema_version": "martinluk_public_signal_trace_v1",
             "replication_target": "public_operation_reproducibility",
-            "signals": [dict(entry) for entry in self._signal_trace_entries],
+            "signals": [dict(entry) for entry in self.signal_trace_entries],
         }
 
-    def _ticker_from_frame(self, frame: "pd.DataFrame") -> "str":
+    def ticker_from_frame(self, frame: "pd.DataFrame") -> "str":
         if "ticker" not in frame.columns or frame.empty:
             return "UNKNOWN"
         ticker = frame["ticker"].dropna()
@@ -171,7 +171,7 @@ class TradingStrategy:
             return "UNKNOWN"
         return str(ticker.iloc[0])
 
-    def _signal_date(self, frame: "pd.DataFrame", entry_position: "int") -> "str":
+    def signal_date(self, frame: "pd.DataFrame", entry_position: "int") -> "str":
         if "session_date" in frame.columns and len(frame.index) > entry_position:
             value = pd.to_datetime(frame["session_date"].iloc[entry_position])
             if not pd.isna(value):
@@ -181,7 +181,7 @@ class TradingStrategy:
             return index_value.date().isoformat()
         return "1970-01-01"
 
-    def _append_trace_entry(
+    def append_trace_entry(
         self,
         frame: "pd.DataFrame",
         ticker: "str",
@@ -207,13 +207,13 @@ class TradingStrategy:
         else:
             r_multiple = float((exit_price - entry_price) / risk)
 
-        self._signal_trace_entries.append(
+        self.signal_trace_entries.append(
             {
-                "signal_id": f"phase4-{ticker.lower()}-orh-{self._signal_date(frame, entry_position)}",
+                "signal_id": f"phase4-{ticker.lower()}-orh-{self.signal_date(frame, entry_position)}",
                 "case_id": f"PHASE4-{ticker}-ORH",
                 "symbol": ticker,
                 "direction": "long",
-                "date": self._signal_date(frame, entry_position),
+                "date": self.signal_date(frame, entry_position),
                 "setup_type": "leader_pullback_orh",
                 "entry_trigger": "opening_range_high_breakout",
                 "data_status": "available",
@@ -230,7 +230,7 @@ class TradingStrategy:
             }
         )
 
-    def _append_open_trace_entry(
+    def append_open_trace_entry(
         self,
         frame: "pd.DataFrame",
         ticker: "str",
@@ -246,13 +246,13 @@ class TradingStrategy:
         trade_slice = frame.iloc[entry_position : last_position + 1]
         high = trade_slice["high"].astype(float)
         low = trade_slice["low"].astype(float)
-        self._signal_trace_entries.append(
+        self.signal_trace_entries.append(
             {
-                "signal_id": f"phase4-{ticker.lower()}-orh-{self._signal_date(frame, entry_position)}-open",
+                "signal_id": f"phase4-{ticker.lower()}-orh-{self.signal_date(frame, entry_position)}-open",
                 "case_id": f"PHASE4-{ticker}-ORH",
                 "symbol": ticker,
                 "direction": "long",
-                "date": self._signal_date(frame, entry_position),
+                "date": self.signal_date(frame, entry_position),
                 "setup_type": "leader_pullback_orh",
                 "entry_trigger": "opening_range_high_breakout",
                 "data_status": "available",
@@ -293,7 +293,7 @@ class TradingStrategy:
         opening_range_high = float(opening_range["high"].astype(float).max())
         opening_range_low = float(opening_range["low"].astype(float).min())
 
-        ticker = self._ticker_from_frame(frame)
+        ticker = self.ticker_from_frame(frame)
         in_trade = False
         entry_position = None
         entry_price = None
@@ -316,7 +316,7 @@ class TradingStrategy:
 
             if current_low < stop_price:
                 signals.loc[idx] = 0.0
-                self._append_trace_entry(
+                self.append_trace_entry(
                     frame,
                     ticker,
                     entry_position,
@@ -333,7 +333,7 @@ class TradingStrategy:
 
             if current_close < float(ema.iloc[position]):
                 signals.loc[idx] = 0.0
-                self._append_trace_entry(
+                self.append_trace_entry(
                     frame,
                     ticker,
                     entry_position,
@@ -351,7 +351,7 @@ class TradingStrategy:
             signals.loc[idx] = 1.0
 
         if in_trade and entry_position is not None and entry_price is not None:
-            self._append_open_trace_entry(frame, ticker, entry_position, entry_price, stop_price)
+            self.append_open_trace_entry(frame, ticker, entry_position, entry_price, stop_price)
 
         return signals
 
@@ -363,7 +363,7 @@ class TradingStrategy:
         pd.Series], and DataFrame input returns one pd.Series. Validator trace
         output is side-band state available through get_signal_trace().
         """
-        self._signal_trace_entries = []
+        self.signal_trace_entries = []
 
         if isinstance(data, dict):
             return {
