@@ -29,6 +29,7 @@ data/cache/
 experiments/logs/
 experiments/results/
 experiments/database/
+experiments/iterations/run-*/
 artifacts/plots/
 *.log
 *.tsv
