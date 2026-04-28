@@ -109,7 +109,9 @@ def symbol_matches(case_symbol: str, signal_symbol: str) -> bool:
 def missing_evidence_reasons(case: dict[str, Any]) -> list[str]:
     reasons: list[str] = []
     if parse_date_window(case.get("date_window")) is None:
-        reasons.append(f"date_window is not reconstructable: {case.get('date_window')}")
+        reasons.append(
+            f"date_window is not reconstructable: {case.get('date_window')}"
+        )
     if case.get("direction") == "long_or_short_unknown":
         reasons.append("direction is unknown")
     return reasons
@@ -193,7 +195,10 @@ def validate_signal_trace(
         if evidence_reasons:
             classification = "insufficient_evidence"
             reason = "; ".join(evidence_reasons)
-        elif any(signal_data_status(signal) in DATA_MISSING_STATUSES for signal in candidate_signals):
+        elif any(
+            signal_data_status(signal) in DATA_MISSING_STATUSES
+            for signal in candidate_signals
+        ):
             classification = "data_missing"
             reason = "trace reports missing local market data"
         elif matched_signal_ids:
@@ -234,7 +239,10 @@ def validate_signal_trace(
         status = "failed"
     elif passed:
         status = "passed"
-    elif classification_counts["insufficient_evidence"] > 0 and classification_counts["not_reproduced"] == 0:
+    elif (
+        classification_counts["insufficient_evidence"] > 0
+        and classification_counts["not_reproduced"] == 0
+    ):
         status = "insufficient_evidence"
     else:
         status = "failed"
