@@ -27,8 +27,15 @@ unsupported; see `phase2-acceptance-review.md` for gaps before strategy mutation
 
 ## Phase 3: Strategy Diagnostics
 
-- [ ] T010 Add or expose R-multiple, MAE/MFE, stop width, entry type, trim type, exit type, and holding period diagnostics
-- [ ] T011 Add tests that diagnostics are present in the candidate report or signal trace
+- [X] T010 Add or expose R-multiple, MAE/MFE, stop width, entry type, trim type, exit type, and holding period diagnostics
+- [X] T011 Add tests that diagnostics are present in the candidate report or signal trace
+
+
+Phase 3 closeout note: T010/T011 are complete for the validator signal-trace
+contract. Diagnostics are required on matched reproduced `signals[]` entries and
+focused tests cover required fields, unit errors, and the open-trade nullable
+exception; see `phase3-verification.md`. This is not a claim that
+`active_strategy.py` emits production MartinLuk traces yet.
 
 ## Phase 4: Dry-Run Primitive Implementation
 
