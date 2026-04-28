@@ -145,7 +145,7 @@ def build_leader_daily_frame() -> pd.DataFrame:
         "MOMO": {"start": 10.0, "end": 18.0, "volume": 900_000, "range_pct": 0.070},
         "DOLLAR": {"start": 20.0, "end": 36.0, "volume": 2_000_000, "range_pct": 0.080},
         "ALPHA": {"start": 8.0, "end": 11.0, "volume": 1_500_000, "range_pct": 0.060},
-        "BETA": {"start": 12.0, "end": 16.5, "volume": 1_500_000, "range_pct": 0.060},
+        "BETA": {"start": 12.0, "end": 16.5, "volume": 1_000_000, "range_pct": 0.060},
         "SLOW": {"start": 40.0, "end": 42.0, "volume": 5_000_000, "range_pct": 0.055},
         "LOWADR": {"start": 30.0, "end": 39.0, "volume": 6_000_000, "range_pct": 0.030},
         "FALL": {"start": 50.0, "end": 45.0, "volume": 9_000_000, "range_pct": 0.090},

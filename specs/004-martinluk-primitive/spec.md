@@ -21,7 +21,7 @@ As a strategy developer, I want a deterministic primitive contract before editin
 ### Acceptance Scenarios
 
 1. **Given** the primitive spec, **when** implementation starts, **then** it uses leader selection, EMA/AVWAP context, ORH/IRH/prior-high or pullback entries, hard stops, partial trims, and trend exits.
-2. **Given** the primitive is unvalidated on public cases, **when** any post-Phase-4 promotion is requested, **then** the validator blocks promotion.
+2. **Given** the primitive is unvalidated on public cases, **when** a broad backtest is requested, **then** the validator blocks promotion.
 
 ## User Story 3 - Prevent private-ledger replication overclaims (P1)
 
@@ -40,7 +40,7 @@ As the project owner, I want explicit language that public evidence cannot guara
 - **FR-004**: The primitive MUST prioritize hot leaders and pullback/breakout structures rather than broad liquid minute-momentum.
 - **FR-005**: The first implementation MUST start with 0.5% portfolio risk per trade, no leverage, hard stops, and max stop 2.5% unless explicitly testing a separate 5% branch.
 - **FR-006**: The validator MUST return `insufficient_evidence` or fail when a case lacks enough public information for signal reproduction.
-- **FR-007**: Post-Phase-4 promotion work, including backtests or live autoresearch mutation, MUST wait until the public-case validator exists and passes.
+- **FR-007**: Broad backtests and live autoresearch mutation MUST wait until the public-case validator exists and passes.
 
 ## Non-Goals
 
