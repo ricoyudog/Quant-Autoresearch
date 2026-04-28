@@ -101,10 +101,10 @@ def make_signal(case: dict[str, Any], **overrides: Any) -> dict[str, Any]:
 
 def test_signals_path_reproduces_five_exact_public_cases(tmp_path: Path) -> None:
     validator = load_validator_module()
-    cases = [make_case(index) for index in range(1, 6)]
+    cases = [make_case(index) for index in range(1, 8)]
     write_public_case_root(tmp_path, cases)
     signals_path = tmp_path / "signals.json"
-    write_signal_trace(signals_path, [make_signal(case) for case in cases])
+    write_signal_trace(signals_path, [make_signal(case) for case in cases[:5]])
 
     result = validator.validate(tmp_path, signals_path)
 
@@ -113,22 +113,23 @@ def test_signals_path_reproduces_five_exact_public_cases(tmp_path: Path) -> None
     signal_validation = result["signal_validation"]
     assert signal_validation["reproduced_count"] == 5
     assert signal_validation["classification_counts"]["reproduced"] == 5
-    assert {
-        case_result["classification"]
-        for case_result in signal_validation["case_results"]
-    } == {"reproduced"}
+    assert signal_validation["classification_counts"]["not_reproduced"] == 2
 
 
 def test_unknown_public_date_classifies_as_insufficient_evidence(
     tmp_path: Path,
 ) -> None:
     validator = load_validator_module()
-    case = make_case(
-        1,
-        date_window="unknown_public_interview_example",
-        missing_fields=["exact date", "entry fill"],
-    )
-    write_public_case_root(tmp_path, [case])
+    cases = [
+        make_case(
+            index,
+            date_window="unknown_public_interview_example",
+            missing_fields=["exact date", "entry fill"],
+        )
+        for index in range(1, 8)
+    ]
+    case = cases[0]
+    write_public_case_root(tmp_path, cases)
     signals_path = tmp_path / "signals.json"
     write_signal_trace(signals_path, [make_signal(case, date="2025-01-01")])
 
@@ -143,8 +144,9 @@ def test_unknown_public_date_classifies_as_insufficient_evidence(
 
 def test_trace_data_missing_is_explicit_not_silent_pass(tmp_path: Path) -> None:
     validator = load_validator_module()
-    case = make_case(1)
-    write_public_case_root(tmp_path, [case])
+    cases = [make_case(index) for index in range(1, 8)]
+    case = cases[0]
+    write_public_case_root(tmp_path, cases)
     signals_path = tmp_path / "signals.json"
     write_signal_trace(
         signals_path,
