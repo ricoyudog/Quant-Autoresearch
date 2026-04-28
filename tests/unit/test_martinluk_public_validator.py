@@ -16,7 +16,10 @@ PUBLIC_CASE_ROOT = MODULE_PATH.parent
 
 
 def load_validator_module() -> Any:
-    spec = importlib.util.spec_from_file_location("martinluk_public_validator", MODULE_PATH)
+    spec = importlib.util.spec_from_file_location(
+        "martinluk_public_validator",
+        MODULE_PATH,
+    )
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -175,9 +178,8 @@ def test_public_fixture_keeps_unknown_dates_insufficient() -> None:
 
     assert result["status"] == "insufficient_evidence"
     assert result["passed"] is False
-    expected_case_ids = set(json.loads(signals_path.read_text())[
-        "expected_insufficient_evidence_case_ids"
-    ])
+    fixture_doc = json.loads(signals_path.read_text())
+    expected_case_ids = set(fixture_doc["expected_insufficient_evidence_case_ids"])
     case_results = {
         case_result["case_id"]: case_result
         for case_result in result["signal_validation"]["case_results"]
