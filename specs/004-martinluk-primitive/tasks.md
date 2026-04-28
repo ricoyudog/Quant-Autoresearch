@@ -44,7 +44,14 @@ exception; see `phase3-verification.md`. This is not a claim that
 - [ ] T015 Run `pytest tests/unit/test_strategy_interface.py -q`
 - [ ] T016 Run `python3 specs/004-martinluk-primitive/validate_public_cases.py --signals-path <trace>`
 
-## Phase 5: Bounded Backtest and Autoresearch Gate
+Phase 4 validator note: T016 may exit non-zero when parsed JSON reports
+`status: "insufficient_evidence"`. Treat that as an acceptable Phase 4
+research-only stop only when the JSON has no schema/diagnostic errors, no
+`not_reproduced` classifications for unsupported public cases, and no
+private-ledger or exact-fill replication claim. It is not a pass/promotion
+signal.
+
+## Later / Out of Scope: Bounded Backtest and Autoresearch Gate
 
 - [ ] T017 Run a no-leverage bounded backtest with the new primitive
 - [ ] T018 Compare public-case reproduction before aggregate score
@@ -55,4 +62,5 @@ exception; see `phase3-verification.md`. This is not a claim that
 
 - T006/T007 can run in parallel with source-date reconstruction if files are disjoint.
 - Strategy edits in T014 are shared-file work and should stay local or single-owner.
-- Broad backtests depend on validator and tests; do not parallelize them before prerequisites pass.
+- Backtest/autoresearch promotion work is outside Phase 4 and must not be run
+  by the dry-run primitive implementation lanes.

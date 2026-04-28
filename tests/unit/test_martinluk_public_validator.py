@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -499,6 +500,43 @@ def test_public_fixture_keeps_unknown_dates_insufficient() -> None:
         case_results[case_id]["classification"]
         for case_id in expected_case_ids
     } == {"insufficient_evidence"}
+
+
+def test_cli_insufficient_evidence_is_nonzero_research_only(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    validator = load_validator_module()
+    signals_path = (
+        PUBLIC_CASE_ROOT
+        / "fixtures"
+        / "signal-trace-public-cases-insufficient-evidence.json"
+    )
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "validate_public_cases.py",
+            "--signals-path",
+            str(signals_path),
+        ],
+    )
+
+    exit_code = validator.main()
+    result = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 1
+    assert result["status"] == "insufficient_evidence"
+    assert result["passed"] is False
+    assert result["errors"] == []
+    signal_validation = result["signal_validation"]
+    assert signal_validation["diagnostic_errors"] == []
+    assert signal_validation["classification_counts"]["not_reproduced"] == 0
+    assert (
+        signal_validation["classification_counts"]["insufficient_evidence"]
+        == result["case_count"]
+    )
 
 
 def test_baseline_public_case_validator_passes_without_signal_trace() -> None:

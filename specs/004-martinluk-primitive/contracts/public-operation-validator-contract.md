@@ -94,3 +94,10 @@ Future signal phase:
 - at least five public cases reproduced, or the run must remain research-only;
 - unsupported cases are listed with missing fields;
 - no exact private-ledger replication claim is emitted.
+
+The CLI remains non-zero for any `passed: false` result. A non-zero
+`insufficient_evidence` result may be accepted by a Phase 4 dry-run plan only as
+a research-only schema pass: no schema/replication-target/diagnostic errors, no
+`not_reproduced` classifications for unsupported public cases, and no
+private-ledger or exact-fill replication claim. Any other non-zero result is a
+validator failure, not an acceptable stop condition.

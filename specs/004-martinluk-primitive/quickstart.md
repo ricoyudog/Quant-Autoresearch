@@ -39,11 +39,18 @@ python3 specs/004-martinluk-primitive/validate_public_cases.py --signals-path <p
 `case_id`, `symbol`, `direction`, `date`, `setup_type`, `entry_trigger`, and
 `data_status` fields.
 
-## Promotion rule
+## Phase 4 validator semantics
 
-A broad backtest or live autoresearch run is allowed only after:
+The signal-trace validator remains fail-closed. Its CLI exits non-zero whenever
+`passed` is false, including research-only `insufficient_evidence` results. For
+Phase 4 dry-run verification, a non-zero validator result is acceptable only
+when parsed JSON satisfies all of these conditions:
 
-1. public cases validate structurally;
-2. signal reproduction validator exists;
-3. at least five public cases reproduce or are explicitly marked unsupported with evidence;
-4. no report claims exact private-ledger replication.
+1. `status == "insufficient_evidence"` and `passed == false`;
+2. there are no schema, replication-target, or diagnostic errors;
+3. unsupported public cases have `classification_counts.not_reproduced == 0`;
+4. the trace/report makes no private-ledger or exact-fill replication claim.
+
+This is a research-only stop condition, not a promotion signal. Do not run
+backtests, score comparisons, live/autoresearch loops, or promotion work as part
+of Phase 4 verification.
