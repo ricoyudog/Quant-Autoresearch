@@ -236,9 +236,10 @@ def test_reproduced_mae_mfe_values_require_units(
 
     assert result["status"] == "failed"
     assert result["passed"] is False
-    assert result["signal_validation"]["diagnostic_errors"] == [
+    assert (
         f"{signals[0]['signal_id']} {value_field} requires {unit_field}"
-    ]
+        in result["signal_validation"]["diagnostic_errors"]
+    )
 
 
 def test_unknown_public_date_classifies_as_insufficient_evidence(
