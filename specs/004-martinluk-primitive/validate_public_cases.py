@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import math
 import re
 from pathlib import Path
 from typing import Any
@@ -57,6 +58,20 @@ REQUIRED_REPRODUCED_DIAGNOSTICS = {
 }
 OPEN_EXIT_NULLABLE_DIAGNOSTICS = {"r_multiple", "trim_type"}
 DATA_MISSING_STATUSES = {"missing", "unavailable", "not_available"}
+DIAGNOSTIC_UNIT_FIELDS = {"mae_unit", "mfe_unit"}
+ALLOWED_DIAGNOSTIC_UNITS = {"R", "pct"}
+NUMERIC_DIAGNOSTIC_FIELDS = {
+    "r_multiple",
+    "mae",
+    "mfe",
+    "stop_width_pct",
+}
+NON_NEGATIVE_DIAGNOSTIC_FIELDS = {
+    "stop_width_pct",
+    "holding_period_bars",
+    "holding_period_minutes",
+}
+TEXT_DIAGNOSTIC_FIELDS = {"entry_type", "trim_type", "exit_type"}
 ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
@@ -156,6 +171,63 @@ def _field_missing_or_null(payload: dict[str, Any], field: str) -> bool:
     return field not in payload or payload[field] is None
 
 
+def _is_finite_number(value: Any) -> bool:
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(float(value))
+    )
+
+
+def _validate_numeric_field(
+    signal: dict[str, Any],
+    signal_ref: str,
+    field: str,
+    diagnostic_errors: list[str],
+) -> None:
+    if _field_missing_or_null(signal, field):
+        return
+
+    value = signal[field]
+    if not _is_finite_number(value):
+        diagnostic_errors.append(f"{signal_ref} {field} must be a finite number")
+        return
+
+    if field in NON_NEGATIVE_DIAGNOSTIC_FIELDS and value < 0:
+        diagnostic_errors.append(f"{signal_ref} {field} must be non-negative")
+
+
+def _validate_unit_field(
+    signal: dict[str, Any],
+    signal_ref: str,
+    field: str,
+    diagnostic_errors: list[str],
+) -> None:
+    if _field_missing_or_null(signal, field):
+        return
+
+    value = signal[field]
+    if not isinstance(value, str) or value not in ALLOWED_DIAGNOSTIC_UNITS:
+        allowed_units = ", ".join(sorted(ALLOWED_DIAGNOSTIC_UNITS))
+        diagnostic_errors.append(
+            f"{signal_ref} {field} must be one of: {allowed_units}"
+        )
+
+
+def _validate_text_field(
+    signal: dict[str, Any],
+    signal_ref: str,
+    field: str,
+    diagnostic_errors: list[str],
+) -> None:
+    if _field_missing_or_null(signal, field):
+        return
+
+    value = signal[field]
+    if not isinstance(value, str) or not value.strip():
+        diagnostic_errors.append(f"{signal_ref} {field} must be a non-empty string")
+
+
 def validate_reproduced_signal_diagnostics(
     signal: dict[str, Any],
     signal_ref: str,
@@ -211,6 +283,17 @@ def validate_reproduced_signal_diagnostics(
         diagnostic_errors.append(f"{signal_ref} mae requires mae_unit")
     if "mfe" in signal and _field_missing_or_null(signal, "mfe_unit"):
         diagnostic_errors.append(f"{signal_ref} mfe requires mfe_unit")
+
+    for field in sorted(NUMERIC_DIAGNOSTIC_FIELDS | NON_NEGATIVE_DIAGNOSTIC_FIELDS):
+        _validate_numeric_field(signal, signal_ref, field, diagnostic_errors)
+
+    for field in sorted(DIAGNOSTIC_UNIT_FIELDS):
+        _validate_unit_field(signal, signal_ref, field, diagnostic_errors)
+
+    for field in sorted(TEXT_DIAGNOSTIC_FIELDS):
+        if field in nullable_fields and signal.get(field) is None:
+            continue
+        _validate_text_field(signal, signal_ref, field, diagnostic_errors)
 
     return diagnostic_errors
 

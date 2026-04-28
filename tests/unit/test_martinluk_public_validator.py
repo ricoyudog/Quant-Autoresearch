@@ -124,6 +124,33 @@ def make_signal(
     return signal
 
 
+def validate_with_signal_overrides(
+    tmp_path: Path,
+    **signal_overrides: Any,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    validator = load_validator_module()
+    cases = [make_case(index) for index in range(1, 8)]
+    write_public_case_root(tmp_path, cases)
+    signals = [make_signal(case) for case in cases[:5]]
+    signals[0].update(signal_overrides)
+    signals_path = tmp_path / "signals.json"
+    write_signal_trace(signals_path, signals)
+
+    result = validator.validate(tmp_path, signals_path)
+    return result, signals[0]
+
+
+def assert_has_diagnostic_error(
+    errors: list[str],
+    signal_id: str,
+    *fragments: str,
+) -> None:
+    assert any(
+        signal_id in error and all(fragment in error for fragment in fragments)
+        for error in errors
+    ), errors
+
+
 def test_signals_path_reproduces_five_exact_public_cases_with_diagnostics(
     tmp_path: Path,
 ) -> None:
@@ -236,9 +263,169 @@ def test_reproduced_mae_mfe_values_require_units(
 
     assert result["status"] == "failed"
     assert result["passed"] is False
+    diagnostic_errors = result["signal_validation"]["diagnostic_errors"]
     assert (
-        f"{signals[0]['signal_id']} {value_field} requires {unit_field}"
-        in result["signal_validation"]["diagnostic_errors"]
+        diagnostic_errors.count(
+            f"{signals[0]['signal_id']} {value_field} requires {unit_field}"
+        )
+        == 1
+    )
+    assert (
+        f"{signals[0]['signal_id']} reproduced signal missing diagnostic field: "
+        f"{unit_field}"
+        not in diagnostic_errors
+    )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("r_multiple", "2R"),
+        ("r_multiple", True),
+        ("mae", "low"),
+        ("mae", False),
+        ("mfe", "high"),
+        ("mfe", True),
+        ("stop_width_pct", "wide"),
+        ("stop_width_pct", False),
+    ],
+)
+def test_reproduced_numeric_diagnostics_reject_invalid_types(
+    tmp_path: Path,
+    field: str,
+    value: Any,
+) -> None:
+    result, signal = validate_with_signal_overrides(tmp_path, **{field: value})
+
+    assert result["status"] == "failed"
+    assert result["passed"] is False
+    assert_has_diagnostic_error(
+        result["signal_validation"]["diagnostic_errors"],
+        str(signal["signal_id"]),
+        field,
+        "finite number",
+    )
+
+
+@pytest.mark.parametrize(
+    ("unit_field", "unit_value"),
+    [
+        ("mae_unit", "percent"),
+        ("mfe_unit", "dollars"),
+    ],
+)
+def test_reproduced_mae_mfe_units_must_be_allowed_values(
+    tmp_path: Path,
+    unit_field: str,
+    unit_value: str,
+) -> None:
+    result, signal = validate_with_signal_overrides(
+        tmp_path,
+        **{unit_field: unit_value},
+    )
+
+    assert result["status"] == "failed"
+    assert result["passed"] is False
+    assert_has_diagnostic_error(
+        result["signal_validation"]["diagnostic_errors"],
+        str(signal["signal_id"]),
+        unit_field,
+        "R",
+        "pct",
+    )
+
+
+def test_reproduced_signal_requires_a_holding_period_diagnostic(
+    tmp_path: Path,
+) -> None:
+    validator = load_validator_module()
+    cases = [make_case(index) for index in range(1, 8)]
+    write_public_case_root(tmp_path, cases)
+    signals = [make_signal(case) for case in cases[:5]]
+    del signals[0]["holding_period_bars"]
+    signals[0].pop("holding_period_minutes", None)
+    signals_path = tmp_path / "signals.json"
+    write_signal_trace(signals_path, signals)
+
+    result = validator.validate(tmp_path, signals_path)
+
+    assert result["status"] == "failed"
+    assert result["passed"] is False
+    assert_has_diagnostic_error(
+        result["signal_validation"]["diagnostic_errors"],
+        str(signals[0]["signal_id"]),
+        "holding_period_bars or holding_period_minutes",
+    )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("stop_width_pct", -0.01),
+        ("holding_period_bars", -1),
+        ("holding_period_minutes", -1),
+    ],
+)
+def test_reproduced_range_diagnostics_must_be_non_negative(
+    tmp_path: Path,
+    field: str,
+    value: int | float,
+) -> None:
+    result, signal = validate_with_signal_overrides(tmp_path, **{field: value})
+
+    assert result["status"] == "failed"
+    assert result["passed"] is False
+    assert_has_diagnostic_error(
+        result["signal_validation"]["diagnostic_errors"],
+        str(signal["signal_id"]),
+        field,
+        "non-negative",
+    )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("entry_type", ""),
+        ("entry_type", ["orh_reclaim"]),
+        ("trim_type", ""),
+        ("trim_type", {"kind": "partial_after_R_expansion"}),
+        ("exit_type", ""),
+        ("exit_type", 9),
+    ],
+)
+def test_reproduced_entry_trim_exit_labels_must_be_non_empty_strings(
+    tmp_path: Path,
+    field: str,
+    value: Any,
+) -> None:
+    result, signal = validate_with_signal_overrides(tmp_path, **{field: value})
+
+    assert result["status"] == "failed"
+    assert result["passed"] is False
+    assert_has_diagnostic_error(
+        result["signal_validation"]["diagnostic_errors"],
+        str(signal["signal_id"]),
+        field,
+        "non-empty string",
+    )
+
+
+def test_reproduced_signal_rejects_nested_diagnostics_object(
+    tmp_path: Path,
+) -> None:
+    result, signal = validate_with_signal_overrides(
+        tmp_path,
+        diagnostics={"r_multiple": 2.1},
+    )
+
+    assert result["status"] == "failed"
+    assert result["passed"] is False
+    assert_has_diagnostic_error(
+        result["signal_validation"]["diagnostic_errors"],
+        str(signal["signal_id"]),
+        "diagnostics must live directly on the signal entry",
+        "schema_version",
     )
 
 
