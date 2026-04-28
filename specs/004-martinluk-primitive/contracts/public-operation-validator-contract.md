@@ -36,11 +36,43 @@ Signal traces supplied with `--signals-path` use this deterministic shape:
       "date": "YYYY-MM-DD",
       "setup_type": "leader_pullback_prior_day_high",
       "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
-      "data_status": "available"
+      "data_status": "available",
+      "r_multiple": 2.4,
+      "mae": -0.35,
+      "mae_unit": "R",
+      "mfe": 3.1,
+      "mfe_unit": "R",
+      "stop_width_pct": 4.2,
+      "entry_type": "breakout_reclaim",
+      "trim_type": "partial_strength_trim",
+      "exit_type": "rule_exit",
+      "holding_period_bars": 18
     }
   ]
 }
 ```
+
+Diagnostic fields are part of each `signals[]` entry itself, not a nested
+`diagnostics` object. Matched reproduced signals must include:
+
+- `r_multiple`;
+- `mae` and `mae_unit`;
+- `mfe` and `mfe_unit`;
+- `stop_width_pct`;
+- `entry_type`;
+- `trim_type`;
+- `exit_type`;
+- at least one of `holding_period_bars` or `holding_period_minutes`.
+
+Open reproduced trades are represented with `exit_type: "open"`. They must
+still include entry, stop-width, MAE/MFE value+unit, and holding-period
+diagnostics. `r_multiple` and `trim_type` may be `null` only for these open
+trades; closed trades must provide non-null values for all reproduced-signal
+diagnostics. A trace that supplies `mae` without `mae_unit`, or `mfe` without
+`mfe_unit`, must fail with an explicit diagnostic error.
+
+Future changes to diagnostic semantics, field placement, or required fields
+require an explicit `schema_version` decision before implementation.
 
 When signal traces exist, each case should evaluate to one of:
 
