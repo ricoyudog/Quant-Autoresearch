@@ -19,7 +19,7 @@
       "direction": "long",
       "confidence": "medium_high",
       "setup_type": "leader_pullback_prior_day_high",
-      "date_window": "unknown_public_interview_example",
+      "date_window": "reconstructed_candidate: setup 2024-10-29..2024-11-05; management/exit check 2024-12-18..2024-12-19",
       "context_rules": [
         "strong recent mover or leader candidate",
         "pullback near rising 9 EMA",
@@ -39,7 +39,41 @@
         "partial fill",
         "final exit fill",
         "account equity"
-      ]
+      ],
+      "date_reconstruction": {
+        "status": "reconstructed_candidate_not_exact_fill",
+        "timezone": "America/New_York",
+        "confidence": "medium",
+        "window_start": "2024-10-29",
+        "window_end": "2024-12-19",
+        "setup_dates": [
+          "2024-10-29",
+          "2024-10-30",
+          "2024-10-31",
+          "2024-11-01",
+          "2024-11-04"
+        ],
+        "trigger_date_candidates": [
+          "2024-11-05"
+        ],
+        "management_date_candidates": [
+          "2024-12-18",
+          "2024-12-19"
+        ],
+        "source_refs": [
+          {
+            "source_id": "lilys_traderlion_2024_transcript",
+            "detail": "transcript idx 459-467 describes SOFI move from about 7 to 11/12, three-day pullback near 9 EMA, prior-day-high entry, day-low stop, 6R trim, and exit below 9 EMA into December"
+          }
+        ],
+        "market_data_checks": [
+          "SOFI daily bars show an October move into the 11/12 area, a pullback/consolidation around 2024-10-29..2024-11-04 near the 9 EMA, a 2024-11-05 break above the prior day high, and weak closes below the local 9 EMA on 2024-12-18/19."
+        ],
+        "limitations": [
+          "chart pointer in interview is not machine-readable",
+          "exact entry/partial/final fills remain unavailable"
+        ]
+      }
     },
     {
       "case_id": "MLUK-AMC-ORH-REENTRY-002",
@@ -47,7 +81,7 @@
       "direction": "long",
       "confidence": "medium_high",
       "setup_type": "opening_range_high_inside_day_reentry",
-      "date_window": "unknown_public_interview_example",
+      "date_window": "reconstructed_candidate: 2024-05-13..2024-05-14 meme-run ORH/re-entry window",
       "context_rules": [
         "meme/attention leader context",
         "inside-day structure after initial ORH failure",
@@ -66,7 +100,35 @@
         "re-entry timestamp",
         "stop adjustment timestamps",
         "all exits"
-      ]
+      ],
+      "date_reconstruction": {
+        "status": "reconstructed_candidate_not_exact_fill",
+        "timezone": "America/New_York",
+        "confidence": "medium_high",
+        "window_start": "2024-05-13",
+        "window_end": "2024-05-14",
+        "setup_dates": [
+          "2024-05-13"
+        ],
+        "trigger_date_candidates": [
+          "2024-05-13"
+        ],
+        "management_date_candidates": [
+          "2024-05-14"
+        ],
+        "source_refs": [
+          {
+            "source_id": "lilys_traderlion_2024_transcript",
+            "detail": "transcript idx 443-458 describes AMC, a first 5m ORH stopout, inside-day/range re-entry, roughly 3.22% stop, 170% move from entry, 100% premarket strength, and 9.50/10 area resistance trim"
+          }
+        ],
+        "market_data_checks": [
+          "AMC daily bars show the two-day meme run on 2024-05-13 and 2024-05-14, with high volume, a 2024-05-14 high near 11.88, and the 9.50/10 resistance/trim area inside that session range."
+        ],
+        "limitations": [
+          "intraday 5m candle timestamps and exact stop adjustment times remain unavailable"
+        ]
+      }
     },
     {
       "case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
@@ -74,7 +136,7 @@
       "direction": "long",
       "confidence": "medium_high",
       "setup_type": "theme_linked_inside_day_prior_high",
-      "date_window": "unknown_public_interview_example",
+      "date_window": "reconstructed_candidate: 2024-02-07..2024-02-16 BTC-linked low-of-day reclaim window",
       "context_rules": [
         "Bitcoin or crypto-linked theme strength",
         "inside-day or prior-high context",
@@ -86,13 +148,51 @@
       "exit_rule": "avoid_panic_sale_if_original_stop_not_hit_then_trail_with_9ema",
       "expected_signal_behavior": "long signal should require both theme context and tight technical trigger",
       "source_ids": [
-        "lilys_traderlion_2024_transcript"
+        "lilys_traderlion_2024_transcript",
+        "financialwisdom_martin_luk_strategy"
       ],
       "missing_fields": [
         "exact BTC context timestamp",
         "entry/exit fills",
         "position size"
-      ]
+      ],
+      "date_reconstruction": {
+        "status": "reconstructed_candidate_not_exact_fill",
+        "timezone": "America/New_York",
+        "confidence": "medium",
+        "window_start": "2024-02-07",
+        "window_end": "2024-02-16",
+        "setup_dates": [
+          "2024-02-07",
+          "2024-02-08",
+          "2024-02-09"
+        ],
+        "trigger_date_candidates": [
+          "2024-02-07"
+        ],
+        "management_date_candidates": [
+          "2024-02-14",
+          "2024-02-15",
+          "2024-02-16"
+        ],
+        "source_refs": [
+          {
+            "source_id": "lilys_traderlion_2024_transcript",
+            "detail": "transcript idx 360-366 describes COIN bought near low-of-day reclaim while Bitcoin formed an inside-day/prior-high breakout context"
+          },
+          {
+            "source_id": "financialwisdom_martin_luk_strategy",
+            "detail": "secondary article corroborates a COIN trade with entry around 117, 2% stop, and about 20R/40% gain; used only as corroboration"
+          }
+        ],
+        "market_data_checks": [
+          "COIN daily bars put a plausible 117-area low-of-day reclaim on 2024-02-07, followed by a move through the 140/160 area into 2024-02-14..2024-02-16; this better matches the public 117 entry than the later February 26 BTC breakout."
+        ],
+        "limitations": [
+          "transcript does not expose the chart date directly",
+          "Bitcoin context timestamp and exact COIN fills remain unavailable"
+        ]
+      }
     },
     {
       "case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
@@ -100,7 +200,7 @@
       "direction": "long",
       "confidence": "medium_high",
       "setup_type": "high_tight_flag_inside_day",
-      "date_window": "unknown_public_interview_example",
+      "date_window": "reconstructed_candidate: 2024-11-18..2024-11-21 high-tight-flag breakout/climax window",
       "context_rules": [
         "high-tight flag or tight consolidation",
         "inside-day trigger",
@@ -118,7 +218,37 @@
         "exact split-adjusted prices",
         "partial size",
         "volume climax timestamp"
-      ]
+      ],
+      "date_reconstruction": {
+        "status": "reconstructed_candidate_not_exact_fill",
+        "timezone": "America/New_York",
+        "confidence": "medium_high",
+        "window_start": "2024-11-18",
+        "window_end": "2024-11-21",
+        "setup_dates": [
+          "2024-11-15",
+          "2024-11-18"
+        ],
+        "trigger_date_candidates": [
+          "2024-11-19"
+        ],
+        "management_date_candidates": [
+          "2024-11-20",
+          "2024-11-21"
+        ],
+        "source_refs": [
+          {
+            "source_id": "lilys_traderlion_2024_transcript",
+            "detail": "transcript idx 514-530 describes Lemonade high-tight flag, repeated inside days, prior-day-high breakout, 2.5%-3% stop, 8R partial, and volume-driven strength exit"
+          }
+        ],
+        "market_data_checks": [
+          "LMND daily bars show a tight/inside-day setup around 2024-11-18, a 2024-11-19 breakout above the prior day high, and acceleration with very high volume on 2024-11-20/21."
+        ],
+        "limitations": [
+          "exact split-adjusted entry/partial sizes and intraday volume-climax timestamp remain unavailable"
+        ]
+      }
     },
     {
       "case_id": "MLUK-SMCI-WEEKLYBASE-005",
@@ -126,7 +256,7 @@
       "direction": "long",
       "confidence": "medium",
       "setup_type": "weekly_base_tight_risk_breakout",
-      "date_window": "unknown_public_interview_example",
+      "date_window": "reconstructed_candidate: 2024-01-16..2024-01-19 weekly-base breakout window",
       "context_rules": [
         "weekly base or strong higher-timeframe structure",
         "risk tight enough despite imperfect entry",
@@ -144,7 +274,41 @@
         "exact date",
         "actual premature exit",
         "would-have-held benchmark"
-      ]
+      ],
+      "date_reconstruction": {
+        "status": "reconstructed_candidate_not_exact_fill",
+        "timezone": "America/New_York",
+        "confidence": "medium_high",
+        "window_start": "2024-01-16",
+        "window_end": "2024-01-19",
+        "setup_dates": [
+          "2024-01-16",
+          "2024-01-17",
+          "2024-01-18"
+        ],
+        "trigger_date_candidates": [
+          "2024-01-18",
+          "2024-01-19"
+        ],
+        "management_date_candidates": [
+          "2024-01-19",
+          "2024-01-22",
+          "2024-01-23"
+        ],
+        "source_refs": [
+          {
+            "source_id": "lilys_traderlion_2024_transcript",
+            "detail": "transcript idx 312-336 describes SMCI, watchlist from December 2023, six-month weekly base from August, tight January 2024 candles after failed December breakouts, nonoptimal entry, and preferred prior-day-high breakout"
+          }
+        ],
+        "market_data_checks": [
+          "SMCI daily bars show tight January setup days on 2024-01-16..2024-01-18 and a high-volume range expansion on 2024-01-19 after the December/January base context described publicly."
+        ],
+        "limitations": [
+          "interview chart pointer does not expose the exact entry date",
+          "premature exit date and would-have-held benchmark remain unavailable"
+        ]
+      }
     },
     {
       "case_id": "MLUK-GLD-SLV-DECLINING9EMA-SHORT-006",
@@ -230,5 +394,7 @@
         "VOD transcript snippets"
       ]
     }
-  ]
+  ],
+  "date_reconstruction_generated_at": "2026-04-28T04:58:00+00:00",
+  "date_reconstruction_artifact": "specs/004-martinluk-primitive/public-date-reconstruction.md"
 }
