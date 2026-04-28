@@ -1,0 +1,249 @@
+{
+  "generated_at": "2026-04-28T03:47:54.589071+00:00",
+  "mission": "Research Martin Luk public strategy evidence and convert it into a deterministic primitive-base strategy specification for Quant-Autoresearch.",
+  "replication_boundary": {
+    "can_replicate": "A rules-based primitive that reproduces publicly described decision logic and can be checked against publicly documented trade examples.",
+    "cannot_guarantee": "Exact trade-by-trade replication of the USIC account because full broker executions, timestamps, sizes, slippage, borrow/margin constraints, and the complete 731-trade ledger are not public in the available sources.",
+    "required_to_guarantee_exact": [
+      "Complete order/execution ledger with timestamp, symbol, side, qty, price, fees, borrow, stop/trim changes, and account equity",
+      "All screen-recorded chart context at decision time or enough raw market data to reconstruct each signal",
+      "Source-of-truth timezone/session mapping and corporate-action-adjusted prices"
+    ]
+  },
+  "sources": [
+    {
+      "id": "businesswire_usic_2025_final",
+      "url": "https://www.businesswire.com/news/home/20260202090143/en/Multiple-World-Records-Set-in-International-Investing-Competition",
+      "type": "competition_result_primary_press_release",
+      "use": "Confirms 2025 USIC real-money account context and Martin Luk +969.8% in the $20k-$1M stock/ETF division, plus prior +283.1% in 2024.",
+      "confidence": "high"
+    },
+    {
+      "id": "businesswire_usic_2025_half",
+      "url": "https://www.businesswire.com/news/home/20250730525524/en/2025-United-States-Investing-Championship-First-Half-Results",
+      "type": "competition_result_primary_press_release",
+      "use": "Confirms mid-2025 progress: Martin Luk third in sub-$1M stocks after six months at +183.6%, and 2024 +283.1% mention.",
+      "confidence": "high"
+    },
+    {
+      "id": "traderlion_linkedin_2026_episode_summary",
+      "url": "https://www.linkedin.com/company/traderlion",
+      "type": "publisher_episode_summary_social",
+      "use": "Summarizes 2025 profile: 22% win rate, 209 winners/731 trades, 0.5% risk per trade, up to 280% margin exposure, anchored VWAP, pullbacks to rising EMAs, tight stops under 2.5%, December drawdown and mistake review.",
+      "confidence": "medium_high"
+    },
+    {
+      "id": "castbox_traderlion_2026",
+      "url": "https://castbox.fm/channel/The-TraderLion-Podcast-id4572357",
+      "type": "podcast_episode_description",
+      "use": "Corroborates the 2026 TraderLion episode framing: pullback-focused system, dozens of real trades, anchored VWAP, NVIDIA/Tesla/quantum examples, first pullback within a base, 0.5% risk, 280% margin, December 26% drawdown.",
+      "confidence": "medium_high"
+    },
+    {
+      "id": "podwise_making_millions_2026",
+      "url": "https://podwise.ai/dashboard/episodes/7557502",
+      "type": "interview_summary",
+      "use": "Confirms weekly structures, hot sectors, technical trading emphasis, tight stops usually below 3%, 50% drawdown in 2021, and best/worst trade themes.",
+      "confidence": "medium"
+    },
+    {
+      "id": "lilys_traderlion_2024_transcript",
+      "url": "https://lilys.ai/ko/notes/887808",
+      "type": "interview_transcript_and_summary",
+      "use": "Provides detailed 2024 rules and trade examples: swing holding horizon, EMA/dollar-volume/AVWAP indicators, ADR filters, ORH/IRH entries, stop logic, trims and 9/21/50 EMA trailing, scanners, SMCI/COIN/GME/AMC/SOFI/Lemonade cases.",
+      "confidence": "medium_high"
+    },
+    {
+      "id": "twstalker_martinlukkt_profile",
+      "url": "https://w.twstalker.com/martinlukkt",
+      "type": "social_profile_public_mirror",
+      "use": "Captures current public profile and recent operation-style posts: GLD/SLV short after close below declining 9 EMA, first bounce short, first $100k trade close, QQQ AVWAP/50-week EMA support idea, WTI as market anchor, SNDK repeated stopout attempts.",
+      "confidence": "medium"
+    },
+    {
+      "id": "streamscharts_martinlukkt",
+      "url": "https://streamscharts.com/channels/martinlukkt/streams",
+      "type": "stream_index",
+      "use": "Shows public stream/recording surface exists; useful as a future data-acquisition route for reconstructing more individual operations, but not a complete execution ledger by itself.",
+      "confidence": "medium"
+    },
+    {
+      "id": "financialwisdom_martin_luk_strategy",
+      "url": "https://www.financialwisdomtv.com/post/martin-luk-s-1358-swing-trading-strategy-from-gamestop-blow-up-to-us-investing-champion",
+      "type": "secondary_strategy_article",
+      "use": "Secondary synthesis of scans, ADR, opening range, EMA convergence, risk controls, and example case studies. Use as corroboration only, not sole rule source.",
+      "confidence": "medium_low"
+    }
+  ],
+  "public_trade_evidence_index": [
+    {
+      "symbol_or_theme": "GME",
+      "source_ids": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "evidence_class": "trade_lesson",
+      "available_fields": [
+        "parabolic top entry mistake",
+        "large intraday loss",
+        "anti-rule: do not buy parabolic FOMO highs"
+      ],
+      "missing_fields": [
+        "complete timestamp",
+        "size",
+        "all exits"
+      ]
+    },
+    {
+      "symbol_or_theme": "SMCI",
+      "source_ids": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "evidence_class": "case_study",
+      "available_fields": [
+        "weekly base",
+        "entry quality notes",
+        "exit mistake",
+        "missed large R multiple"
+      ],
+      "missing_fields": [
+        "exact full execution ledger"
+      ]
+    },
+    {
+      "symbol_or_theme": "COIN",
+      "source_ids": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "evidence_class": "case_study",
+      "available_fields": [
+        "Bitcoin-linked thesis",
+        "inside-day/prior-high context",
+        "near low-of-day reclaim entry",
+        "panic-sale lesson",
+        "EP/ORH variant"
+      ],
+      "missing_fields": [
+        "complete fills",
+        "portfolio sizing"
+      ]
+    },
+    {
+      "symbol_or_theme": "AMC",
+      "source_ids": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "evidence_class": "case_study",
+      "available_fields": [
+        "first 5m ORH attempt stopped",
+        "inside-day re-entry",
+        "stop raised",
+        "large R outcome",
+        "partial sale near major resistance"
+      ],
+      "missing_fields": [
+        "complete fills"
+      ]
+    },
+    {
+      "symbol_or_theme": "SOFI",
+      "source_ids": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "evidence_class": "case_study",
+      "available_fields": [
+        "3-day pullback near 9 EMA",
+        "prior-day-high entry",
+        "low-of-day stop",
+        "half trim near 6R",
+        "final exit below 9 EMA"
+      ],
+      "missing_fields": [
+        "exact dates/fills"
+      ]
+    },
+    {
+      "symbol_or_theme": "Lemonade/LMND",
+      "source_ids": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "evidence_class": "case_study",
+      "available_fields": [
+        "high-tight flag",
+        "inside days",
+        "prior-day-high entry",
+        "3% stop",
+        "8R partial",
+        "volume climax sell"
+      ],
+      "missing_fields": [
+        "full ledger"
+      ]
+    },
+    {
+      "symbol_or_theme": "NVDA/TSLA/quantum names",
+      "source_ids": [
+        "castbox_traderlion_2026",
+        "traderlion_linkedin_2026_episode_summary"
+      ],
+      "evidence_class": "2025_example_family",
+      "available_fields": [
+        "pullback to rising EMAs",
+        "anchored VWAP",
+        "first pullback within base"
+      ],
+      "missing_fields": [
+        "individual operations without video extraction"
+      ]
+    },
+    {
+      "symbol_or_theme": "GLD/SLV short",
+      "source_ids": [
+        "twstalker_martinlukkt_profile"
+      ],
+      "evidence_class": "public_operation_post",
+      "available_fields": [
+        "short first bounce into declining 9 EMA after close below",
+        "closed first $100k trade",
+        "wanted hold toward 50 EMA"
+      ],
+      "missing_fields": [
+        "entry/exit prices",
+        "size"
+      ]
+    },
+    {
+      "symbol_or_theme": "SNDK",
+      "source_ids": [
+        "twstalker_martinlukkt_profile"
+      ],
+      "evidence_class": "public_operation_post",
+      "available_fields": [
+        "multiple stopouts",
+        "sixth/seventh attempt",
+        "signal switched"
+      ],
+      "missing_fields": [
+        "full setup condition",
+        "fills"
+      ]
+    },
+    {
+      "symbol_or_theme": "QQQ/WTI market context",
+      "source_ids": [
+        "twstalker_martinlukkt_profile"
+      ],
+      "evidence_class": "market_context_post",
+      "available_fields": [
+        "QQQ AVWAP from April 2025 tariff low",
+        "570 undercut interest",
+        "50-week EMA alignment",
+        "WTI 9 EMA as market-direction anchor"
+      ],
+      "missing_fields": [
+        "actual trade decision"
+      ]
+    }
+  ],
+  "promoted_to_repo_spec_at": "2026-04-28T04:15:55.863499+00:00",
+  "repo_spec_path": "specs/004-martinluk-primitive"
+}

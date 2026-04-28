@@ -34,6 +34,7 @@ artifacts/plots/
 *.log
 *.tsv
 *.json
+!specs/**/*.json
 *.db
 *.duckdb
 !research_cache.json
