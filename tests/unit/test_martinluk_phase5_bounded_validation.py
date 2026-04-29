@@ -395,7 +395,7 @@ def test_phase5_rejects_broad_backtest_requests_before_loader_calls(
             "universe": "all",
             "full_history": True,
             "parameter_sweep": {"stop_width": [1, 2, 3]},
-            "search_loop": True,
+            "optimizer_loop": True,
             "walk_forward": True,
             "broad_scoreboard": True,
         }

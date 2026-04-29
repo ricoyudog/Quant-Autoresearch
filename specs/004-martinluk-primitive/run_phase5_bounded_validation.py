@@ -89,7 +89,7 @@ REQUIRED_CAPS = {
     "allow_dynamic_universe": False,
     "allow_full_history": False,
     "allow_parameter_sweeps": False,
-    "allow_search_loops": False,
+    "allow_optimizer_loops": False,
     "allow_walk_forward": False,
     "allow_broad_scoreboard": False,
 }
@@ -397,7 +397,7 @@ def validate_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
             "dynamic_universe",
             "full_history",
             "parameter_sweep",
-            "search_loop",
+            "optimizer_loop",
             "walk_forward",
             "broad_scoreboard",
         )

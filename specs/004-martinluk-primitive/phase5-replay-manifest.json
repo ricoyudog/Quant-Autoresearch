@@ -13,7 +13,7 @@
     "allow_dynamic_universe": false,
     "allow_full_history": false,
     "allow_parameter_sweeps": false,
-    "allow_search_loops": false,
+    "allow_optimizer_loops": false,
     "allow_walk_forward": false,
     "allow_broad_scoreboard": false
   },
