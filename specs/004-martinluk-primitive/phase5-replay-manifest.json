@@ -13,7 +13,7 @@
     "allow_dynamic_universe": false,
     "allow_full_history": false,
     "allow_parameter_sweeps": false,
-    "allow_optimizer_loops": false,
+    "allow_search_loops": false,
     "allow_walk_forward": false,
     "allow_broad_scoreboard": false
   },
@@ -24,9 +24,40 @@
     "below_threshold_status": "research_only"
   },
   "data_sources": {
-    "daily": "src/data/duckdb_connector.py::load_daily_data using data/daily_cache.duckdb",
-    "minute": "src/data/duckdb_connector.py::query_minute_data using MINUTE_AGGS_CLI and MINUTE_AGGS_DATASET_ROOT",
-    "public_evidence": "specs/004-martinluk-primitive/source-ledger.json and public-operation-cases.json"
+    "daily": "src/data/duckdb_connector.py::load_daily_data",
+    "daily_cache_path": "data/daily_cache.duckdb",
+    "minute": "src/data/duckdb_connector.py::query_minute_data",
+    "minute_cli_env": "MINUTE_AGGS_CLI",
+    "minute_dataset_root_env": "MINUTE_AGGS_DATASET_ROOT",
+    "public_evidence": "specs/004-martinluk-primitive/source-ledger.json and public-operation-cases.json",
+    "query_date_ranges": [
+      {
+        "start": "2024-10-29",
+        "end": "2024-12-19",
+        "basis": "public-date-reconstruction candidate window"
+      },
+      {
+        "start": "2024-05-13",
+        "end": "2024-05-14",
+        "basis": "public-date-reconstruction candidate window; intraday replay would require minute bars"
+      },
+      {
+        "start": "2024-02-07",
+        "end": "2024-02-16",
+        "basis": "public-date-reconstruction candidate window"
+      },
+      {
+        "start": "2024-11-18",
+        "end": "2024-11-21",
+        "basis": "public-date-reconstruction candidate window"
+      },
+      {
+        "start": "2024-01-16",
+        "end": "2024-01-19",
+        "basis": "public-date-reconstruction candidate window"
+      }
+    ],
+    "missing_symbol_or_window_reasons": []
   },
   "metric_labels": [
     "signal_emitted",
