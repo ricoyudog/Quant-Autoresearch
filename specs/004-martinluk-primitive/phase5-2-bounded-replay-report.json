@@ -1,0 +1,1054 @@
+{
+  "audit_only_summary": {
+    "audit_row_count": 3,
+    "market_data_query_allowed": false,
+    "market_data_query_policy": "audit_only_rows_do_not_execute_loaders",
+    "status_counts": {
+      "insufficient_evidence": 3
+    }
+  },
+  "audit_results": [
+    {
+      "case_id": "MLUK-GLD-SLV-DECLINING9EMA-SHORT-006",
+      "direction": "short",
+      "evidence_class": "research_only_insufficient_evidence",
+      "final_status": "insufficient_evidence",
+      "market_data_query_allowed": false,
+      "missing_fields": [
+        "exact post date",
+        "entry price",
+        "cover price",
+        "whether GLD or SLV was primary"
+      ],
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "exact post date and primary GLD/SLV instrument are unavailable",
+      "row_id": "p5-audit-gld-slv-declining9ema-short-006",
+      "row_kind": "research_only_case",
+      "symbol": "GLD_SLV"
+    },
+    {
+      "case_id": "MLUK-SNDK-RETRY-COOLDOWN-007",
+      "direction": "long_or_short_unknown",
+      "evidence_class": "research_only_insufficient_evidence",
+      "final_status": "insufficient_evidence",
+      "market_data_query_allowed": false,
+      "missing_fields": [
+        "direction",
+        "entry/exit fills",
+        "exact signal switch rule",
+        "all retry timestamps"
+      ],
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "direction, retry timestamps, and exact switch rule are unavailable",
+      "row_id": "p5-audit-sndk-retry-cooldown-007",
+      "row_kind": "research_only_case",
+      "symbol": "SNDK"
+    },
+    {
+      "case_id": "MLUK-NVDA-TSLA-QUANTUM-2025-PULLBACK-008",
+      "direction": "long",
+      "evidence_class": "unsupported_until_new_primary_evidence",
+      "final_status": "insufficient_evidence",
+      "market_data_query_allowed": false,
+      "missing_fields": [
+        "symbol-specific dates",
+        "timestamps",
+        "actual fills",
+        "VOD transcript snippets"
+      ],
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "2025 multi-symbol case requires new primary VOD/source extraction before replay",
+      "row_id": "p5-audit-nvda-tsla-quantum-2025-pullback-008",
+      "row_kind": "unsupported_case",
+      "symbol": "MULTI"
+    }
+  ],
+  "control_summary": {
+    "clean_control_count": 17,
+    "control_data_missing_count": 0,
+    "control_insufficient_evidence_count": 0,
+    "control_row_count": 20,
+    "controls_counted_toward_promotion": 0,
+    "false_positive_control_count": 3,
+    "false_positive_control_row_ids": [
+      "p5-control-amc-adjacent-1",
+      "p5-control-amc-null-1",
+      "p5-control-amc-null-2"
+    ],
+    "status_counts": {
+      "not_reproduced": 17,
+      "reproduced": 3
+    }
+  },
+  "controls_counted_toward_promotion": 0,
+  "data_source_metadata": {
+    "allowed_loaders": [
+      "load_daily_data",
+      "query_minute_data"
+    ],
+    "loader_file_path": "src/data/duckdb_connector.py",
+    "loader_import_module": "data.duckdb_connector",
+    "query_ledger_record_count": 25
+  },
+  "diagnostic_promotion_veto": {
+    "active": true,
+    "controls_counted_toward_promotion": 0,
+    "false_positive_control_count": 3,
+    "false_positive_control_row_ids": [
+      "p5-control-amc-adjacent-1",
+      "p5-control-amc-null-1",
+      "p5-control-amc-null-2"
+    ],
+    "reasons": [
+      "false_positive_controls_present"
+    ]
+  },
+  "execution_mode": "bounded_replay",
+  "no_overclaim_statement": "Phase 5.1 is a bounded row-level replay of the frozen Phase 5 public candidate/control manifest. It is research-only unless all public replay candidate gates are separately satisfied. It is not a broad backtest, not profit proof, not Martin Luk realized P&L, not private-account replication, and not exact-fill replication. Realized entry, exit, size, fees, slippage, and account P&L remain N/A unless a later primary-fill evidence phase explicitly upgrades the evidence contract.",
+  "overall_run_status": "research_only",
+  "phase5_2_artifact_note": "Phase 5.2 report artifacts add diagnostic promotion-veto fields only; they do not broaden replay scope, query audit rows, or upgrade realized outcomes.",
+  "phase5_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+  "phase5_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+  "promoted": false,
+  "promotion_evaluation": {
+    "controls_counted_toward_promotion": 0,
+    "counted_row_kind": "public_replay_candidate",
+    "diagnostic_veto_reasons": [
+      "false_positive_controls_present"
+    ],
+    "false_positive_control_count": 3,
+    "false_positive_control_row_ids": [
+      "p5-control-amc-adjacent-1",
+      "p5-control-amc-null-1",
+      "p5-control-amc-null-2"
+    ],
+    "non_diagnostic_blockers": [
+      "public_replay_candidate_reproduction_below_threshold"
+    ],
+    "promoted": false,
+    "public_replay_candidate_threshold_met": false,
+    "reproduced_public_replay_candidate_count": 0,
+    "required_public_reproduced": 5
+  },
+  "promotion_threshold": 5,
+  "public_replay_candidate_summary": {
+    "public_replay_candidate_count": 5,
+    "status_counts": {
+      "insufficient_evidence": 5
+    }
+  },
+  "query_ledger_path": "specs/004-martinluk-primitive/phase5-2-query-ledger.json",
+  "query_ledger_sha256": "914661d2706be772a5c80ff40021f9f40ad034b7da2877a32d59dcf4fb0c1af4",
+  "realized_outcome_fields": {
+    "fees": "N/A",
+    "realized_account_pnl": "N/A",
+    "realized_entry_price": "N/A",
+    "realized_exit_price": "N/A",
+    "realized_position_size": "N/A",
+    "slippage": "N/A"
+  },
+  "realized_outcome_policy": {
+    "applies_to": "all row_results and audit_results",
+    "default": "N/A",
+    "fields": [
+      "realized_entry_price",
+      "realized_exit_price",
+      "realized_position_size",
+      "realized_account_pnl",
+      "fees",
+      "slippage"
+    ],
+    "primary_fill_evidence_required": true,
+    "reason": "public evidence does not supply primary fills, size, fees, slippage, or account P&L"
+  },
+  "replay_request_path": "specs/004-martinluk-primitive/phase5-1-replay-request.json",
+  "replay_request_sha256": "ccf7c6e63f18ebb0a922fff7b4b1dde4da0c9dc084347e540c82a55ae00d8383",
+  "reproduced_public_replay_candidate_count": 0,
+  "row_results": [
+    {
+      "allowed_window": {
+        "basis": "public-date-reconstruction candidate window",
+        "end": "2024-12-19",
+        "start": "2024-10-29"
+      },
+      "case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "insufficient_evidence",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "exact date",
+        "entry fill",
+        "partial fill",
+        "final exit fill",
+        "account equity"
+      ],
+      "parent_case_id": null,
+      "query_id": "p5-1-q015-daily-sofi",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "public evidence gap remains explicit; no date/fill/account fields were invented",
+      "row_id": "p5-public-sofi",
+      "row_kind": "public_replay_candidate",
+      "signal_present": false,
+      "symbol": "SOFI"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent before_window control",
+        "end": "2024-10-28",
+        "start": "2024-10-22"
+      },
+      "case_id": "MLUK-SOFI-PULLBACK-PDH-001-ADJ-1",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "exact date",
+        "entry fill",
+        "partial fill",
+        "final exit fill",
+        "account equity"
+      ],
+      "parent_case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "query_id": "p5-1-q013-daily-sofi",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-sofi-adjacent-1",
+      "row_kind": "adjacent_control_window",
+      "signal_present": false,
+      "symbol": "SOFI"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent after_window control",
+        "end": "2024-12-27",
+        "start": "2024-12-20"
+      },
+      "case_id": "MLUK-SOFI-PULLBACK-PDH-001-ADJ-2",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "exact date",
+        "entry fill",
+        "partial fill",
+        "final exit fill",
+        "account equity"
+      ],
+      "parent_case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "query_id": "p5-1-q020-daily-sofi",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-sofi-adjacent-2",
+      "row_kind": "adjacent_control_window",
+      "signal_present": false,
+      "symbol": "SOFI"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_ticker control",
+        "end": "2024-12-19",
+        "start": "2024-10-29"
+      },
+      "case_id": "MLUK-SOFI-PULLBACK-PDH-001-NULL-1",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "control row has no public fill evidence",
+        "dry-run market data not queried"
+      ],
+      "parent_case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "query_id": "p5-1-q014-daily-qqq",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-sofi-null-1",
+      "row_kind": "null_control_window",
+      "signal_present": false,
+      "symbol": "QQQ"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_date control",
+        "end": "2024-09-27",
+        "start": "2024-09-23"
+      },
+      "case_id": "MLUK-SOFI-PULLBACK-PDH-001-NULL-2",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "control row has no public fill evidence",
+        "dry-run market data not queried"
+      ],
+      "parent_case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "query_id": "p5-1-q011-daily-sofi",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-sofi-null-2",
+      "row_kind": "null_control_window",
+      "signal_present": false,
+      "symbol": "SOFI"
+    },
+    {
+      "allowed_window": {
+        "basis": "public-date-reconstruction candidate window; intraday replay would require minute bars",
+        "end": "2024-05-14",
+        "start": "2024-05-13"
+      },
+      "case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "insufficient_evidence",
+      "loader_status": "executed",
+      "market_granularity": "minute",
+      "missing_fields": [
+        "exact first attempt timestamp",
+        "re-entry timestamp",
+        "stop adjustment timestamps",
+        "all exits"
+      ],
+      "parent_case_id": null,
+      "query_id": "p5-1-q023-minute-amc",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "public evidence gap remains explicit; no date/fill/account fields were invented",
+      "row_id": "p5-public-amc",
+      "row_kind": "public_replay_candidate",
+      "signal_present": false,
+      "symbol": "AMC"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent before_window control",
+        "end": "2024-05-10",
+        "start": "2024-05-09"
+      },
+      "case_id": "MLUK-AMC-ORH-REENTRY-002-ADJ-1",
+      "control_outcome": "false_positive_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "reproduced",
+      "loader_status": "executed",
+      "market_granularity": "minute",
+      "missing_fields": [
+        "exact first attempt timestamp",
+        "re-entry timestamp",
+        "stop adjustment timestamps",
+        "all exits"
+      ],
+      "parent_case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "query_id": "p5-1-q022-minute-amc",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "matching primitive signal appeared in a diagnostic control window; not promotion evidence",
+      "row_id": "p5-control-amc-adjacent-1",
+      "row_kind": "adjacent_control_window",
+      "signal_present": true,
+      "symbol": "AMC"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent after_window control",
+        "end": "2024-05-16",
+        "start": "2024-05-15"
+      },
+      "case_id": "MLUK-AMC-ORH-REENTRY-002-ADJ-2",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "minute",
+      "missing_fields": [
+        "exact first attempt timestamp",
+        "re-entry timestamp",
+        "stop adjustment timestamps",
+        "all exits"
+      ],
+      "parent_case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "query_id": "p5-1-q025-minute-amc",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-amc-adjacent-2",
+      "row_kind": "adjacent_control_window",
+      "signal_present": false,
+      "symbol": "AMC"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_ticker control",
+        "end": "2024-05-14",
+        "start": "2024-05-13"
+      },
+      "case_id": "MLUK-AMC-ORH-REENTRY-002-NULL-1",
+      "control_outcome": "false_positive_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "reproduced",
+      "loader_status": "executed",
+      "market_granularity": "minute",
+      "missing_fields": [
+        "control row has no public fill evidence",
+        "dry-run market data not queried"
+      ],
+      "parent_case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "query_id": "p5-1-q024-minute-spy",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "matching primitive signal appeared in a diagnostic control window; not promotion evidence",
+      "row_id": "p5-control-amc-null-1",
+      "row_kind": "null_control_window",
+      "signal_present": true,
+      "symbol": "SPY"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_date control",
+        "end": "2024-04-30",
+        "start": "2024-04-29"
+      },
+      "case_id": "MLUK-AMC-ORH-REENTRY-002-NULL-2",
+      "control_outcome": "false_positive_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "reproduced",
+      "loader_status": "executed",
+      "market_granularity": "minute",
+      "missing_fields": [
+        "control row has no public fill evidence",
+        "dry-run market data not queried"
+      ],
+      "parent_case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "query_id": "p5-1-q021-minute-amc",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "matching primitive signal appeared in a diagnostic control window; not promotion evidence",
+      "row_id": "p5-control-amc-null-2",
+      "row_kind": "null_control_window",
+      "signal_present": true,
+      "symbol": "AMC"
+    },
+    {
+      "allowed_window": {
+        "basis": "public-date-reconstruction candidate window",
+        "end": "2024-02-16",
+        "start": "2024-02-07"
+      },
+      "case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "insufficient_evidence",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "exact BTC context timestamp",
+        "entry/exit fills",
+        "position size"
+      ],
+      "parent_case_id": null,
+      "query_id": "p5-1-q008-daily-coin",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "public evidence gap remains explicit; no date/fill/account fields were invented",
+      "row_id": "p5-public-coin",
+      "row_kind": "public_replay_candidate",
+      "signal_present": false,
+      "symbol": "COIN"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent before_window control",
+        "end": "2024-02-06",
+        "start": "2024-01-31"
+      },
+      "case_id": "MLUK-COIN-BTC-INSIDEDAY-003-ADJ-1",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "exact BTC context timestamp",
+        "entry/exit fills",
+        "position size"
+      ],
+      "parent_case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "query_id": "p5-1-q007-daily-coin",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-coin-adjacent-1",
+      "row_kind": "adjacent_control_window",
+      "signal_present": false,
+      "symbol": "COIN"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent after_window control",
+        "end": "2024-02-23",
+        "start": "2024-02-20"
+      },
+      "case_id": "MLUK-COIN-BTC-INSIDEDAY-003-ADJ-2",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "exact BTC context timestamp",
+        "entry/exit fills",
+        "position size"
+      ],
+      "parent_case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "query_id": "p5-1-q010-daily-coin",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-coin-adjacent-2",
+      "row_kind": "adjacent_control_window",
+      "signal_present": false,
+      "symbol": "COIN"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_ticker control",
+        "end": "2024-02-16",
+        "start": "2024-02-07"
+      },
+      "case_id": "MLUK-COIN-BTC-INSIDEDAY-003-NULL-1",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "control row has no public fill evidence",
+        "dry-run market data not queried"
+      ],
+      "parent_case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "query_id": "p5-1-q009-daily-qqq",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-coin-null-1",
+      "row_kind": "null_control_window",
+      "signal_present": false,
+      "symbol": "QQQ"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_date control",
+        "end": "2024-01-26",
+        "start": "2024-01-22"
+      },
+      "case_id": "MLUK-COIN-BTC-INSIDEDAY-003-NULL-2",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "control row has no public fill evidence",
+        "dry-run market data not queried"
+      ],
+      "parent_case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "query_id": "p5-1-q005-daily-coin",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-coin-null-2",
+      "row_kind": "null_control_window",
+      "signal_present": false,
+      "symbol": "COIN"
+    },
+    {
+      "allowed_window": {
+        "basis": "public-date-reconstruction candidate window",
+        "end": "2024-11-21",
+        "start": "2024-11-18"
+      },
+      "case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "insufficient_evidence",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "exact split-adjusted prices",
+        "partial size",
+        "volume climax timestamp"
+      ],
+      "parent_case_id": null,
+      "query_id": "p5-1-q017-daily-lmnd",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "public evidence gap remains explicit; no date/fill/account fields were invented",
+      "row_id": "p5-public-lmnd",
+      "row_kind": "public_replay_candidate",
+      "signal_present": false,
+      "symbol": "LMND"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent before_window control",
+        "end": "2024-11-14",
+        "start": "2024-11-11"
+      },
+      "case_id": "MLUK-LMND-HIGHTIGHTFLAG-004-ADJ-1",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "exact split-adjusted prices",
+        "partial size",
+        "volume climax timestamp"
+      ],
+      "parent_case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "query_id": "p5-1-q016-daily-lmnd",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-lmnd-adjacent-1",
+      "row_kind": "adjacent_control_window",
+      "signal_present": false,
+      "symbol": "LMND"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent after_window control",
+        "end": "2024-11-27",
+        "start": "2024-11-22"
+      },
+      "case_id": "MLUK-LMND-HIGHTIGHTFLAG-004-ADJ-2",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "exact split-adjusted prices",
+        "partial size",
+        "volume climax timestamp"
+      ],
+      "parent_case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "query_id": "p5-1-q019-daily-lmnd",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-lmnd-adjacent-2",
+      "row_kind": "adjacent_control_window",
+      "signal_present": false,
+      "symbol": "LMND"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_ticker control",
+        "end": "2024-11-21",
+        "start": "2024-11-18"
+      },
+      "case_id": "MLUK-LMND-HIGHTIGHTFLAG-004-NULL-1",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "control row has no public fill evidence",
+        "dry-run market data not queried"
+      ],
+      "parent_case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "query_id": "p5-1-q018-daily-spy",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-lmnd-null-1",
+      "row_kind": "null_control_window",
+      "signal_present": false,
+      "symbol": "SPY"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_date control",
+        "end": "2024-10-24",
+        "start": "2024-10-21"
+      },
+      "case_id": "MLUK-LMND-HIGHTIGHTFLAG-004-NULL-2",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "control row has no public fill evidence",
+        "dry-run market data not queried"
+      ],
+      "parent_case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "query_id": "p5-1-q012-daily-lmnd",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-lmnd-null-2",
+      "row_kind": "null_control_window",
+      "signal_present": false,
+      "symbol": "LMND"
+    },
+    {
+      "allowed_window": {
+        "basis": "public-date-reconstruction candidate window",
+        "end": "2024-01-19",
+        "start": "2024-01-16"
+      },
+      "case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "insufficient_evidence",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "exact date",
+        "actual premature exit",
+        "would-have-held benchmark"
+      ],
+      "parent_case_id": null,
+      "query_id": "p5-1-q004-daily-smci",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "public evidence gap remains explicit; no date/fill/account fields were invented",
+      "row_id": "p5-public-smci",
+      "row_kind": "public_replay_candidate",
+      "signal_present": false,
+      "symbol": "SMCI"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent before_window control",
+        "end": "2024-01-12",
+        "start": "2024-01-08"
+      },
+      "case_id": "MLUK-SMCI-WEEKLYBASE-005-ADJ-1",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "exact date",
+        "actual premature exit",
+        "would-have-held benchmark"
+      ],
+      "parent_case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "query_id": "p5-1-q002-daily-smci",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-smci-adjacent-1",
+      "row_kind": "adjacent_control_window",
+      "signal_present": false,
+      "symbol": "SMCI"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent after_window control",
+        "end": "2024-01-26",
+        "start": "2024-01-22"
+      },
+      "case_id": "MLUK-SMCI-WEEKLYBASE-005-ADJ-2",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "exact date",
+        "actual premature exit",
+        "would-have-held benchmark"
+      ],
+      "parent_case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "query_id": "p5-1-q006-daily-smci",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-smci-adjacent-2",
+      "row_kind": "adjacent_control_window",
+      "signal_present": false,
+      "symbol": "SMCI"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_ticker control",
+        "end": "2024-01-19",
+        "start": "2024-01-16"
+      },
+      "case_id": "MLUK-SMCI-WEEKLYBASE-005-NULL-1",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "control row has no public fill evidence",
+        "dry-run market data not queried"
+      ],
+      "parent_case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "query_id": "p5-1-q003-daily-qqq",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-smci-null-1",
+      "row_kind": "null_control_window",
+      "signal_present": false,
+      "symbol": "QQQ"
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_date control",
+        "end": "2023-12-15",
+        "start": "2023-12-11"
+      },
+      "case_id": "MLUK-SMCI-WEEKLYBASE-005-NULL-2",
+      "control_outcome": "clean_control",
+      "direction": "long",
+      "evidence_class": "replayable_window_candidate",
+      "final_status": "not_reproduced",
+      "loader_status": "executed",
+      "market_granularity": "daily",
+      "missing_fields": [
+        "control row has no public fill evidence",
+        "dry-run market data not queried"
+      ],
+      "parent_case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "query_id": "p5-1-q001-daily-smci",
+      "realized_outcome": {
+        "fees": "N/A",
+        "realized_account_pnl": "N/A",
+        "realized_entry_price": "N/A",
+        "realized_exit_price": "N/A",
+        "realized_position_size": "N/A",
+        "slippage": "N/A"
+      },
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
+      "row_id": "p5-control-smci-null-2",
+      "row_kind": "null_control_window",
+      "signal_present": false,
+      "symbol": "SMCI"
+    }
+  ],
+  "run_id": "martinluk_phase5_1_bounded_replay_v1",
+  "runner_path": "specs/004-martinluk-primitive/run_phase5_bounded_replay.py",
+  "runtime_path": "specs/004-martinluk-primitive/phase5-2-runtime.json",
+  "runtime_sha256": "dbffaa96db1e2be067190734ac6ca07acfba50592e9369a14870f598d6d23ac8",
+  "schema_version": "martinluk_phase5_2_bounded_replay_report_v1",
+  "validation": {
+    "errors": [],
+    "passed": true,
+    "query_ledger": {
+      "errors": [],
+      "passed": true
+    },
+    "request": {
+      "errors": [],
+      "manifest_path": "/Users/chunsingyu/softwares/Quant-Autoresearch/specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "passed": true,
+      "phase5_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "warnings": []
+    }
+  }
+}

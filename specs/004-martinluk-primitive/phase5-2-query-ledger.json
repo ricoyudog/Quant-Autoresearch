@@ -1,0 +1,1960 @@
+{
+  "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+  "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+  "query_count": 25,
+  "records": [
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2023-12-15",
+      "date_window_start": "2023-11-21",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-control-smci-null-2",
+          "row_kind": "null_control_window",
+          "source_allowed_window": {
+            "basis": "explicit null_date control",
+            "end": "2023-12-15",
+            "start": "2023-12-11"
+          },
+          "source_symbol": "SMCI"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "SMCI"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q001-daily-smci",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "SMCI"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11175,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIW",
+          "AACT",
+          "AACT.U",
+          "AACT.WS"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11176,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIW",
+          "AACT",
+          "AACT.U",
+          "AACT.WS"
+        ],
+        "strategy_input_symbols": [
+          "SMCI"
+        ]
+      },
+      "row_ids": [
+        "p5-control-smci-null-2"
+      ],
+      "signals_by_symbol": {
+        "SMCI": false
+      },
+      "symbols": [
+        "SMCI"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-01-12",
+      "date_window_start": "2023-12-19",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-control-smci-adjacent-1",
+          "row_kind": "adjacent_control_window",
+          "source_allowed_window": {
+            "basis": "explicit adjacent before_window control",
+            "end": "2024-01-12",
+            "start": "2024-01-08"
+          },
+          "source_symbol": "SMCI"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "SMCI"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q002-daily-smci",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "SMCI"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11115,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIW",
+          "AACT",
+          "AACT.U",
+          "AACT.WS"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11116,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIW",
+          "AACT",
+          "AACT.U",
+          "AACT.WS"
+        ],
+        "strategy_input_symbols": [
+          "SMCI"
+        ]
+      },
+      "row_ids": [
+        "p5-control-smci-adjacent-1"
+      ],
+      "signals_by_symbol": {
+        "SMCI": false
+      },
+      "symbols": [
+        "SMCI"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-01-19",
+      "date_window_start": "2023-12-27",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-control-smci-null-1",
+          "row_kind": "null_control_window",
+          "source_allowed_window": {
+            "basis": "explicit null_ticker control",
+            "end": "2024-01-19",
+            "start": "2024-01-16"
+          },
+          "source_symbol": "QQQ"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "QQQ"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q003-daily-qqq",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "QQQ"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11073,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIU",
+          "AACIW",
+          "AACT",
+          "AACT.U"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11074,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIU",
+          "AACIW",
+          "AACT",
+          "AACT.U"
+        ],
+        "strategy_input_symbols": [
+          "QQQ"
+        ]
+      },
+      "row_ids": [
+        "p5-control-smci-null-1"
+      ],
+      "signals_by_symbol": {
+        "QQQ": false
+      },
+      "symbols": [
+        "QQQ"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-01-19",
+      "date_window_start": "2023-12-27",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-public-smci",
+          "row_kind": "public_replay_candidate",
+          "source_allowed_window": {
+            "basis": "public-date-reconstruction candidate window",
+            "end": "2024-01-19",
+            "start": "2024-01-16"
+          },
+          "source_symbol": "SMCI"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "SMCI"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q004-daily-smci",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "SMCI"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11073,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIU",
+          "AACIW",
+          "AACT",
+          "AACT.U"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11074,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIU",
+          "AACIW",
+          "AACT",
+          "AACT.U"
+        ],
+        "strategy_input_symbols": [
+          "SMCI"
+        ]
+      },
+      "row_ids": [
+        "p5-public-smci"
+      ],
+      "signals_by_symbol": {
+        "SMCI": false
+      },
+      "symbols": [
+        "SMCI"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-01-26",
+      "date_window_start": "2024-01-02",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-control-coin-null-2",
+          "row_kind": "null_control_window",
+          "source_allowed_window": {
+            "basis": "explicit null_date control",
+            "end": "2024-01-26",
+            "start": "2024-01-22"
+          },
+          "source_symbol": "COIN"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "COIN"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q005-daily-coin",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "COIN"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11089,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIU",
+          "AACIW",
+          "AACT",
+          "AACT.U"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11090,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIU",
+          "AACIW",
+          "AACT",
+          "AACT.U"
+        ],
+        "strategy_input_symbols": [
+          "COIN"
+        ]
+      },
+      "row_ids": [
+        "p5-control-coin-null-2"
+      ],
+      "signals_by_symbol": {
+        "COIN": false
+      },
+      "symbols": [
+        "COIN"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-01-26",
+      "date_window_start": "2024-01-02",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-control-smci-adjacent-2",
+          "row_kind": "adjacent_control_window",
+          "source_allowed_window": {
+            "basis": "explicit adjacent after_window control",
+            "end": "2024-01-26",
+            "start": "2024-01-22"
+          },
+          "source_symbol": "SMCI"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "SMCI"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q006-daily-smci",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "SMCI"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11089,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIU",
+          "AACIW",
+          "AACT",
+          "AACT.U"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11090,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIU",
+          "AACIW",
+          "AACT",
+          "AACT.U"
+        ],
+        "strategy_input_symbols": [
+          "SMCI"
+        ]
+      },
+      "row_ids": [
+        "p5-control-smci-adjacent-2"
+      ],
+      "signals_by_symbol": {
+        "SMCI": false
+      },
+      "symbols": [
+        "SMCI"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-02-06",
+      "date_window_start": "2024-01-11",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-control-coin-adjacent-1",
+          "row_kind": "adjacent_control_window",
+          "source_allowed_window": {
+            "basis": "explicit adjacent before_window control",
+            "end": "2024-02-06",
+            "start": "2024-01-31"
+          },
+          "source_symbol": "COIN"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "COIN"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q007-daily-coin",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "COIN"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11096,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIU",
+          "AACIW",
+          "AACT",
+          "AACT.U"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11097,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIU",
+          "AACIW",
+          "AACT",
+          "AACT.U"
+        ],
+        "strategy_input_symbols": [
+          "COIN"
+        ]
+      },
+      "row_ids": [
+        "p5-control-coin-adjacent-1"
+      ],
+      "signals_by_symbol": {
+        "COIN": false
+      },
+      "symbols": [
+        "COIN"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-02-16",
+      "date_window_start": "2024-01-18",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-public-coin",
+          "row_kind": "public_replay_candidate",
+          "source_allowed_window": {
+            "basis": "public-date-reconstruction candidate window",
+            "end": "2024-02-16",
+            "start": "2024-02-07"
+          },
+          "source_symbol": "COIN"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "COIN"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q008-daily-coin",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "COIN"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11113,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIU",
+          "AACIW",
+          "AACT",
+          "AACT.U"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11114,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIU",
+          "AACIW",
+          "AACT",
+          "AACT.U"
+        ],
+        "strategy_input_symbols": [
+          "COIN"
+        ]
+      },
+      "row_ids": [
+        "p5-public-coin"
+      ],
+      "signals_by_symbol": {
+        "COIN": false
+      },
+      "symbols": [
+        "COIN"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-02-16",
+      "date_window_start": "2024-01-18",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-control-coin-null-1",
+          "row_kind": "null_control_window",
+          "source_allowed_window": {
+            "basis": "explicit null_ticker control",
+            "end": "2024-02-16",
+            "start": "2024-02-07"
+          },
+          "source_symbol": "QQQ"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "QQQ"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q009-daily-qqq",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "QQQ"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11113,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIU",
+          "AACIW",
+          "AACT",
+          "AACT.U"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11114,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIU",
+          "AACIW",
+          "AACT",
+          "AACT.U"
+        ],
+        "strategy_input_symbols": [
+          "QQQ"
+        ]
+      },
+      "row_ids": [
+        "p5-control-coin-null-1"
+      ],
+      "signals_by_symbol": {
+        "QQQ": false
+      },
+      "symbols": [
+        "QQQ"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-02-23",
+      "date_window_start": "2024-01-31",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-control-coin-adjacent-2",
+          "row_kind": "adjacent_control_window",
+          "source_allowed_window": {
+            "basis": "explicit adjacent after_window control",
+            "end": "2024-02-23",
+            "start": "2024-02-20"
+          },
+          "source_symbol": "COIN"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "COIN"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q010-daily-coin",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "COIN"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11060,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIU",
+          "AACIW",
+          "AACT",
+          "AACT.U"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11061,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACI",
+          "AACIU",
+          "AACIW",
+          "AACT",
+          "AACT.U"
+        ],
+        "strategy_input_symbols": [
+          "COIN"
+        ]
+      },
+      "row_ids": [
+        "p5-control-coin-adjacent-2"
+      ],
+      "signals_by_symbol": {
+        "COIN": false
+      },
+      "symbols": [
+        "COIN"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-09-27",
+      "date_window_start": "2024-09-03",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-control-sofi-null-2",
+          "row_kind": "null_control_window",
+          "source_allowed_window": {
+            "basis": "explicit null_date control",
+            "end": "2024-09-27",
+            "start": "2024-09-23"
+          },
+          "source_symbol": "SOFI"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "SOFI"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q011-daily-sofi",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "SOFI"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11127,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11128,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "strategy_input_symbols": [
+          "SOFI"
+        ]
+      },
+      "row_ids": [
+        "p5-control-sofi-null-2"
+      ],
+      "signals_by_symbol": {
+        "SOFI": false
+      },
+      "symbols": [
+        "SOFI"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-10-24",
+      "date_window_start": "2024-10-01",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-control-lmnd-null-2",
+          "row_kind": "null_control_window",
+          "source_allowed_window": {
+            "basis": "explicit null_date control",
+            "end": "2024-10-24",
+            "start": "2024-10-21"
+          },
+          "source_symbol": "LMND"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "LMND"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q012-daily-lmnd",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "LMND"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11128,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11129,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "strategy_input_symbols": [
+          "LMND"
+        ]
+      },
+      "row_ids": [
+        "p5-control-lmnd-null-2"
+      ],
+      "signals_by_symbol": {
+        "LMND": false
+      },
+      "symbols": [
+        "LMND"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-10-28",
+      "date_window_start": "2024-10-02",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-control-sofi-adjacent-1",
+          "row_kind": "adjacent_control_window",
+          "source_allowed_window": {
+            "basis": "explicit adjacent before_window control",
+            "end": "2024-10-28",
+            "start": "2024-10-22"
+          },
+          "source_symbol": "SOFI"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "SOFI"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q013-daily-sofi",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "SOFI"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11141,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11142,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "strategy_input_symbols": [
+          "SOFI"
+        ]
+      },
+      "row_ids": [
+        "p5-control-sofi-adjacent-1"
+      ],
+      "signals_by_symbol": {
+        "SOFI": false
+      },
+      "symbols": [
+        "SOFI"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-12-19",
+      "date_window_start": "2024-10-09",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-control-sofi-null-1",
+          "row_kind": "null_control_window",
+          "source_allowed_window": {
+            "basis": "explicit null_ticker control",
+            "end": "2024-12-19",
+            "start": "2024-10-29"
+          },
+          "source_symbol": "QQQ"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "QQQ"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q014-daily-qqq",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "QQQ"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11428,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11429,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "strategy_input_symbols": [
+          "QQQ"
+        ]
+      },
+      "row_ids": [
+        "p5-control-sofi-null-1"
+      ],
+      "signals_by_symbol": {
+        "QQQ": false
+      },
+      "symbols": [
+        "QQQ"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-12-19",
+      "date_window_start": "2024-10-09",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-public-sofi",
+          "row_kind": "public_replay_candidate",
+          "source_allowed_window": {
+            "basis": "public-date-reconstruction candidate window",
+            "end": "2024-12-19",
+            "start": "2024-10-29"
+          },
+          "source_symbol": "SOFI"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "SOFI"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q015-daily-sofi",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "SOFI"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11428,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11429,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "strategy_input_symbols": [
+          "SOFI"
+        ]
+      },
+      "row_ids": [
+        "p5-public-sofi"
+      ],
+      "signals_by_symbol": {
+        "SOFI": false
+      },
+      "symbols": [
+        "SOFI"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-11-14",
+      "date_window_start": "2024-10-22",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-control-lmnd-adjacent-1",
+          "row_kind": "adjacent_control_window",
+          "source_allowed_window": {
+            "basis": "explicit adjacent before_window control",
+            "end": "2024-11-14",
+            "start": "2024-11-11"
+          },
+          "source_symbol": "LMND"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "LMND"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q016-daily-lmnd",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "LMND"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11111,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11112,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "strategy_input_symbols": [
+          "LMND"
+        ]
+      },
+      "row_ids": [
+        "p5-control-lmnd-adjacent-1"
+      ],
+      "signals_by_symbol": {
+        "LMND": false
+      },
+      "symbols": [
+        "LMND"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-11-21",
+      "date_window_start": "2024-10-29",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-public-lmnd",
+          "row_kind": "public_replay_candidate",
+          "source_allowed_window": {
+            "basis": "public-date-reconstruction candidate window",
+            "end": "2024-11-21",
+            "start": "2024-11-18"
+          },
+          "source_symbol": "LMND"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "LMND"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q017-daily-lmnd",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "LMND"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11119,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11120,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "strategy_input_symbols": [
+          "LMND"
+        ]
+      },
+      "row_ids": [
+        "p5-public-lmnd"
+      ],
+      "signals_by_symbol": {
+        "LMND": false
+      },
+      "symbols": [
+        "LMND"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-11-21",
+      "date_window_start": "2024-10-29",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-control-lmnd-null-1",
+          "row_kind": "null_control_window",
+          "source_allowed_window": {
+            "basis": "explicit null_ticker control",
+            "end": "2024-11-21",
+            "start": "2024-11-18"
+          },
+          "source_symbol": "SPY"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "SPY"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q018-daily-spy",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "SPY"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11119,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11120,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "strategy_input_symbols": [
+          "SPY"
+        ]
+      },
+      "row_ids": [
+        "p5-control-lmnd-null-1"
+      ],
+      "signals_by_symbol": {
+        "SPY": false
+      },
+      "symbols": [
+        "SPY"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-11-27",
+      "date_window_start": "2024-11-02",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-control-lmnd-adjacent-2",
+          "row_kind": "adjacent_control_window",
+          "source_allowed_window": {
+            "basis": "explicit adjacent after_window control",
+            "end": "2024-11-27",
+            "start": "2024-11-22"
+          },
+          "source_symbol": "LMND"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "LMND"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q019-daily-lmnd",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "LMND"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11098,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11099,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "strategy_input_symbols": [
+          "LMND"
+        ]
+      },
+      "row_ids": [
+        "p5-control-lmnd-adjacent-2"
+      ],
+      "signals_by_symbol": {
+        "LMND": false
+      },
+      "symbols": [
+        "LMND"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-12-27",
+      "date_window_start": "2024-11-30",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 20 bounded warmup day(s)",
+          "row_id": "p5-control-sofi-adjacent-2",
+          "row_kind": "adjacent_control_window",
+          "source_allowed_window": {
+            "basis": "explicit adjacent after_window control",
+            "end": "2024-12-27",
+            "start": "2024-12-20"
+          },
+          "source_symbol": "SOFI"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "SOFI"
+      ],
+      "executed": true,
+      "granularity": "daily",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "load_daily_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q020-daily-sofi",
+      "raw_loader_scope": "date_only_daily_cache",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "SOFI"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 11209,
+        "filtered_out_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "raw_loader_scope": "date_only_daily_cache",
+        "raw_symbol_count": 11210,
+        "raw_symbol_sample": [
+          "A",
+          "AA",
+          "AAA",
+          "AAAU",
+          "AACG",
+          "AACT",
+          "AACT.U",
+          "AACT.WS",
+          "AADI",
+          "AADR"
+        ],
+        "strategy_input_symbols": [
+          "SOFI"
+        ]
+      },
+      "row_ids": [
+        "p5-control-sofi-adjacent-2"
+      ],
+      "signals_by_symbol": {
+        "SOFI": false
+      },
+      "symbols": [
+        "SOFI"
+      ],
+      "warmup_days_used": 20,
+      "warmup_policy": {
+        "max_days": 20,
+        "name": "max_daily_warmup_trading_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-04-30",
+      "date_window_start": "2024-04-28",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 1 bounded warmup day(s)",
+          "row_id": "p5-control-amc-null-2",
+          "row_kind": "null_control_window",
+          "source_allowed_window": {
+            "basis": "explicit null_date control",
+            "end": "2024-04-30",
+            "start": "2024-04-29"
+          },
+          "source_symbol": "AMC"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "AMC"
+      ],
+      "executed": true,
+      "granularity": "minute",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "query_minute_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q021-minute-amc",
+      "raw_loader_scope": "symbol_date_minute_bars",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "AMC"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 0,
+        "filtered_out_symbol_sample": [],
+        "raw_loader_scope": "symbol_date_minute_bars",
+        "raw_symbol_count": 1,
+        "raw_symbol_sample": [
+          "AMC"
+        ],
+        "strategy_input_symbols": [
+          "AMC"
+        ]
+      },
+      "row_ids": [
+        "p5-control-amc-null-2"
+      ],
+      "signals_by_symbol": {
+        "AMC": true
+      },
+      "symbols": [
+        "AMC"
+      ],
+      "warmup_days_used": 1,
+      "warmup_policy": {
+        "max_days": 1,
+        "name": "max_minute_warmup_session_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-05-10",
+      "date_window_start": "2024-05-08",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 1 bounded warmup day(s)",
+          "row_id": "p5-control-amc-adjacent-1",
+          "row_kind": "adjacent_control_window",
+          "source_allowed_window": {
+            "basis": "explicit adjacent before_window control",
+            "end": "2024-05-10",
+            "start": "2024-05-09"
+          },
+          "source_symbol": "AMC"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "AMC"
+      ],
+      "executed": true,
+      "granularity": "minute",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "query_minute_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q022-minute-amc",
+      "raw_loader_scope": "symbol_date_minute_bars",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "AMC"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 0,
+        "filtered_out_symbol_sample": [],
+        "raw_loader_scope": "symbol_date_minute_bars",
+        "raw_symbol_count": 1,
+        "raw_symbol_sample": [
+          "AMC"
+        ],
+        "strategy_input_symbols": [
+          "AMC"
+        ]
+      },
+      "row_ids": [
+        "p5-control-amc-adjacent-1"
+      ],
+      "signals_by_symbol": {
+        "AMC": true
+      },
+      "symbols": [
+        "AMC"
+      ],
+      "warmup_days_used": 1,
+      "warmup_policy": {
+        "max_days": 1,
+        "name": "max_minute_warmup_session_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-05-14",
+      "date_window_start": "2024-05-12",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 1 bounded warmup day(s)",
+          "row_id": "p5-public-amc",
+          "row_kind": "public_replay_candidate",
+          "source_allowed_window": {
+            "basis": "public-date-reconstruction candidate window; intraday replay would require minute bars",
+            "end": "2024-05-14",
+            "start": "2024-05-13"
+          },
+          "source_symbol": "AMC"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "AMC"
+      ],
+      "executed": true,
+      "granularity": "minute",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "query_minute_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q023-minute-amc",
+      "raw_loader_scope": "symbol_date_minute_bars",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "AMC"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 0,
+        "filtered_out_symbol_sample": [],
+        "raw_loader_scope": "symbol_date_minute_bars",
+        "raw_symbol_count": 1,
+        "raw_symbol_sample": [
+          "AMC"
+        ],
+        "strategy_input_symbols": [
+          "AMC"
+        ]
+      },
+      "row_ids": [
+        "p5-public-amc"
+      ],
+      "signals_by_symbol": {
+        "AMC": false
+      },
+      "symbols": [
+        "AMC"
+      ],
+      "warmup_days_used": 1,
+      "warmup_policy": {
+        "max_days": 1,
+        "name": "max_minute_warmup_session_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-05-14",
+      "date_window_start": "2024-05-12",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 1 bounded warmup day(s)",
+          "row_id": "p5-control-amc-null-1",
+          "row_kind": "null_control_window",
+          "source_allowed_window": {
+            "basis": "explicit null_ticker control",
+            "end": "2024-05-14",
+            "start": "2024-05-13"
+          },
+          "source_symbol": "SPY"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "SPY"
+      ],
+      "executed": true,
+      "granularity": "minute",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "query_minute_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q024-minute-spy",
+      "raw_loader_scope": "symbol_date_minute_bars",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "SPY"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 0,
+        "filtered_out_symbol_sample": [],
+        "raw_loader_scope": "symbol_date_minute_bars",
+        "raw_symbol_count": 1,
+        "raw_symbol_sample": [
+          "SPY"
+        ],
+        "strategy_input_symbols": [
+          "SPY"
+        ]
+      },
+      "row_ids": [
+        "p5-control-amc-null-1"
+      ],
+      "signals_by_symbol": {
+        "SPY": true
+      },
+      "symbols": [
+        "SPY"
+      ],
+      "warmup_days_used": 1,
+      "warmup_policy": {
+        "max_days": 1,
+        "name": "max_minute_warmup_session_days",
+        "no_forward_expansion": true
+      }
+    },
+    {
+      "data_missing_reason": null,
+      "date_window_end": "2024-05-16",
+      "date_window_start": "2024-05-14",
+      "derivation_proof": [
+        {
+          "query_end_rule": "allowed_window.end with no forward expansion",
+          "query_start_rule": "allowed_window.start minus <= 1 bounded warmup day(s)",
+          "row_id": "p5-control-amc-adjacent-2",
+          "row_kind": "adjacent_control_window",
+          "source_allowed_window": {
+            "basis": "explicit adjacent after_window control",
+            "end": "2024-05-16",
+            "start": "2024-05-15"
+          },
+          "source_symbol": "AMC"
+        }
+      ],
+      "derived_from_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "derived_from_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+      "effective_symbols": [
+        "AMC"
+      ],
+      "executed": true,
+      "granularity": "minute",
+      "loader_module": "data.duckdb_connector",
+      "loader_name": "query_minute_data",
+      "loader_status": "executed",
+      "query_id": "p5-1-q025-minute-amc",
+      "raw_loader_scope": "symbol_date_minute_bars",
+      "raw_to_effective_filter_proof": {
+        "effective_symbols": [
+          "AMC"
+        ],
+        "filter_before_strategy": true,
+        "filtered_out_symbol_count": 0,
+        "filtered_out_symbol_sample": [],
+        "raw_loader_scope": "symbol_date_minute_bars",
+        "raw_symbol_count": 1,
+        "raw_symbol_sample": [
+          "AMC"
+        ],
+        "strategy_input_symbols": [
+          "AMC"
+        ]
+      },
+      "row_ids": [
+        "p5-control-amc-adjacent-2"
+      ],
+      "signals_by_symbol": {
+        "AMC": false
+      },
+      "symbols": [
+        "AMC"
+      ],
+      "warmup_days_used": 1,
+      "warmup_policy": {
+        "max_days": 1,
+        "name": "max_minute_warmup_session_days",
+        "no_forward_expansion": true
+      }
+    }
+  ],
+  "request_execution_mode": "bounded_replay",
+  "run_id": "martinluk_phase5_1_bounded_replay_v1",
+  "schema_version": "martinluk_phase5_1_query_ledger_v1"
+}

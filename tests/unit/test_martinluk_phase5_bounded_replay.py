@@ -270,3 +270,98 @@ def test_phase5_1_control_outcome_mapping_and_promotion_excludes_controls(
     assert report["control_summary"]["false_positive_control_count"] == 20
     assert report["control_summary"]["controls_counted_toward_promotion"] == 0
     assert report["promoted"] is False
+
+
+def test_phase5_2_reports_false_positive_control_ids_and_vetoes_promotion(
+    phase5_1: Any,
+    manifest: dict[str, Any],
+    request_payload: dict[str, Any],
+) -> None:
+    public_rows = [
+        row for row in manifest["executable_rows"] if row["row_kind"] == "public_replay_candidate"
+    ]
+    false_positive_control_ids = [
+        "p5-control-amc-adjacent-1",
+        "p5-control-amc-null-1",
+        "p5-control-amc-null-2",
+    ]
+
+    for row in public_rows:
+        row["missing_fields"] = []
+        row["expected_status"] = "replayable_window_candidate"
+    manifest["run_level_gate"]["required_public_reproduced"] = len(public_rows)
+
+    row_outcomes: dict[str, dict[str, Any]] = {}
+    for row in manifest["executable_rows"]:
+        row_outcomes[row["row_id"]] = {
+            "query_id": f"query-{row['row_id']}",
+            "loader_status": "executed",
+            "signal_present": row["row_kind"] == "public_replay_candidate"
+            or row["row_id"] in false_positive_control_ids,
+        }
+
+    report = phase5_1.build_report(
+        manifest,
+        request_payload,
+        {"records": []},
+        row_outcomes,
+        manifest_sha256=request_payload["phase5_manifest_sha256"],
+        request_path=REQUEST_PATH,
+        query_ledger_path=MODULE_PATH.with_name("phase5-2-query-ledger.json"),
+        runtime_path=MODULE_PATH.with_name("phase5-2-runtime.json"),
+        request_sha256="request-sha",
+        query_ledger_sha256="ledger-sha",
+        runtime_sha256="runtime-sha",
+        validation={"passed": True, "errors": []},
+    )
+
+    assert report["reproduced_public_replay_candidate_count"] == len(public_rows)
+    assert report["control_summary"]["false_positive_control_count"] == len(false_positive_control_ids)
+    assert report["control_summary"]["false_positive_control_row_ids"] == false_positive_control_ids
+    assert report["control_summary"]["controls_counted_toward_promotion"] == 0
+    assert report["promoted"] is False
+    assert report["overall_run_status"] == "research_only"
+    assert report["diagnostic_promotion_veto"] == {
+        "active": True,
+        "false_positive_control_count": len(false_positive_control_ids),
+        "false_positive_control_row_ids": false_positive_control_ids,
+        "controls_counted_toward_promotion": 0,
+        "reasons": ["false_positive_controls_present"],
+    }
+
+
+def test_phase5_2_audit_and_executable_rows_keep_realized_outcomes_na(
+    phase5_1: Any,
+    manifest: dict[str, Any],
+    request_payload: dict[str, Any],
+) -> None:
+    row_outcomes: dict[str, dict[str, Any]] = {
+        row["row_id"]: {
+            "query_id": f"query-{row['row_id']}",
+            "loader_status": "executed",
+            "signal_present": False,
+        }
+        for row in manifest["executable_rows"]
+    }
+
+    report = phase5_1.build_report(
+        manifest,
+        request_payload,
+        {"records": []},
+        row_outcomes,
+        manifest_sha256=request_payload["phase5_manifest_sha256"],
+        request_path=REQUEST_PATH,
+        query_ledger_path=MODULE_PATH.with_name("phase5-2-query-ledger.json"),
+        runtime_path=MODULE_PATH.with_name("phase5-2-runtime.json"),
+        request_sha256="request-sha",
+        query_ledger_sha256="ledger-sha",
+        runtime_sha256="runtime-sha",
+        validation={"passed": True, "errors": []},
+    )
+
+    expected_na = phase5_1.realized_outcome_na()
+    assert report["realized_outcome_fields"] == expected_na
+    assert all(row["realized_outcome"] == expected_na for row in report["row_results"])
+    assert all(row["realized_outcome"] == expected_na for row in report["audit_results"])
+    assert all(row["market_data_query_allowed"] is False for row in report["audit_results"])
+    assert all("query_id" not in row for row in report["audit_results"])

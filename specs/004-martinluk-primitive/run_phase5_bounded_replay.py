@@ -29,7 +29,7 @@ if str(SRC_ROOT) not in sys.path:
 REQUEST_SCHEMA_VERSION = "martinluk_phase5_1_replay_request_v1"
 QUERY_LEDGER_SCHEMA_VERSION = "martinluk_phase5_1_query_ledger_v1"
 RUNTIME_SCHEMA_VERSION = "martinluk_phase5_1_runtime_v1"
-REPORT_SCHEMA_VERSION = "martinluk_phase5_1_bounded_replay_report_v1"
+REPORT_SCHEMA_VERSION = "martinluk_phase5_2_bounded_replay_report_v1"
 
 PHASE5_MANIFEST_REL = "specs/004-martinluk-primitive/phase5-replay-manifest.json"
 RUNNER_REL = "specs/004-martinluk-primitive/run_phase5_bounded_replay.py"
@@ -38,6 +38,7 @@ QUERY_LEDGER_REL = "specs/004-martinluk-primitive/phase5-1-query-ledger.json"
 RUNTIME_REL = "specs/004-martinluk-primitive/phase5-1-runtime.json"
 REPORT_JSON_REL = "specs/004-martinluk-primitive/phase5-1-bounded-replay-report.json"
 REPORT_MD_REL = "specs/004-martinluk-primitive/phase5-1-bounded-replay-report.md"
+ALLOWED_OUTPUT_PREFIXES = ("phase5-1-", "phase5-2-")
 
 ALLOWED_LOADER_FILE = "src/data/duckdb_connector.py"
 ALLOWED_LOADER_MODULE = "data.duckdb_connector"
@@ -158,6 +159,16 @@ def realized_outcome_na() -> dict[str, str]:
     return {field: "N/A" for field in REALIZED_OUTCOME_FIELDS}
 
 
+def realized_outcome_policy() -> dict[str, Any]:
+    return {
+        "fields": list(REALIZED_OUTCOME_FIELDS),
+        "default": "N/A",
+        "applies_to": "all row_results and audit_results",
+        "primary_fill_evidence_required": True,
+        "reason": "public evidence does not supply primary fills, size, fees, slippage, or account P&L",
+    }
+
+
 def _as_list(value: Any) -> list[Any]:
     return value if isinstance(value, list) else []
 
@@ -184,7 +195,7 @@ def _contains_fragment(values: Iterable[Any], fragment: str) -> bool:
 
 def _is_allowed_phase5_1_output(path: Path) -> bool:
     rel = repo_rel(path)
-    return rel not in PROTECTED_PHASE5_OUTPUTS and Path(rel).name.startswith("phase5-1-")
+    return rel not in PROTECTED_PHASE5_OUTPUTS and Path(rel).name.startswith(ALLOWED_OUTPUT_PREFIXES)
 
 
 def _protected_output_errors(paths: Iterable[Path]) -> list[str]:
@@ -193,10 +204,10 @@ def _protected_output_errors(paths: Iterable[Path]) -> list[str]:
         rel = repo_rel(path)
         if rel in PROTECTED_PHASE5_OUTPUTS:
             errors.append(f"protected_phase5_output_path: {rel}")
-        if rel and not Path(rel).name.startswith("phase5-1-"):
+        if rel and not Path(rel).name.startswith(ALLOWED_OUTPUT_PREFIXES):
             # The runner itself is not an output.  Keep this guard focused on
             # artifacts passed to --query-ledger/--runtime/--output-*.
-            errors.append(f"non_phase5_1_output_path: {rel}")
+            errors.append(f"non_phase5_bounded_replay_output_path: {rel}")
     return errors
 
 
@@ -859,9 +870,28 @@ def build_report(
     public_status_counts = Counter(str(row.get("final_status")) for row in public_results)
     control_status_counts = Counter(str(row.get("final_status")) for row in control_results)
     control_outcome_counts = Counter(str(row.get("control_outcome")) for row in control_results)
+    false_positive_control_row_ids = sorted(
+        str(row.get("row_id"))
+        for row in control_results
+        if row.get("control_outcome") == "false_positive_control"
+    )
     reproduced_public_count = int(public_status_counts.get("reproduced", 0))
     promotion_threshold = int(manifest.get("run_level_gate", {}).get("required_public_reproduced", 5))
-    promoted = bool(validation.get("passed")) and reproduced_public_count >= promotion_threshold
+    diagnostic_veto_reasons = (
+        ["false_positive_controls_present"] if false_positive_control_row_ids else []
+    )
+    diagnostic_promotion_veto = {
+        "active": bool(diagnostic_veto_reasons),
+        "false_positive_control_count": len(false_positive_control_row_ids),
+        "false_positive_control_row_ids": false_positive_control_row_ids,
+        "controls_counted_toward_promotion": 0,
+        "reasons": diagnostic_veto_reasons,
+    }
+    promoted = (
+        bool(validation.get("passed"))
+        and reproduced_public_count >= promotion_threshold
+        and not diagnostic_promotion_veto["active"]
+    )
     overall_status = FAILED_RUN_STATUS if not validation.get("passed") else PROMOTED_RUN_STATUS if promoted else RESEARCH_ONLY_RUN_STATUS
 
     return {
@@ -870,6 +900,29 @@ def build_report(
         "execution_mode": ALLOWED_EXECUTION_MODE,
         "overall_run_status": overall_status,
         "promoted": promoted,
+        "diagnostic_promotion_veto": diagnostic_promotion_veto,
+        "promotion_evaluation": {
+            "promoted": promoted,
+            "required_public_reproduced": promotion_threshold,
+            "reproduced_public_replay_candidate_count": reproduced_public_count,
+            "public_replay_candidate_threshold_met": reproduced_public_count >= promotion_threshold,
+            "counted_row_kind": PUBLIC_ROW_KIND,
+            "controls_counted_toward_promotion": 0,
+            "false_positive_control_count": len(false_positive_control_row_ids),
+            "false_positive_control_row_ids": false_positive_control_row_ids,
+            "diagnostic_veto_reasons": diagnostic_veto_reasons,
+            "non_diagnostic_blockers": [
+                reason
+                for condition, reason in (
+                    (
+                        reproduced_public_count < promotion_threshold,
+                        "public_replay_candidate_reproduction_below_threshold",
+                    ),
+                    (not validation.get("passed"), "bounded_replay_validation_failed"),
+                )
+                if condition
+            ],
+        },
         "promotion_threshold": promotion_threshold,
         "reproduced_public_replay_candidate_count": reproduced_public_count,
         "controls_counted_toward_promotion": 0,
@@ -896,6 +949,7 @@ def build_report(
             "control_row_count": len(control_results),
             "clean_control_count": int(control_outcome_counts.get("clean_control", 0)),
             "false_positive_control_count": int(control_outcome_counts.get("false_positive_control", 0)),
+            "false_positive_control_row_ids": false_positive_control_row_ids,
             "control_data_missing_count": int(control_outcome_counts.get("data_missing", 0)),
             "control_insufficient_evidence_count": int(control_outcome_counts.get("insufficient_evidence", 0)),
             "status_counts": dict(sorted(control_status_counts.items())),
@@ -905,11 +959,18 @@ def build_report(
             "audit_row_count": len(audit_results),
             "status_counts": dict(sorted(Counter(row["final_status"] for row in audit_results).items())),
             "market_data_query_allowed": False,
+            "market_data_query_policy": "audit_only_rows_do_not_execute_loaders",
         },
         "row_results": executable_results,
         "audit_results": audit_results,
         "realized_outcome_fields": realized_outcome_na(),
+        "realized_outcome_policy": realized_outcome_policy(),
+        "phase5_2_artifact_note": (
+            "Phase 5.2 report artifacts add diagnostic promotion-veto fields only; "
+            "they do not broaden replay scope, query audit rows, or upgrade realized outcomes."
+        ),
         "no_overclaim_statement": NO_OVERCLAIM_STATEMENT,
+        "diagnostic_promotion_veto": diagnostic_promotion_veto,
         "validation": validation,
     }
 
@@ -944,8 +1005,10 @@ def build_runtime(
 
 
 def render_markdown_report(report: dict[str, Any]) -> str:
+    veto = report.get("diagnostic_promotion_veto", {})
+    control_summary = report.get("control_summary", {})
     lines = [
-        "# MartinLuk Phase 5.1 Bounded Replay Report",
+        "# MartinLuk Phase 5.2 Bounded Replay Report",
         "",
         f"Run ID: `{report.get('run_id')}`",
         f"Overall run status: `{report.get('overall_run_status')}`",
@@ -975,7 +1038,17 @@ def render_markdown_report(report: dict[str, Any]) -> str:
         f"- Control rows: `{report.get('control_summary', {}).get('control_row_count')}`",
         f"- Clean controls: `{report.get('control_summary', {}).get('clean_control_count')}`",
         f"- False-positive controls: `{report.get('control_summary', {}).get('false_positive_control_count')}`",
-        f"- Controls counted toward promotion: `{report.get('control_summary', {}).get('controls_counted_toward_promotion')}`",
+        "- False-positive control row IDs: "
+        f"`{json.dumps(control_summary.get('false_positive_control_row_ids', []), sort_keys=True)}`",
+        f"- Controls counted toward promotion: `{control_summary.get('controls_counted_toward_promotion')}`",
+        "",
+        "## Diagnostic promotion veto",
+        "",
+        f"- Active: `{str(veto.get('active')).lower()}`",
+        f"- Reasons: `{json.dumps(veto.get('reasons', []), sort_keys=True)}`",
+        f"- False-positive control count: `{veto.get('false_positive_control_count')}`",
+        "- False-positive control row IDs: "
+        f"`{json.dumps(veto.get('false_positive_control_row_ids', []), sort_keys=True)}`",
         "",
         "## Audit-only rows",
         "",
@@ -985,6 +1058,10 @@ def render_markdown_report(report: dict[str, Any]) -> str:
         "## Realized outcomes",
         "",
         "Realized entry, exit, position size, account P&L, fees, and slippage are `N/A` for every row.",
+        "",
+        "## Phase 5.2 artifact note",
+        "",
+        str(report.get("phase5_2_artifact_note")),
         "",
     ]
     return "\n".join(lines)
@@ -1022,6 +1099,40 @@ def _fail_closed_result(
         "execution_mode": ALLOWED_EXECUTION_MODE,
         "overall_run_status": FAILED_RUN_STATUS,
         "promoted": False,
+        "diagnostic_promotion_veto": {
+            "active": False,
+            "reasons": [],
+            "false_positive_control_count": 0,
+            "false_positive_control_row_ids": [],
+        },
+        "promotion_evaluation": {
+            "promoted": False,
+            "required_public_reproduced": None,
+            "reproduced_public_replay_candidate_count": 0,
+            "public_replay_candidate_threshold_met": False,
+            "counted_row_kind": PUBLIC_ROW_KIND,
+            "controls_counted_toward_promotion": 0,
+            "false_positive_control_count": 0,
+            "false_positive_control_row_ids": [],
+            "diagnostic_veto_reasons": [],
+            "non_diagnostic_blockers": ["bounded_replay_validation_failed"],
+        },
+        "control_summary": {
+            "control_row_count": 0,
+            "clean_control_count": 0,
+            "false_positive_control_count": 0,
+            "false_positive_control_row_ids": [],
+            "control_data_missing_count": 0,
+            "control_insufficient_evidence_count": 0,
+            "status_counts": {},
+            "controls_counted_toward_promotion": 0,
+        },
+        "audit_only_summary": {
+            "audit_row_count": 0,
+            "status_counts": {},
+            "market_data_query_allowed": False,
+            "market_data_query_policy": "audit_only_rows_do_not_execute_loaders",
+        },
         "phase5_manifest_path": request.get("phase5_manifest_path"),
         "phase5_manifest_sha256": manifest_sha256,
         "replay_request_path": repo_rel(request_path),
@@ -1034,6 +1145,11 @@ def _fail_closed_result(
         "row_results": [],
         "audit_results": [],
         "realized_outcome_fields": realized_outcome_na(),
+        "realized_outcome_policy": realized_outcome_policy(),
+        "phase5_2_artifact_note": (
+            "Phase 5.2 report artifacts add diagnostic promotion-veto fields only; "
+            "they do not broaden replay scope, query audit rows, or upgrade realized outcomes."
+        ),
         "no_overclaim_statement": NO_OVERCLAIM_STATEMENT,
         "validation": {"passed": False, "errors": errors},
     }

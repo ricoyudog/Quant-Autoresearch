@@ -93,6 +93,7 @@ def test_phase5_1_fixture_replay_writes_artifacts_and_preserves_phase5_outputs(t
     phase5_1 = load_phase5_1_module()
     before = {path: path.read_bytes() for path in PROTECTED_PHASE5_OUTPUTS}
     loaders = FixtureLoaders()
+    NoSignalStrategy.seen_symbols = []
 
     result = phase5_1.run_bounded_replay(
         request_path=REQUEST_PATH,
@@ -123,6 +124,65 @@ def test_phase5_1_fixture_replay_writes_artifacts_and_preserves_phase5_outputs(t
     assert report["controls_counted_toward_promotion"] == 0
     assert report["audit_only_summary"]["market_data_query_allowed"] is False
     assert all(row["realized_outcome"]["realized_account_pnl"] == "N/A" for row in report["row_results"])
+    assert "profit proof" in report["no_overclaim_statement"]
+    assert "exact-fill" in report["no_overclaim_statement"]
+    assert "EXTRA" not in set(NoSignalStrategy.seen_symbols)
+
+
+def test_phase5_2_fixture_replay_writes_additive_bounded_artifacts_and_keeps_audit_non_query(
+    tmp_path: Path,
+) -> None:
+    phase5_1 = load_phase5_1_module()
+    before = {path: path.read_bytes() for path in PROTECTED_PHASE5_OUTPUTS}
+    loaders = FixtureLoaders()
+    NoSignalStrategy.seen_symbols = []
+
+    result = phase5_1.run_bounded_replay(
+        request_path=REQUEST_PATH,
+        query_ledger_path=tmp_path / "phase5-2-query-ledger.json",
+        runtime_path=tmp_path / "phase5-2-runtime.json",
+        output_json_path=tmp_path / "phase5-2-bounded-replay-diagnostics-report.json",
+        output_md_path=tmp_path / "phase5-2-bounded-replay-diagnostics-report.md",
+        loaders=loaders,
+        strategy_cls=NoSignalStrategy,
+    )
+
+    assert result["ok"] is True
+    for path in before:
+        assert path.read_bytes() == before[path]
+
+    query_ledger_path = tmp_path / "phase5-2-query-ledger.json"
+    runtime_path = tmp_path / "phase5-2-runtime.json"
+    output_json_path = tmp_path / "phase5-2-bounded-replay-diagnostics-report.json"
+    output_md_path = tmp_path / "phase5-2-bounded-replay-diagnostics-report.md"
+    assert query_ledger_path.exists()
+    assert runtime_path.exists()
+    assert output_json_path.exists()
+    assert output_md_path.exists()
+
+    query_ledger = json.loads(query_ledger_path.read_text())
+    runtime = json.loads(runtime_path.read_text())
+    report = json.loads(output_json_path.read_text())
+    manifest = json.loads(REQUEST_PATH.with_name("phase5-replay-manifest.json").read_text())
+    audit_row_ids = {row["row_id"] for row in manifest["audit_rows"]}
+    queried_row_ids = {row_id for record in query_ledger["records"] for row_id in record["row_ids"]}
+
+    assert query_ledger["query_count"] == len(query_ledger["records"]) == runtime["loader_call_count"]
+    assert queried_row_ids.isdisjoint(audit_row_ids)
+    assert report["query_ledger_path"].endswith("phase5-2-query-ledger.json")
+    assert report["runtime_path"].endswith("phase5-2-runtime.json")
+    assert report["query_ledger_sha256"] == phase5_1.sha256_path(query_ledger_path)
+    assert report["runtime_sha256"] == runtime["runtime_sha256"]
+    assert report["overall_run_status"] == "research_only"
+    assert report["promoted"] is False
+    assert report["diagnostic_promotion_veto"]["active"] is False
+    assert report["control_summary"]["false_positive_control_row_ids"] == []
+    assert report["controls_counted_toward_promotion"] == 0
+    assert report["audit_only_summary"]["market_data_query_allowed"] is False
+    assert all(row["market_data_query_allowed"] is False for row in report["audit_results"])
+    assert all("query_id" not in row for row in report["audit_results"])
+    assert all(row["realized_outcome"]["realized_account_pnl"] == "N/A" for row in report["row_results"])
+    assert all(row["realized_outcome"]["realized_account_pnl"] == "N/A" for row in report["audit_results"])
     assert "profit proof" in report["no_overclaim_statement"]
     assert "exact-fill" in report["no_overclaim_statement"]
     assert "EXTRA" not in set(NoSignalStrategy.seen_symbols)
