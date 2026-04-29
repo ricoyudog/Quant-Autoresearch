@@ -620,6 +620,137 @@ class TestStrategyFile:
         assert trace["signals"][0]["exit_type"] == "nine_ema_close_break"
         assert trace["signals"][0]["trim_type"] == "no_partial_trim_phase4"
 
+    def test_generate_signals_rejects_long_support_touch_without_breakout(self, strategy_file_path):
+        """A leader support touch alone is not a long entry without ORH/range-high confirmation."""
+        from strategies.active_strategy import TradingStrategy
+
+        frame = build_orh_minute_frame(
+            "TOUCH",
+            closes=[10.00, 10.05, 10.00, 10.10, 10.00, 10.02, 10.08, 10.12],
+            highs=[10.20, 10.25, 10.15, 10.30, 10.20, 10.18, 10.22, 10.25],
+            lows=[9.80, 9.85, 9.82, 9.88, 9.84, 9.90, 9.96, 10.00],
+        )
+
+        strategy = TradingStrategy(max_stop_pct=10.0)
+        signals = strategy.generate_signals({"TOUCH": frame})
+
+        assert signals["TOUCH"].eq(0.0).all()
+        assert strategy.get_signal_trace()["signals"] == []
+
+    def test_generate_signals_enters_short_on_declining_ema_resistance_rejection(self, strategy_file_path):
+        """Short v1 enters only after a declining-EMA resistance bounce fails through range support."""
+        from strategies.active_strategy import TradingStrategy
+
+        frame = build_orh_minute_frame(
+            "SHRT",
+            closes=[10.00, 9.90, 9.80, 9.70, 9.60, 9.45, 9.35, 9.25],
+            highs=[10.10, 10.00, 9.90, 9.80, 9.70, 9.78, 9.48, 9.38],
+            lows=[9.90, 9.80, 9.70, 9.60, 9.50, 9.40, 9.25, 9.15],
+        )
+
+        strategy = TradingStrategy(max_stop_pct=10.0)
+        signals = strategy.generate_signals({"SHRT": frame})
+        trace = strategy.get_signal_trace()
+
+        series = signals["SHRT"]
+        assert series.iloc[: strategy.opening_range_bars].eq(0.0).all()
+        assert series.iloc[5] == -1.0
+        assert series.iloc[-1] == -1.0
+
+        assert len(trace["signals"]) == 1
+        signal = trace["signals"][0]
+        assert signal["symbol"] == "SHRT"
+        assert signal["direction"] == "short"
+        assert signal["setup_type"] == "declining_ema_avwap_bounce_short"
+        assert signal["entry_trigger"] == "resistance_rejection_breakdown"
+        assert signal["entry_type"] == "resistance_rejection_breakdown"
+        assert signal["trim_type"] == "quick_swing_cover_v1"
+        assert signal["exit_type"] == "open"
+        assert signal["r_multiple"] is None
+        assert signal["mae_unit"] == "R"
+        assert signal["mfe_unit"] == "R"
+        assert signal["stop_width_pct"] > 0.0
+        assert "diagnostics" not in signal
+
+    def test_generate_signals_rejects_short_without_failure_trigger(self, strategy_file_path):
+        """A bounce into resistance is not a short entry until price fails through support."""
+        from strategies.active_strategy import TradingStrategy
+
+        frame = build_orh_minute_frame(
+            "NOFAIL",
+            closes=[10.00, 9.90, 9.80, 9.70, 9.60, 9.55, 9.58, 9.56],
+            highs=[10.10, 10.00, 9.90, 9.80, 9.70, 9.78, 9.76, 9.74],
+            lows=[9.90, 9.80, 9.70, 9.60, 9.50, 9.52, 9.50, 9.51],
+        )
+
+        strategy = TradingStrategy(max_stop_pct=10.0)
+        signals = strategy.generate_signals({"NOFAIL": frame})
+
+        assert signals["NOFAIL"].eq(0.0).all()
+        assert strategy.get_signal_trace()["signals"] == []
+
+    def test_generate_signals_short_hard_stop_trace_is_direction_aware(self, strategy_file_path):
+        """Short hard stops use short-side risk math and direct validator-compatible fields."""
+        from strategies.active_strategy import TradingStrategy
+
+        frame = build_orh_minute_frame(
+            "SSTOP",
+            closes=[10.00, 9.90, 9.80, 9.70, 9.60, 9.45, 9.95],
+            highs=[10.10, 10.00, 9.90, 9.80, 9.70, 9.78, 10.20],
+            lows=[9.90, 9.80, 9.70, 9.60, 9.50, 9.40, 9.70],
+        )
+
+        strategy = TradingStrategy(max_stop_pct=10.0)
+        signals = strategy.generate_signals({"SSTOP": frame})
+        trace = strategy.get_signal_trace()
+
+        series = signals["SSTOP"]
+        assert series.iloc[5] == -1.0
+        assert series.iloc[6] == 0.0
+        signal = trace["signals"][0]
+        assert signal["direction"] == "short"
+        assert signal["exit_type"] == "hard_stop"
+        assert signal["r_multiple"] == pytest.approx(-1.0)
+        assert signal["mae"] <= 0.0
+        assert signal["mfe"] >= 0.0
+        assert signal["holding_period_bars"] == 2
+
+    def test_generate_signals_short_quick_cover_trace_is_validator_compatible(self, strategy_file_path):
+        """Short quick-cover traces keep diagnostics on direct fields without profit claims."""
+        from strategies.active_strategy import TradingStrategy
+
+        frame = build_orh_minute_frame(
+            "SCOV",
+            closes=[10.00, 9.90, 9.80, 9.70, 9.60, 9.45, 8.85],
+            highs=[10.10, 10.00, 9.90, 9.80, 9.70, 9.78, 9.00],
+            lows=[9.90, 9.80, 9.70, 9.60, 9.50, 9.40, 8.70],
+        )
+
+        strategy = TradingStrategy(max_stop_pct=10.0)
+        signals = strategy.generate_signals({"SCOV": frame})
+        trace = strategy.get_signal_trace()
+
+        series = signals["SCOV"]
+        assert series.iloc[5] == -1.0
+        assert series.iloc[6] == 0.0
+        signal = trace["signals"][0]
+        assert signal["direction"] == "short"
+        assert signal["exit_type"] == "support_cover"
+        assert signal["r_multiple"] > 0.0
+        for field in (
+            "r_multiple",
+            "mae",
+            "mae_unit",
+            "mfe",
+            "mfe_unit",
+            "stop_width_pct",
+            "entry_type",
+            "trim_type",
+            "exit_type",
+        ):
+            assert field in signal
+        assert "diagnostics" not in signal
+
     def test_generate_signals_keeps_validator_trace_side_band(self, strategy_file_path):
         """generate_signals keeps returning runtime Series while trace data is exposed through a getter."""
         from strategies.active_strategy import TradingStrategy
