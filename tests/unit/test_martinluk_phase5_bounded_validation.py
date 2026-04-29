@@ -407,3 +407,28 @@ def test_phase5_rejects_broad_backtest_requests_before_loader_calls(
     assert result["passed"] is False
     assert_has_error(result, "forbidden broad-validation request keys")
     assert report["market_data_queries"] == []
+
+
+@pytest.mark.parametrize(
+    "forbidden_key",
+    [
+        "optimizer_loop",
+        "allow_optimizer_loops",
+        "threshold_search",
+        "search_loop",
+        "allow_search_loops",
+    ],
+)
+def test_phase5_rejects_optimizer_and_search_loop_aliases_before_loader_calls(
+    phase5: Any,
+    manifest: dict[str, Any],
+    forbidden_key: str,
+) -> None:
+    manifest[forbidden_key] = True
+
+    result = validate_manifest(phase5, manifest)
+    report = report_for(phase5, manifest)
+
+    assert result["passed"] is False
+    assert_has_error(result, forbidden_key)
+    assert report["market_data_queries"] == []
