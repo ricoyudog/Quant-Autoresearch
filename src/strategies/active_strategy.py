@@ -269,8 +269,95 @@ class TradingStrategy:
             }
         )
 
+    def append_short_trace_entry(
+        self,
+        frame: "pd.DataFrame",
+        ticker: "str",
+        entry_position: "int",
+        exit_position: "int",
+        entry_price: "float",
+        stop_price: "float",
+        exit_type: "str",
+    ) -> None:
+        risk = stop_price - entry_price
+        if risk <= 0 or not np.isfinite(risk):
+            return
+
+        trade_slice = frame.iloc[entry_position : exit_position + 1]
+        high = trade_slice["high"].astype(float)
+        low = trade_slice["low"].astype(float)
+        mae = float(((entry_price - high) / risk).min())
+        mfe = float(((entry_price - low) / risk).max())
+        exit_price = float(frame["close"].astype(float).iloc[exit_position])
+        if exit_type == "hard_stop":
+            r_multiple = -1.0
+        else:
+            r_multiple = float((entry_price - exit_price) / risk)
+
+        self.signal_trace_entries.append(
+            {
+                "signal_id": f"v1-{ticker.lower()}-short-{self.signal_date(frame, entry_position)}",
+                "case_id": f"V1-{ticker}-SHORT",
+                "symbol": ticker,
+                "direction": "short",
+                "date": self.signal_date(frame, entry_position),
+                "setup_type": "declining_ema_avwap_bounce_short",
+                "entry_trigger": "resistance_rejection_breakdown",
+                "data_status": "available",
+                "r_multiple": r_multiple,
+                "mae": mae,
+                "mae_unit": "R",
+                "mfe": mfe,
+                "mfe_unit": "R",
+                "stop_width_pct": float(((stop_price - entry_price) / entry_price) * 100.0),
+                "entry_type": "resistance_rejection_breakdown",
+                "trim_type": "quick_swing_cover_v1",
+                "exit_type": exit_type,
+                "holding_period_bars": int(exit_position - entry_position + 1),
+            }
+        )
+
+    def append_short_open_trace_entry(
+        self,
+        frame: "pd.DataFrame",
+        ticker: "str",
+        entry_position: "int",
+        entry_price: "float",
+        stop_price: "float",
+    ) -> None:
+        risk = stop_price - entry_price
+        if risk <= 0 or not np.isfinite(risk):
+            return
+
+        last_position = len(frame.index) - 1
+        trade_slice = frame.iloc[entry_position : last_position + 1]
+        high = trade_slice["high"].astype(float)
+        low = trade_slice["low"].astype(float)
+        self.signal_trace_entries.append(
+            {
+                "signal_id": f"v1-{ticker.lower()}-short-{self.signal_date(frame, entry_position)}-open",
+                "case_id": f"V1-{ticker}-SHORT",
+                "symbol": ticker,
+                "direction": "short",
+                "date": self.signal_date(frame, entry_position),
+                "setup_type": "declining_ema_avwap_bounce_short",
+                "entry_trigger": "resistance_rejection_breakdown",
+                "data_status": "available",
+                "r_multiple": None,
+                "mae": float(((entry_price - high) / risk).min()),
+                "mae_unit": "R",
+                "mfe": float(((entry_price - low) / risk).max()),
+                "mfe_unit": "R",
+                "stop_width_pct": float(((stop_price - entry_price) / entry_price) * 100.0),
+                "entry_type": "resistance_rejection_breakdown",
+                "trim_type": "quick_swing_cover_v1",
+                "exit_type": "open",
+                "holding_period_bars": int(last_position - entry_position + 1),
+            }
+        )
+
     def generate_signal_series(self, frame: "pd.DataFrame") -> "pd.Series":
-        """Generate long/flat ORH primitive signals aligned to one ticker frame."""
+        """Generate direction-aware MartinLuk primitive signals aligned to one ticker frame."""
         if frame is None:
             return pd.Series(index=pd.Index([]), dtype=float)
 
@@ -289,12 +376,21 @@ class TradingStrategy:
         high = frame["high"].astype(float)
         low = frame["low"].astype(float)
         ema = close.ewm(span=self.ema_exit_period, adjust=False, min_periods=1).mean()
+        typical_price = (high + low + close) / 3.0
+        if "volume" in frame.columns:
+            volume = frame["volume"].astype(float).clip(lower=0.0)
+            cumulative_volume = volume.cumsum()
+            avwap = (typical_price * volume).cumsum() / cumulative_volume.replace(0.0, np.nan)
+            avwap = avwap.fillna(ema)
+        else:
+            avwap = ema
         opening_range = frame.iloc[: self.opening_range_bars]
         opening_range_high = float(opening_range["high"].astype(float).max())
         opening_range_low = float(opening_range["low"].astype(float).min())
 
         ticker = self.ticker_from_frame(frame)
         in_trade = False
+        trade_direction = None
         entry_position = None
         entry_price = None
         stop_price = opening_range_low
@@ -302,16 +398,106 @@ class TradingStrategy:
         for position in range(self.opening_range_bars, len(frame.index)):
             idx = frame.index[position]
             current_close = float(close.iloc[position])
+            current_high = float(high.iloc[position])
             current_low = float(low.iloc[position])
+            current_ema = float(ema.iloc[position])
+            current_avwap = float(avwap.iloc[position])
 
             if not in_trade:
-                if current_close > opening_range_high and current_close > float(ema.iloc[position]):
+                if current_close > opening_range_high and current_close > current_ema:
                     stop_width_pct = ((current_close - stop_price) / current_close) * 100.0
                     if stop_width_pct <= self.max_stop_pct:
                         in_trade = True
+                        trade_direction = "long"
                         entry_position = position
                         entry_price = current_close
                         signals.loc[idx] = 1.0
+                    continue
+
+                prior_low = float(low.iloc[position - 1])
+                prior_ema = float(ema.iloc[position - 1])
+                lookback_position = max(position - 3, 0)
+                declining_resistance = current_ema < float(ema.iloc[lookback_position])
+                bounced_into_resistance = current_high >= min(current_ema, current_avwap, prior_ema)
+                failure_breakdown = current_close < min(prior_low, opening_range_low)
+                below_resistance = current_close < current_ema and current_close < current_avwap
+                short_stop_price = float(high.iloc[: position + 1].max())
+                short_stop_width_pct = ((short_stop_price - current_close) / current_close) * 100.0
+
+                if (
+                    declining_resistance
+                    and bounced_into_resistance
+                    and failure_breakdown
+                    and below_resistance
+                    and short_stop_price > current_close
+                    and short_stop_width_pct <= self.max_stop_pct
+                ):
+                    in_trade = True
+                    trade_direction = "short"
+                    entry_position = position
+                    entry_price = current_close
+                    stop_price = short_stop_price
+                    signals.loc[idx] = -1.0
+                continue
+
+            if trade_direction == "short":
+                if current_high > stop_price:
+                    signals.loc[idx] = 0.0
+                    self.append_short_trace_entry(
+                        frame,
+                        ticker,
+                        entry_position,
+                        position,
+                        entry_price,
+                        stop_price,
+                        "hard_stop",
+                    )
+                    in_trade = False
+                    trade_direction = None
+                    entry_position = None
+                    entry_price = None
+                    stop_price = opening_range_low
+                    continue
+
+                short_risk = stop_price - entry_price
+                cover_price = entry_price - short_risk
+                if short_risk > 0 and current_low <= cover_price:
+                    signals.loc[idx] = 0.0
+                    self.append_short_trace_entry(
+                        frame,
+                        ticker,
+                        entry_position,
+                        position,
+                        entry_price,
+                        stop_price,
+                        "support_cover",
+                    )
+                    in_trade = False
+                    trade_direction = None
+                    entry_position = None
+                    entry_price = None
+                    stop_price = opening_range_low
+                    continue
+
+                if current_close > current_ema or current_close > current_avwap:
+                    signals.loc[idx] = 0.0
+                    self.append_short_trace_entry(
+                        frame,
+                        ticker,
+                        entry_position,
+                        position,
+                        entry_price,
+                        stop_price,
+                        "ema_avwap_reclaim",
+                    )
+                    in_trade = False
+                    trade_direction = None
+                    entry_position = None
+                    entry_price = None
+                    stop_price = opening_range_low
+                    continue
+
+                signals.loc[idx] = -1.0
                 continue
 
             if current_low < stop_price:
@@ -327,11 +513,12 @@ class TradingStrategy:
                     signals,
                 )
                 in_trade = False
+                trade_direction = None
                 entry_position = None
                 entry_price = None
                 continue
 
-            if current_close < float(ema.iloc[position]):
+            if current_close < current_ema:
                 signals.loc[idx] = 0.0
                 self.append_trace_entry(
                     frame,
@@ -344,6 +531,7 @@ class TradingStrategy:
                     signals,
                 )
                 in_trade = False
+                trade_direction = None
                 entry_position = None
                 entry_price = None
                 continue
@@ -351,7 +539,10 @@ class TradingStrategy:
             signals.loc[idx] = 1.0
 
         if in_trade and entry_position is not None and entry_price is not None:
-            self.append_open_trace_entry(frame, ticker, entry_position, entry_price, stop_price)
+            if trade_direction == "short":
+                self.append_short_open_trace_entry(frame, ticker, entry_position, entry_price, stop_price)
+            else:
+                self.append_open_trace_entry(frame, ticker, entry_position, entry_price, stop_price)
 
         return signals
 
