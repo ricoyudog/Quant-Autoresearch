@@ -12,7 +12,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -92,6 +92,24 @@ REQUIRED_CAPS = {
     "allow_optimizer_loops": False,
     "allow_walk_forward": False,
     "allow_broad_scoreboard": False,
+}
+REQUIRED_RUN_LEVEL_GATE = {
+    "required_public_reproduced": 5,
+    "counted_row_kind": PUBLIC_ROW_KIND,
+    "controls_count_toward_promotion": False,
+    "below_threshold_status": RESEARCH_ONLY_RUN_STATUS,
+}
+REQUIRED_DATA_SOURCE_FIELDS = {
+    "daily",
+    "daily_cache_path",
+    "minute",
+    "minute_dataset_root_env",
+    "query_date_ranges",
+    "missing_symbol_or_window_reasons",
+}
+REQUIRED_METRIC_WORDING_CONTRACT = {
+    "diagnostic_values_are": "hypothetical_strategy_bar_diagnostics_only",
+    "realized_outcome_fields": "N/A_without_new_primary_fill_evidence",
 }
 REALIZED_OUTCOME_FIELDS = (
     "realized_entry_price",
@@ -187,6 +205,49 @@ def _validate_window(row: dict[str, Any], errors: list[str], prefix: str) -> Non
         errors.append(f"{prefix} allowed_window must use dates, not timestamps")
 
 
+def _validate_run_level_gate(manifest: dict[str, Any], errors: list[str]) -> dict[str, Any]:
+    gate = manifest.get("run_level_gate")
+    if not isinstance(gate, dict):
+        errors.append("run_level_gate must be an object")
+        return {}
+    for key, expected in REQUIRED_RUN_LEVEL_GATE.items():
+        if gate.get(key) != expected:
+            errors.append(f"run_level_gate.{key} must be {expected!r}")
+    return gate
+
+
+def _validate_source_metadata(manifest: dict[str, Any], errors: list[str]) -> dict[str, Any]:
+    data_sources = manifest.get("data_sources")
+    if not isinstance(data_sources, dict):
+        errors.append("data_sources must be an object")
+        return {}
+    missing = sorted(REQUIRED_DATA_SOURCE_FIELDS - set(data_sources))
+    if missing:
+        errors.append(f"data_sources missing fields: {', '.join(missing)}")
+    if not isinstance(data_sources.get("query_date_ranges"), list):
+        errors.append("data_sources.query_date_ranges must be a list")
+    if not isinstance(data_sources.get("missing_symbol_or_window_reasons"), list):
+        errors.append("data_sources.missing_symbol_or_window_reasons must be a list")
+    for key in sorted(REQUIRED_DATA_SOURCE_FIELDS - {"query_date_ranges", "missing_symbol_or_window_reasons"}):
+        if key in data_sources and (not isinstance(data_sources[key], str) or not data_sources[key].strip()):
+            errors.append(f"data_sources.{key} must be a non-empty string")
+    return data_sources
+
+
+def _validate_metric_wording_contract(manifest: dict[str, Any], errors: list[str]) -> dict[str, Any]:
+    contract = manifest.get("metric_wording_contract")
+    if not isinstance(contract, dict):
+        errors.append("metric_wording_contract must be an object")
+        return {}
+    for key, expected in REQUIRED_METRIC_WORDING_CONTRACT.items():
+        if contract.get(key) != expected:
+            errors.append(f"metric_wording_contract.{key} must be {expected!r}")
+    not_claiming = contract.get("not_claiming")
+    if not isinstance(not_claiming, list) or not not_claiming:
+        errors.append("metric_wording_contract.not_claiming must be a non-empty list")
+    return contract
+
+
 def _validate_executable_rows(
     rows: list[Any],
     caps: dict[str, Any],
@@ -244,9 +305,9 @@ def _validate_executable_rows(
             errors.append(
                 f"{prefix} expected_status must be one of {sorted(ALLOWED_REPLAY_STATUSES)}"
             )
-        if row.get("expected_status") == "reproduced" and row.get("missing_fields"):
+        if row.get("expected_status") in {"reproduced", "not_reproduced"} and row.get("missing_fields"):
             errors.append(
-                f"{prefix} cannot expect reproduced while missing_fields are present"
+                f"{prefix} cannot expect {row.get('expected_status')} while missing_fields are present"
             )
 
         if row.get("market_granularity") not in ALLOWED_MARKET_GRANULARITIES:
@@ -383,6 +444,9 @@ def validate_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
         errors.append("market_data_access must be disabled_in_dry_run")
 
     caps = _validate_caps(manifest, errors)
+    _validate_run_level_gate(manifest, errors)
+    _validate_source_metadata(manifest, errors)
+    _validate_metric_wording_contract(manifest, errors)
     executable_rows = _validate_executable_rows(
         manifest.get("executable_rows"),
         caps,
@@ -398,6 +462,8 @@ def validate_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
             "full_history",
             "parameter_sweep",
             "threshold_search",
+            "threshold_optimization",
+            "optimizer",
             "optimizer_loop",
             "allow_optimizer_loops",
             "search_loop",
