@@ -113,8 +113,9 @@ DISALLOWED_REPORT_LABELS = {
 NO_OVERCLAIM_STATEMENT = (
     "Phase 5 is a bounded public candidate-window dry-run report. It records "
     "evidence class, validation status, data availability, and hypothetical "
-    "strategy-bar diagnostics only. It is not Martin Luk realized P&L, not "
-    "private account replication, and not exact public/private fill proof; "
+    "strategy-bar diagnostics only. It is not profit proof, not Martin Luk "
+    "realized P&L, not private account replication, and not exact fill "
+    "replication; "
     "realized entry, exit, size, fees, slippage, and account P&L remain N/A "
     "unless new primary fill evidence is separately approved."
 )
