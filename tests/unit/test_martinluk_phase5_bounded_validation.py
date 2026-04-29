@@ -432,3 +432,174 @@ def test_phase5_rejects_optimizer_and_search_loop_aliases_before_loader_calls(
     assert result["passed"] is False
     assert_has_error(result, forbidden_key)
     assert report["market_data_queries"] == []
+
+
+@pytest.mark.parametrize(
+    ("key", "bad_value"),
+    [
+        ("required_public_reproduced", 4),
+        ("counted_row_kind", "adjacent_control_window"),
+        ("controls_count_toward_promotion", True),
+        ("below_threshold_status", "promoted"),
+    ],
+)
+def test_phase5_run_level_gate_contract_is_required(
+    phase5: Any,
+    manifest: dict[str, Any],
+    key: str,
+    bad_value: Any,
+) -> None:
+    manifest["run_level_gate"][key] = bad_value
+
+    result = validate_manifest(phase5, manifest)
+
+    assert result["passed"] is False
+    assert_has_error(result, f"run_level_gate.{key}")
+
+
+def test_phase5_run_level_gate_section_is_required(
+    phase5: Any,
+    manifest: dict[str, Any],
+) -> None:
+    manifest.pop("run_level_gate")
+
+    result = validate_manifest(phase5, manifest)
+
+    assert result["passed"] is False
+    assert_has_error(result, "run_level_gate must be an object")
+
+
+def test_phase5_evidence_gapped_not_reproduced_is_rejected(
+    phase5: Any,
+    manifest: dict[str, Any],
+) -> None:
+    row = manifest["executable_rows"][0]
+    row["expected_status"] = "not_reproduced"
+    assert row["missing_fields"]
+
+    result = validate_manifest(phase5, manifest)
+
+    assert result["passed"] is False
+    assert_has_error(result, "cannot expect not_reproduced while missing_fields are present")
+
+
+def test_phase5_not_reproduced_requires_cleared_missing_fields_to_model_adequate_evidence(
+    phase5: Any,
+    manifest: dict[str, Any],
+) -> None:
+    row = manifest["executable_rows"][0]
+    row["expected_status"] = "not_reproduced"
+    row["missing_fields"] = []
+
+    result = validate_manifest(phase5, manifest)
+    report = report_for(phase5, manifest)
+
+    assert result["passed"] is True
+    assert report["row_results"][0]["final_status"] == "not_reproduced"
+
+
+@pytest.mark.parametrize(
+    "forbidden_key",
+    [
+        "threshold_optimization",
+        "optimizer",
+    ],
+)
+def test_phase5_rejects_additional_threshold_and_optimizer_aliases(
+    phase5: Any,
+    manifest: dict[str, Any],
+    forbidden_key: str,
+) -> None:
+    manifest[forbidden_key] = True
+
+    result = validate_manifest(phase5, manifest)
+    report = report_for(phase5, manifest)
+
+    assert result["passed"] is False
+    assert_has_error(result, forbidden_key)
+    assert report["market_data_queries"] == []
+
+
+@pytest.mark.parametrize(
+    ("section", "fragment"),
+    [
+        ("data_sources", "data_sources must be an object"),
+        ("metric_wording_contract", "metric_wording_contract must be an object"),
+    ],
+)
+def test_phase5_required_top_level_metadata_sections_are_validated(
+    phase5: Any,
+    manifest: dict[str, Any],
+    section: str,
+    fragment: str,
+) -> None:
+    manifest.pop(section)
+
+    result = validate_manifest(phase5, manifest)
+
+    assert result["passed"] is False
+    assert_has_error(result, fragment)
+
+
+@pytest.mark.parametrize(
+    "missing_field",
+    [
+        "daily",
+        "daily_cache_path",
+        "minute",
+        "minute_dataset_root_env",
+        "query_date_ranges",
+        "missing_symbol_or_window_reasons",
+    ],
+)
+def test_phase5_data_source_metadata_fields_are_required(
+    phase5: Any,
+    manifest: dict[str, Any],
+    missing_field: str,
+) -> None:
+    manifest["data_sources"].pop(missing_field)
+
+    result = validate_manifest(phase5, manifest)
+
+    assert result["passed"] is False
+    assert_has_error(result, "data_sources missing fields", missing_field)
+
+
+@pytest.mark.parametrize(
+    ("key", "bad_value"),
+    [
+        ("diagnostic_values_are", "realized_trade_results"),
+        ("realized_outcome_fields", "computed_from_public_interview"),
+        ("not_claiming", []),
+    ],
+)
+def test_phase5_metric_wording_contract_fields_are_required(
+    phase5: Any,
+    manifest: dict[str, Any],
+    key: str,
+    bad_value: Any,
+) -> None:
+    manifest["metric_wording_contract"][key] = bad_value
+
+    result = validate_manifest(phase5, manifest)
+
+    assert result["passed"] is False
+    assert_has_error(result, f"metric_wording_contract.{key}")
+
+
+def test_phase5_markdown_report_renders_closeout_guardrails(
+    phase5: Any,
+    manifest: dict[str, Any],
+) -> None:
+    report = report_for(phase5, manifest)
+    markdown = phase5.render_markdown_report(report)
+
+    assert "# MartinLuk Phase 5 Bounded Validation Dry-Run Report" in markdown
+    assert "## No-overclaim boundary" in markdown
+    assert "not profit proof" in markdown
+    assert "Manifest SHA-256" in markdown
+    assert "Controls counted toward promotion: `0`" in markdown
+    assert "MLUK-GLD-SLV-DECLINING9EMA-SHORT-006" in markdown
+    assert "unsupported_until_new_primary_evidence" in markdown
+    assert "Validation errors: `[]`" in markdown
+    assert "N/A" in markdown
