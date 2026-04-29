@@ -1,0 +1,34 @@
+{
+  "schema_version": "martinluk_phase5_1_replay_request_v1",
+  "run_id": "martinluk_phase5_1_bounded_replay_v1",
+  "phase5_manifest_path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+  "phase5_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+  "allowed_runner": "specs/004-martinluk-primitive/run_phase5_bounded_replay.py",
+  "allowed_execution_mode": "bounded_replay",
+  "allowed_loader_file_paths": [
+    "src/data/duckdb_connector.py"
+  ],
+  "allowed_loader_import_modules": [
+    "data.duckdb_connector"
+  ],
+  "allowed_loaders": [
+    "load_daily_data",
+    "query_minute_data"
+  ],
+  "strategy_surface": "src/strategies/active_strategy.py::TradingStrategy.generate_signals/get_signal_trace",
+  "explicitly_forbidden_strategy_surface": "src/strategies/active_strategy.py::TradingStrategy.select_universe",
+  "loader_file_path": "src/data/duckdb_connector.py",
+  "loader_import_module": "data.duckdb_connector",
+  "forbidden_surfaces": [
+    "src/core/backtester.py",
+    "specs/004-martinluk-primitive/validate_public_cases.py as orchestration"
+  ],
+  "max_executable_rows": 25,
+  "max_public_replay_candidates": 5,
+  "max_adjacent_controls_per_case": 2,
+  "max_null_controls_per_case": 2,
+  "max_daily_warmup_trading_days": 20,
+  "max_minute_warmup_session_days": 1,
+  "audit_rows_execute": false,
+  "controls_count_toward_promotion": false
+}

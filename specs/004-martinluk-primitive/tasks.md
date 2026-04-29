@@ -44,12 +44,32 @@ exception; see `phase3-verification.md`. This is not a claim that
 - [ ] T015 Run `pytest tests/unit/test_strategy_interface.py -q`
 - [ ] T016 Run `python3 specs/004-martinluk-primitive/validate_public_cases.py --signals-path <trace>`
 
-## Phase 5: Bounded Backtest and Autoresearch Gate
+## Phase 5: Bounded Validation and Replay Gate
 
-- [ ] T017 Run a no-leverage bounded backtest with the new primitive
-- [ ] T018 Compare public-case reproduction before aggregate score
-- [ ] T019 Record result in Obsidian and repo report artifacts
-- [ ] T020 Launch bounded autoresearch only after validator and focused tests pass
+- [X] T017 Add frozen bounded validation manifest and dry-run report artifacts
+- [X] T018 Preserve public-case reproduction status before any aggregate scoring
+- [X] T019 Record Phase 5 dry-run result in repo report artifacts
+- [ ] T020 Launch bounded autoresearch only after validator, focused tests, and replay gates pass
+
+Phase 5 closeout note: T017-T019 are complete as bounded dry-run evidence only.
+The report stays `research_only`/`promoted=false`, records zero market-data
+queries, and does not prove profit, exact fills, private-account replication, or
+broad historical validity. T020 remains blocked until later phases explicitly
+approve bounded autoresearch.
+
+## Phase 5.1: Bounded Data Replay
+
+- [X] T021 Add `phase5-1-replay-request.json` with frozen manifest hash and allowed loader/runner contract
+- [X] T022 Add separate `run_phase5_bounded_replay.py` runner without backtester, validator orchestration, or `select_universe`
+- [X] T023 Generate `phase5-1-query-ledger.json`, `phase5-1-runtime.json`, and bounded replay report artifacts
+- [X] T024 Add focused Phase 5.1 unit and integration tests for hash fail-closed, query union, audit exclusion, control semantics, and artifact immutability
+- [X] T025 Verify Phase 5 dry-run artifacts and `active_strategy.py` remain unchanged
+
+Phase 5.1 closeout note: the replay remains strictly bounded to the 25 executable
+manifest rows; audit-only rows do not query market data; controls are diagnostic
+only; realized outcome fields stay `N/A`; and the generated report remains
+`research_only`/`promoted=false`. This is not a Phase 5 broad backtest, optimizer,
+profit proof, or exact-fill replication.
 
 ## Parallelization Notes
 
