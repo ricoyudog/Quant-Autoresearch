@@ -397,7 +397,11 @@ def validate_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
             "dynamic_universe",
             "full_history",
             "parameter_sweep",
+            "threshold_search",
             "optimizer_loop",
+            "allow_optimizer_loops",
+            "search_loop",
+            "allow_search_loops",
             "walk_forward",
             "broad_scoreboard",
         )
