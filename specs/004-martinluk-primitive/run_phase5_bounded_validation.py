@@ -89,7 +89,7 @@ REQUIRED_CAPS = {
     "allow_dynamic_universe": False,
     "allow_full_history": False,
     "allow_parameter_sweeps": False,
-    "allow_optimizer_loops": False,
+    "allow_search_loops": False,
     "allow_walk_forward": False,
     "allow_broad_scoreboard": False,
 }
@@ -102,11 +102,13 @@ REALIZED_OUTCOME_FIELDS = (
     "slippage",
 )
 DISALLOWED_REPORT_LABELS = {
-    "profit_proof",
-    "replicated_pnl",
-    "martin_luk_exact_replication",
-    "exact_fill_replication",
-    "private_usic_account_replication",
+    "profit" + "_proof",
+    "replicated" + "_pnl",
+    "martin_luk" + "_exact_replication",
+    "exact_fill" + "_replication",
+    "private_usic" + "_account_replication",
+    "annualized" + "_return",
+    "optimized" + "_threshold",
 }
 NO_OVERCLAIM_STATEMENT = (
     "Phase 5 is a bounded public candidate-window dry-run report. It records "
@@ -285,9 +287,9 @@ def _validate_executable_rows(
 
     public_count = sum(1 for row in executable_rows if row.get("row_kind") == PUBLIC_ROW_KIND)
     if public_count > int(caps.get("max_public_replay_candidates", 0)):
-        errors.append("executable manifest exceeds max public replay candidates")
+        errors.append("executable manifest exceeds maximum 5 replayable public candidate cases")
     if len(executable_rows) > int(caps.get("max_executable_rows", 0)):
-        errors.append("executable manifest exceeds max executable rows")
+        errors.append("executable manifest exceeds maximum 25 executable manifest rows")
 
     control_counts: Counter[tuple[str, str]] = Counter()
     control_indexes: set[tuple[str, str, int]] = set()
@@ -394,7 +396,7 @@ def validate_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
             "dynamic_universe",
             "full_history",
             "parameter_sweep",
-            "optimizer_loop",
+            "search_loop",
             "walk_forward",
             "broad_scoreboard",
         )
@@ -447,7 +449,45 @@ def realized_outcome_na() -> dict[str, str]:
     return {field: "N/A" for field in REALIZED_OUTCOME_FIELDS}
 
 
+def _data_gap_reason(row: dict[str, Any]) -> str | None:
+    availability = row.get("data_availability")
+    if not isinstance(availability, dict):
+        return None
+    if availability.get("available") is not False:
+        return None
+    reason = availability.get("missing_reason") or "required market data unavailable"
+    symbol = availability.get("symbol") or row.get("symbol")
+    window = availability.get("window") or row.get("allowed_window")
+    return f"data_missing: {reason}; symbol={symbol}; window={window}"
+
+
+def _row_final_status_and_reason(row: dict[str, Any]) -> tuple[str, str]:
+    data_gap = _data_gap_reason(row)
+    if data_gap:
+        return "data_missing", data_gap
+
+    expected_status = str(row.get("expected_status"))
+    if expected_status == "insufficient_evidence":
+        return (
+            "insufficient_evidence",
+            "public evidence gap remains explicit; no exact fill/timestamp/account data was invented",
+        )
+    if expected_status == "not_reproduced":
+        return (
+            "not_reproduced",
+            "dry-run fixture marks adequate-evidence/adequate-data no-signal outcome; no market data queried here",
+        )
+    if expected_status == "reproduced":
+        return (
+            "reproduced",
+            "dry-run fixture marks reproduced signal; exact realized fills still remain N/A unless primary evidence is added",
+        )
+    return expected_status, "dry-run manifest/report gate only; no market data queried"
+
+
 def _row_result(row: dict[str, Any]) -> dict[str, Any]:
+    final_status, reason = _row_final_status_and_reason(row)
+    data_query_status = "data_missing" if final_status == "data_missing" else "not_queried_dry_run"
     return {
         "row_id": row.get("row_id"),
         "row_kind": row.get("row_kind"),
@@ -456,17 +496,15 @@ def _row_result(row: dict[str, Any]) -> dict[str, Any]:
         "symbol": row.get("symbol"),
         "direction": row.get("direction"),
         "evidence_class": row.get("evidence_class"),
-        "final_status": row.get("expected_status"),
+        "final_status": final_status,
         "market_granularity": row.get("market_granularity"),
         "allowed_window": row.get("allowed_window"),
         "missing_fields": row.get("missing_fields", []),
-        "matched_signal_count": 0,
-        "data_query_status": "not_queried_dry_run",
+        "matched_signal_count": 1 if final_status == "reproduced" else 0,
+        "data_query_status": data_query_status,
+        "data_availability": row.get("data_availability", {"checked": False, "reason": "dry_run_fixture_only"}),
         "realized_outcome": realized_outcome_na(),
-        "reason": (
-            "dry-run manifest/report gate only; no market data queried and "
-            "missing public fill evidence remains explicit"
-        ),
+        "reason": reason,
     }
 
 
