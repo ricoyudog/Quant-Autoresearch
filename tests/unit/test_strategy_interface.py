@@ -637,6 +637,23 @@ class TestStrategyFile:
         assert signals["TOUCH"].eq(0.0).all()
         assert strategy.get_signal_trace()["signals"] == []
 
+    def test_generate_signals_rejects_long_when_stop_width_exceeds_threshold(self, strategy_file_path):
+        """A valid ORH breakout is rejected when the setup stop is too wide for bounded v1 risk."""
+        from strategies.active_strategy import TradingStrategy
+
+        frame = build_orh_minute_frame(
+            "LWIDE",
+            closes=[10.00, 10.05, 10.00, 10.10, 10.00, 10.35, 10.45, 10.55],
+            highs=[10.20, 10.25, 10.15, 10.30, 10.20, 10.45, 10.55, 10.65],
+            lows=[9.80, 9.85, 9.82, 9.88, 9.84, 10.25, 10.35, 10.45],
+        )
+
+        strategy = TradingStrategy(max_stop_pct=2.0)
+        signals = strategy.generate_signals({"LWIDE": frame})
+
+        assert signals["LWIDE"].eq(0.0).all()
+        assert strategy.get_signal_trace()["signals"] == []
+
     def test_generate_signals_enters_short_on_declining_ema_resistance_rejection(self, strategy_file_path):
         """Short v1 enters only after a declining-EMA resistance bounce fails through range support."""
         from strategies.active_strategy import TradingStrategy
@@ -687,6 +704,23 @@ class TestStrategyFile:
         signals = strategy.generate_signals({"NOFAIL": frame})
 
         assert signals["NOFAIL"].eq(0.0).all()
+        assert strategy.get_signal_trace()["signals"] == []
+
+    def test_generate_signals_rejects_short_when_stop_width_exceeds_threshold(self, strategy_file_path):
+        """A short breakdown is rejected when high-of-day stop width exceeds the bounded v1 threshold."""
+        from strategies.active_strategy import TradingStrategy
+
+        frame = build_orh_minute_frame(
+            "SWIDE",
+            closes=[10.00, 9.90, 9.80, 9.70, 9.60, 9.45, 9.35, 9.25],
+            highs=[10.10, 10.00, 9.90, 9.80, 9.70, 9.78, 9.48, 9.38],
+            lows=[9.90, 9.80, 9.70, 9.60, 9.50, 9.40, 9.25, 9.15],
+        )
+
+        strategy = TradingStrategy(max_stop_pct=2.0)
+        signals = strategy.generate_signals({"SWIDE": frame})
+
+        assert signals["SWIDE"].eq(0.0).all()
         assert strategy.get_signal_trace()["signals"] == []
 
     def test_generate_signals_short_hard_stop_trace_is_direction_aware(self, strategy_file_path):
@@ -751,6 +785,34 @@ class TestStrategyFile:
             assert field in signal
         assert "diagnostics" not in signal
 
+    def test_generate_signals_short_ema_avwap_reclaim_trace_is_validator_compatible(self, strategy_file_path):
+        """Short EMA/AVWAP reclaim exits keep direct diagnostics without forcing a profit claim."""
+        from strategies.active_strategy import TradingStrategy
+
+        frame = build_orh_minute_frame(
+            "SRECL",
+            closes=[10.00, 9.90, 9.80, 9.70, 9.60, 9.45, 9.95],
+            highs=[10.10, 10.00, 9.90, 9.80, 9.70, 9.78, 10.05],
+            lows=[9.90, 9.80, 9.70, 9.60, 9.50, 9.40, 9.80],
+        )
+
+        strategy = TradingStrategy(max_stop_pct=10.0)
+        signals = strategy.generate_signals({"SRECL": frame})
+        trace = strategy.get_signal_trace()
+
+        series = signals["SRECL"]
+        assert series.iloc[5] == -1.0
+        assert series.iloc[6] == 0.0
+        signal = trace["signals"][0]
+        assert signal["direction"] == "short"
+        assert signal["exit_type"] == "ema_avwap_reclaim"
+        assert signal["entry_trigger"] == "resistance_rejection_breakdown"
+        assert signal["r_multiple"] < 0.0
+        assert signal["mae_unit"] == "R"
+        assert signal["mfe_unit"] == "R"
+        assert signal["stop_width_pct"] > 0.0
+        assert "diagnostics" not in signal
+
     def test_generate_signals_keeps_validator_trace_side_band(self, strategy_file_path):
         """generate_signals keeps returning runtime Series while trace data is exposed through a getter."""
         from strategies.active_strategy import TradingStrategy
@@ -773,6 +835,35 @@ class TestStrategyFile:
         assert trace["signals"][0]["direction"] == "long"
         assert trace["signals"][0]["data_status"] == "available"
         assert "diagnostics" not in trace["signals"][0]
+
+    def test_generate_signals_keeps_validator_trace_side_band_for_multi_ticker_dict(self, strategy_file_path):
+        """Dict input returns runtime series while aggregating validator trace entries across tickers."""
+        from strategies.active_strategy import TradingStrategy
+
+        long_frame = build_orh_minute_frame(
+            "LTRACE",
+            closes=[10.00, 10.05, 10.00, 10.10, 10.00, 10.35, 10.45, 9.85],
+            highs=[10.20, 10.25, 10.15, 10.30, 10.20, 10.45, 10.55, 9.95],
+            lows=[9.80, 9.85, 9.82, 9.88, 9.84, 10.25, 10.35, 9.75],
+        )
+        short_frame = build_orh_minute_frame(
+            "STRACE",
+            closes=[10.00, 9.90, 9.80, 9.70, 9.60, 9.45, 8.85],
+            highs=[10.10, 10.00, 9.90, 9.80, 9.70, 9.78, 9.00],
+            lows=[9.90, 9.80, 9.70, 9.60, 9.50, 9.40, 8.70],
+        )
+
+        strategy = TradingStrategy(max_stop_pct=10.0)
+        signals = strategy.generate_signals({"LTRACE": long_frame, "STRACE": short_frame})
+        trace = strategy.get_signal_trace()
+
+        assert set(signals) == {"LTRACE", "STRACE"}
+        assert signals["LTRACE"].index.equals(long_frame.index)
+        assert signals["STRACE"].index.equals(short_frame.index)
+        assert {signal["symbol"] for signal in trace["signals"]} == {"LTRACE", "STRACE"}
+        assert {signal["direction"] for signal in trace["signals"]} == {"long", "short"}
+        assert all(signal["data_status"] == "available" for signal in trace["signals"])
+        assert all("diagnostics" not in signal for signal in trace["signals"])
 
     def test_strategy_class_init(self, strategy_file_path):
         """TradingStrategy exposes bounded Phase 4 primitive parameters and trace state."""
