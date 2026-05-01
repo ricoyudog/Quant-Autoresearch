@@ -592,11 +592,138 @@ def _series_has_direction(series: Any, direction: str) -> bool:
     return False
 
 
+def _coerce_date(value: Any) -> dt.date | None:
+    if isinstance(value, dt.datetime):
+        return value.date()
+    if isinstance(value, dt.date):
+        return value
+    if value is None:
+        return None
+    text = str(value)
+    if not text:
+        return None
+    try:
+        return dt.date.fromisoformat(text[:10])
+    except ValueError:
+        return None
+
+
+def _allowed_window_dates(window: Any) -> tuple[dt.date, dt.date] | None:
+    if not isinstance(window, dict):
+        return None
+    start = _coerce_date(window.get("start"))
+    end = _coerce_date(window.get("end"))
+    if start is None or end is None:
+        return None
+    return start, end
+
+
+def _frame_row_date(frame: Any, position: int) -> dt.date | None:
+    if frame is None or "session_date" not in getattr(frame, "columns", []):
+        return None
+    try:
+        return _coerce_date(frame.iloc[position]["session_date"])
+    except (IndexError, KeyError, TypeError):
+        return None
+
+
+def _frame_position_for_index(frame: Any, index: Any, fallback: int) -> int | None:
+    if frame is None:
+        return None
+    try:
+        if isinstance(index, int) or str(index).isdigit():
+            position = int(index)
+            if 0 <= position < len(frame):
+                return position
+    except (TypeError, ValueError):
+        pass
+    try:
+        location = frame.index.get_loc(index)
+    except (AttributeError, KeyError, TypeError):
+        location = fallback
+    if isinstance(location, int) and 0 <= location < len(frame):
+        return location
+    if isinstance(fallback, int) and 0 <= fallback < len(frame):
+        return fallback
+    return None
+
+
+def _iter_signal_items(series: Any) -> Iterable[tuple[Any, Any]]:
+    if series is None:
+        return []
+    if hasattr(series, "dropna"):
+        return list(series.dropna().items())
+    if isinstance(series, dict):
+        return list(series.items())
+    try:
+        return list(enumerate(series))
+    except TypeError:
+        return [(0, series)]
+
+
+def _series_has_direction_in_date_window(
+    series: Any,
+    frame: Any,
+    direction: str,
+    start: dt.date,
+    end: dt.date,
+) -> bool:
+    for fallback_position, (index, value) in enumerate(_iter_signal_items(series)):
+        try:
+            numeric = float(value)
+        except (TypeError, ValueError):
+            continue
+        if direction == "long" and numeric <= 0:
+            continue
+        if direction == "short" and numeric >= 0:
+            continue
+        position = _frame_position_for_index(frame, index, fallback_position)
+        if position is None:
+            continue
+        row_date = _frame_row_date(frame, position)
+        if row_date is not None and start <= row_date <= end:
+            return True
+    return False
+
+
 def _signals_by_symbol(signals: Any, symbols: list[str], direction: str) -> dict[str, bool]:
     if isinstance(signals, dict):
         return {symbol: _series_has_direction(signals.get(symbol), direction) for symbol in symbols}
     if len(symbols) == 1:
         return {symbols[0]: _series_has_direction(signals, direction)}
+    return {symbol: False for symbol in symbols}
+
+
+def _signals_by_symbol_in_date_window(
+    signals: Any,
+    frames: dict[str, Any],
+    symbols: list[str],
+    direction: str,
+    start: dt.date,
+    end: dt.date,
+) -> dict[str, bool]:
+    if isinstance(signals, dict):
+        return {
+            symbol: _series_has_direction_in_date_window(
+                signals.get(symbol),
+                frames.get(symbol),
+                direction,
+                start,
+                end,
+            )
+            for symbol in symbols
+        }
+    if len(symbols) == 1:
+        symbol = symbols[0]
+        return {
+            symbol: _series_has_direction_in_date_window(
+                signals,
+                frames.get(symbol),
+                direction,
+                start,
+                end,
+            )
+        }
     return {symbol: False for symbol in symbols}
 
 
@@ -613,18 +740,74 @@ def _trace_signal_by_symbol(trace: Any, symbols: list[str], direction: str) -> d
     return result
 
 
+def _trace_signal_by_symbol_in_date_window(
+    trace: Any,
+    symbols: list[str],
+    direction: str,
+    start: dt.date,
+    end: dt.date,
+) -> dict[str, bool]:
+    result = {symbol: False for symbol in symbols}
+    if not isinstance(trace, dict):
+        return result
+    for signal in _as_list(trace.get("signals")):
+        if not isinstance(signal, dict):
+            continue
+        symbol = str(signal.get("symbol"))
+        signal_date = _coerce_date(signal.get("date") or signal.get("session_date"))
+        if (
+            symbol in result
+            and str(signal.get("direction")) == direction
+            and signal_date is not None
+            and start <= signal_date <= end
+        ):
+            result[symbol] = True
+    return result
+
+
 def _merge_signal_maps(primary: dict[str, bool], secondary: dict[str, bool]) -> dict[str, bool]:
     symbols = set(primary) | set(secondary)
     return {symbol: bool(primary.get(symbol) or secondary.get(symbol)) for symbol in symbols}
 
 
-def _execute_strategy(strategy_cls: Any, frames: dict[str, Any], direction: str) -> dict[str, bool]:
+def _execute_strategy(
+    strategy_cls: Any,
+    frames: dict[str, Any],
+    direction: str,
+    allowed_window: Any | None = None,
+) -> dict[str, bool]:
     strategy = strategy_cls()
     signals = strategy.generate_signals(frames)
     trace = strategy.get_signal_trace() if hasattr(strategy, "get_signal_trace") else {}
-    series_map = _signals_by_symbol(signals, list(frames), direction)
-    trace_map = _trace_signal_by_symbol(trace, list(frames), direction)
+    symbols = list(frames)
+    window = _allowed_window_dates(allowed_window)
+    if window is None:
+        series_map = _signals_by_symbol(signals, symbols, direction)
+        trace_map = _trace_signal_by_symbol(trace, symbols, direction)
+    else:
+        start, end = window
+        series_map = _signals_by_symbol_in_date_window(signals, frames, symbols, direction, start, end)
+        trace_map = _trace_signal_by_symbol_in_date_window(trace, symbols, direction, start, end)
     return _merge_signal_maps(series_map, trace_map)
+
+
+def _execute_strategy_for_rows(
+    strategy_cls: Any,
+    frames: dict[str, Any],
+    row_ids: list[str],
+    row_by_id: dict[str, dict[str, Any]],
+    symbols: list[str],
+) -> tuple[dict[str, bool], dict[str, dict[str, bool]]]:
+    aggregate = {symbol: False for symbol in symbols}
+    by_row: dict[str, dict[str, bool]] = {}
+    for row_id in row_ids:
+        row = row_by_id.get(row_id, {})
+        direction = str(row.get("direction", "long"))
+        row_map = _execute_strategy(strategy_cls, frames, direction, row.get("allowed_window"))
+        by_row[row_id] = row_map
+        for symbol, signal_present in row_map.items():
+            aggregate[symbol] = bool(aggregate.get(symbol) or signal_present)
+    return aggregate, by_row
 
 
 def execute_query_ledger(
@@ -657,7 +840,7 @@ def execute_query_ledger(
         loader_name = str(record.get("loader_name"))
         start = str(record.get("date_window_start"))
         end = str(record.get("date_window_end"))
-        direction = str(row_by_id.get(row_ids[0], {}).get("direction", "long")) if row_ids else "long"
+        signal_maps_by_row: dict[str, dict[str, bool]] = {}
 
         record["executed"] = True
         loader_call_count += 1
@@ -685,7 +868,13 @@ def execute_query_ledger(
                     signal_map = {symbol: False for symbol in symbols}
                 else:
                     frames = _frames_by_symbol(filtered, symbols)
-                    signal_map = _execute_strategy(strategy_cls, frames, direction)
+                    signal_map, signal_maps_by_row = _execute_strategy_for_rows(
+                        strategy_cls,
+                        frames,
+                        row_ids,
+                        row_by_id,
+                        symbols,
+                    )
                     record["loader_status"] = "executed"
                     record["data_missing_reason"] = None
             elif loader_name == "query_minute_data" and granularity == "minute":
@@ -720,7 +909,13 @@ def execute_query_ledger(
                     record["data_missing_reason"] = "minute loader returned no bars for: " + ", ".join(missing)
                     signal_map = {symbol: False for symbol in symbols}
                 else:
-                    signal_map = _execute_strategy(strategy_cls, frames, direction)
+                    signal_map, signal_maps_by_row = _execute_strategy_for_rows(
+                        strategy_cls,
+                        frames,
+                        row_ids,
+                        row_by_id,
+                        symbols,
+                    )
                     record["loader_status"] = "executed"
                     record["data_missing_reason"] = None
             else:
@@ -741,11 +936,12 @@ def execute_query_ledger(
         for row_id in row_ids:
             row = row_by_id.get(row_id, {})
             symbol = str(row.get("symbol"))
+            row_signal_map = signal_maps_by_row.get(row_id, signal_map)
             row_outcomes[row_id] = {
                 "query_id": record.get("query_id"),
                 "loader_status": record.get("loader_status"),
                 "data_missing_reason": record.get("data_missing_reason"),
-                "signal_present": bool(signal_map.get(symbol)),
+                "signal_present": bool(row_signal_map.get(symbol)),
             }
 
     return query_ledger, row_outcomes, fail_closed_errors, loader_call_count

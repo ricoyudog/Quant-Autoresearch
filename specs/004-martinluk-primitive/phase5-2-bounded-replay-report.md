@@ -12,8 +12,8 @@ Phase 5.1 is a bounded row-level replay of the frozen Phase 5 public candidate/c
 
 - Phase 5 manifest SHA-256: `cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725`
 - Replay request SHA-256: `ccf7c6e63f18ebb0a922fff7b4b1dde4da0c9dc084347e540c82a55ae00d8383`
-- Query ledger SHA-256: `914661d2706be772a5c80ff40021f9f40ad034b7da2877a32d59dcf4fb0c1af4`
-- Runtime SHA-256: `dbffaa96db1e2be067190734ac6ca07acfba50592e9369a14870f598d6d23ac8`
+- Query ledger SHA-256: `ab4314ea10e22a8b52086d365e4882daf53f3baa31152cb8b8e56ab2b9ca3a87`
+- Runtime SHA-256: `4aec98b9a31a53df1ca6a6f0e4569734fd62027ad71ab8e5206bd40e0c191e51`
 
 ## Public replay candidates
 
@@ -24,17 +24,17 @@ Phase 5.1 is a bounded row-level replay of the frozen Phase 5 public candidate/c
 ## Diagnostic controls
 
 - Control rows: `20`
-- Clean controls: `17`
-- False-positive controls: `3`
-- False-positive control row IDs: `["p5-control-amc-adjacent-1", "p5-control-amc-null-1", "p5-control-amc-null-2"]`
+- Clean controls: `18`
+- False-positive controls: `2`
+- False-positive control row IDs: `["p5-control-amc-null-1", "p5-control-amc-null-2"]`
 - Controls counted toward promotion: `0`
 
 ## Diagnostic promotion veto
 
 - Active: `true`
 - Reasons: `["false_positive_controls_present"]`
-- False-positive control count: `3`
-- False-positive control row IDs: `["p5-control-amc-adjacent-1", "p5-control-amc-null-1", "p5-control-amc-null-2"]`
+- False-positive control count: `2`
+- False-positive control row IDs: `["p5-control-amc-null-1", "p5-control-amc-null-2"]`
 
 ## Audit-only rows
 

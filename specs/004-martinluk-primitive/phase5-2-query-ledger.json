@@ -1755,7 +1755,7 @@
         "p5-control-amc-adjacent-1"
       ],
       "signals_by_symbol": {
-        "AMC": true
+        "AMC": false
       },
       "symbols": [
         "AMC"

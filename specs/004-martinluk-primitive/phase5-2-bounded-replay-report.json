@@ -85,20 +85,19 @@
     }
   ],
   "control_summary": {
-    "clean_control_count": 17,
+    "clean_control_count": 18,
     "control_data_missing_count": 0,
     "control_insufficient_evidence_count": 0,
     "control_row_count": 20,
     "controls_counted_toward_promotion": 0,
-    "false_positive_control_count": 3,
+    "false_positive_control_count": 2,
     "false_positive_control_row_ids": [
-      "p5-control-amc-adjacent-1",
       "p5-control-amc-null-1",
       "p5-control-amc-null-2"
     ],
     "status_counts": {
-      "not_reproduced": 17,
-      "reproduced": 3
+      "not_reproduced": 18,
+      "reproduced": 2
     }
   },
   "controls_counted_toward_promotion": 0,
@@ -114,9 +113,8 @@
   "diagnostic_promotion_veto": {
     "active": true,
     "controls_counted_toward_promotion": 0,
-    "false_positive_control_count": 3,
+    "false_positive_control_count": 2,
     "false_positive_control_row_ids": [
-      "p5-control-amc-adjacent-1",
       "p5-control-amc-null-1",
       "p5-control-amc-null-2"
     ],
@@ -137,9 +135,8 @@
     "diagnostic_veto_reasons": [
       "false_positive_controls_present"
     ],
-    "false_positive_control_count": 3,
+    "false_positive_control_count": 2,
     "false_positive_control_row_ids": [
-      "p5-control-amc-adjacent-1",
       "p5-control-amc-null-1",
       "p5-control-amc-null-2"
     ],
@@ -159,7 +156,7 @@
     }
   },
   "query_ledger_path": "specs/004-martinluk-primitive/phase5-2-query-ledger.json",
-  "query_ledger_sha256": "914661d2706be772a5c80ff40021f9f40ad034b7da2877a32d59dcf4fb0c1af4",
+  "query_ledger_sha256": "ab4314ea10e22a8b52086d365e4882daf53f3baa31152cb8b8e56ab2b9ca3a87",
   "realized_outcome_fields": {
     "fees": "N/A",
     "realized_account_pnl": "N/A",
@@ -400,10 +397,10 @@
         "start": "2024-05-09"
       },
       "case_id": "MLUK-AMC-ORH-REENTRY-002-ADJ-1",
-      "control_outcome": "false_positive_control",
+      "control_outcome": "clean_control",
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
-      "final_status": "reproduced",
+      "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "minute",
       "missing_fields": [
@@ -422,10 +419,10 @@
         "realized_position_size": "N/A",
         "slippage": "N/A"
       },
-      "reason": "matching primitive signal appeared in a diagnostic control window; not promotion evidence",
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
       "row_id": "p5-control-amc-adjacent-1",
       "row_kind": "adjacent_control_window",
-      "signal_present": true,
+      "signal_present": false,
       "symbol": "AMC"
     },
     {
@@ -1034,7 +1031,7 @@
   "run_id": "martinluk_phase5_1_bounded_replay_v1",
   "runner_path": "specs/004-martinluk-primitive/run_phase5_bounded_replay.py",
   "runtime_path": "specs/004-martinluk-primitive/phase5-2-runtime.json",
-  "runtime_sha256": "dbffaa96db1e2be067190734ac6ca07acfba50592e9369a14870f598d6d23ac8",
+  "runtime_sha256": "4aec98b9a31a53df1ca6a6f0e4569734fd62027ad71ab8e5206bd40e0c191e51",
   "schema_version": "martinluk_phase5_2_bounded_replay_report_v1",
   "validation": {
     "errors": [],

@@ -215,6 +215,75 @@ def test_phase5_1_daily_loader_overfetch_is_filtered_to_effective_manifest_symbo
     assert set(outcomes) == set(first_daily["row_ids"])
 
 
+@pytest.mark.parametrize(
+    ("positive_index", "trace_date", "expected_signal_present"),
+    [
+        (0, "2024-05-08", False),
+        (1, "2024-05-09", True),
+    ],
+)
+def test_phase5_2_signal_matching_uses_allowed_window_not_warmup(
+    phase5_1: Any,
+    manifest: dict[str, Any],
+    request_payload: dict[str, Any],
+    positive_index: int,
+    trace_date: str,
+    expected_signal_present: bool,
+) -> None:
+    target_row = next(
+        row
+        for row in manifest["executable_rows"]
+        if row["row_id"] == "p5-control-amc-adjacent-1"
+    )
+    manifest["executable_rows"] = [target_row]
+    ledger = phase5_1.build_query_plan(copy.deepcopy(manifest), copy.deepcopy(request_payload), MANIFEST_PATH)
+
+    class FakeLoaders:
+        def load_daily_data(self, *args: Any, **kwargs: Any) -> pd.DataFrame:  # pragma: no cover - not used
+            raise AssertionError("daily loader should not be called")
+
+        def query_minute_data(self, tickers: list[str], start_date: str, end_date: str) -> dict[str, pd.DataFrame]:
+            assert tickers == ["AMC"]
+            assert start_date == "2024-05-08"
+            assert end_date == "2024-05-10"
+            return {
+                "AMC": pd.DataFrame(
+                    {
+                        "ticker": ["AMC", "AMC"],
+                        "session_date": ["2024-05-08", "2024-05-09"],
+                        "open": [3.2, 3.3],
+                        "high": [3.3, 3.4],
+                        "low": [3.1, 3.2],
+                        "close": [3.25, 3.35],
+                        "volume": [1000, 1000],
+                    }
+                )
+            }
+
+    class WindowAwareStrategy:
+        def generate_signals(self, frames: dict[str, pd.DataFrame]) -> dict[str, pd.Series]:
+            frame = frames["AMC"]
+            values = [0.0, 0.0]
+            values[positive_index] = 1.0
+            return {"AMC": pd.Series(values, index=frame.index)}
+
+        def get_signal_trace(self) -> dict[str, Any]:
+            return {"signals": [{"symbol": "AMC", "direction": "long", "date": trace_date}]}
+
+    updated, outcomes, errors, loader_calls = phase5_1.execute_query_ledger(
+        ledger,
+        manifest,
+        request_payload,
+        loaders=FakeLoaders(),
+        strategy_cls=WindowAwareStrategy,
+    )
+
+    assert errors == []
+    assert loader_calls == 1
+    assert updated["records"][0]["signals_by_symbol"] == {"AMC": expected_signal_present}
+    assert outcomes["p5-control-amc-adjacent-1"]["signal_present"] is expected_signal_present
+
+
 def test_phase5_1_rejects_existing_phase5_output_paths_without_overwrite(
     phase5_1: Any,
     request_payload: dict[str, Any],

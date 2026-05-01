@@ -1,14 +1,14 @@
 {
-  "completed_at": "2026-04-29T15:32:59Z",
+  "completed_at": "2026-05-01T14:35:30Z",
   "fail_closed": false,
   "fail_closed_reason": null,
   "loader_call_count": 25,
   "phase5_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
-  "query_ledger_sha256": "914661d2706be772a5c80ff40021f9f40ad034b7da2877a32d59dcf4fb0c1af4",
+  "query_ledger_sha256": "ab4314ea10e22a8b52086d365e4882daf53f3baa31152cb8b8e56ab2b9ca3a87",
   "replay_request_sha256": "ccf7c6e63f18ebb0a922fff7b4b1dde4da0c9dc084347e540c82a55ae00d8383",
   "run_id": "martinluk_phase5_1_bounded_replay_v1",
   "runner_path": "specs/004-martinluk-primitive/run_phase5_bounded_replay.py",
-  "runtime_sha256": "dbffaa96db1e2be067190734ac6ca07acfba50592e9369a14870f598d6d23ac8",
+  "runtime_sha256": "4aec98b9a31a53df1ca6a6f0e4569734fd62027ad71ab8e5206bd40e0c191e51",
   "schema_version": "martinluk_phase5_1_runtime_v1",
-  "started_at": "2026-04-29T15:32:56Z"
+  "started_at": "2026-05-01T14:35:27Z"
 }
