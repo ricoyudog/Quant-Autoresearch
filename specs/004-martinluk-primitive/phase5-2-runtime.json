@@ -1,5 +1,5 @@
 {
-  "completed_at": "2026-05-01T15:06:46Z",
+  "completed_at": "2026-05-01T15:54:26Z",
   "fail_closed": false,
   "fail_closed_reason": null,
   "loader_call_count": 25,
@@ -8,7 +8,7 @@
   "replay_request_sha256": "ccf7c6e63f18ebb0a922fff7b4b1dde4da0c9dc084347e540c82a55ae00d8383",
   "run_id": "martinluk_phase5_1_bounded_replay_v1",
   "runner_path": "specs/004-martinluk-primitive/run_phase5_bounded_replay.py",
-  "runtime_sha256": "cb3977c50adf16ec118de3df78d6724aeda97fdc809fa22d082e88b41da16974",
+  "runtime_sha256": "da3e370dd383473e813473003bb590cc270481c84b11a7741a5917f1898148bc",
   "schema_version": "martinluk_phase5_1_runtime_v1",
-  "started_at": "2026-05-01T15:06:42Z"
+  "started_at": "2026-05-01T15:54:22Z"
 }

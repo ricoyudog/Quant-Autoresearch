@@ -1,6 +1,9 @@
 {
   "audit_only_summary": {
     "audit_row_count": 3,
+    "gap_classification_counts": {
+      "evidence_not_sufficient": 3
+    },
     "market_data_query_allowed": false,
     "market_data_query_policy": "audit_only_rows_do_not_execute_loaders",
     "status_counts": {
@@ -13,6 +16,8 @@
       "direction": "short",
       "evidence_class": "research_only_insufficient_evidence",
       "final_status": "insufficient_evidence",
+      "gap_classification": "evidence_not_sufficient",
+      "gap_classification_reason": "audit-only row is not executable without additional primary evidence",
       "market_data_query_allowed": false,
       "missing_fields": [
         "exact post date",
@@ -38,6 +43,8 @@
       "direction": "long_or_short_unknown",
       "evidence_class": "research_only_insufficient_evidence",
       "final_status": "insufficient_evidence",
+      "gap_classification": "evidence_not_sufficient",
+      "gap_classification_reason": "audit-only row is not executable without additional primary evidence",
       "market_data_query_allowed": false,
       "missing_fields": [
         "direction",
@@ -63,6 +70,8 @@
       "direction": "long",
       "evidence_class": "unsupported_until_new_primary_evidence",
       "final_status": "insufficient_evidence",
+      "gap_classification": "evidence_not_sufficient",
+      "gap_classification_reason": "audit-only row is not executable without additional primary evidence",
       "market_data_query_allowed": false,
       "missing_fields": [
         "symbol-specific dates",
@@ -92,6 +101,10 @@
     "controls_counted_toward_promotion": 0,
     "false_positive_control_count": 0,
     "false_positive_control_row_ids": [],
+    "gap_classification_counts": {
+      "primitive_not_emitted": 17,
+      "trace_label_missing": 3
+    },
     "status_counts": {
       "not_reproduced": 20
     }
@@ -114,6 +127,11 @@
     "reasons": []
   },
   "execution_mode": "bounded_replay",
+  "gap_classification_summary": {
+    "evidence_not_sufficient": 8,
+    "primitive_not_emitted": 17,
+    "trace_label_missing": 3
+  },
   "no_overclaim_statement": "Phase 5.1 is a bounded row-level replay of the frozen Phase 5 public candidate/control manifest. It is research-only unless all public replay candidate gates are separately satisfied. It is not a broad backtest, not profit proof, not Martin Luk realized P&L, not private-account replication, and not exact-fill replication. Realized entry, exit, size, fees, slippage, and account P&L remain N/A unless a later primary-fill evidence phase explicitly upgrades the evidence contract.",
   "overall_run_status": "research_only",
   "phase5_2_artifact_note": "Phase 5.2 report artifacts add diagnostic promotion-veto fields only; they do not broaden replay scope, query audit rows, or upgrade realized outcomes.",
@@ -136,6 +154,9 @@
   },
   "promotion_threshold": 5,
   "public_replay_candidate_summary": {
+    "gap_classification_counts": {
+      "evidence_not_sufficient": 5
+    },
     "public_replay_candidate_count": 5,
     "status_counts": {
       "insufficient_evidence": 5
@@ -179,6 +200,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "insufficient_evidence",
+      "gap_classification": "evidence_not_sufficient",
+      "gap_classification_reason": "public replay candidate still lacks exact public evidence fields",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -242,6 +265,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -305,6 +330,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -368,6 +395,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -428,6 +457,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -487,6 +518,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "insufficient_evidence",
+      "gap_classification": "evidence_not_sufficient",
+      "gap_classification_reason": "public replay candidate still lacks exact public evidence fields",
       "loader_status": "executed",
       "market_granularity": "minute",
       "match_provenance": {
@@ -549,6 +582,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "trace_label_missing",
+      "gap_classification_reason": "primitive activity exists but row-level trace labels do not match setup_type and entry_trigger",
       "loader_status": "executed",
       "market_granularity": "minute",
       "match_provenance": {
@@ -616,6 +651,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "minute",
       "match_provenance": {
@@ -678,6 +715,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "trace_label_missing",
+      "gap_classification_reason": "primitive activity exists but row-level trace labels do not match setup_type and entry_trigger",
       "loader_status": "executed",
       "market_granularity": "minute",
       "match_provenance": {
@@ -748,6 +787,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "trace_label_missing",
+      "gap_classification_reason": "primitive activity exists but row-level trace labels do not match setup_type and entry_trigger",
       "loader_status": "executed",
       "market_granularity": "minute",
       "match_provenance": {
@@ -817,6 +858,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "insufficient_evidence",
+      "gap_classification": "evidence_not_sufficient",
+      "gap_classification_reason": "public replay candidate still lacks exact public evidence fields",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -878,6 +921,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -939,6 +984,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -1000,6 +1047,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -1060,6 +1109,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -1119,6 +1170,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "insufficient_evidence",
+      "gap_classification": "evidence_not_sufficient",
+      "gap_classification_reason": "public replay candidate still lacks exact public evidence fields",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -1180,6 +1233,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -1241,6 +1296,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -1302,6 +1359,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -1362,6 +1421,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -1421,6 +1482,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "insufficient_evidence",
+      "gap_classification": "evidence_not_sufficient",
+      "gap_classification_reason": "public replay candidate still lacks exact public evidence fields",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -1482,6 +1545,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -1543,6 +1608,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -1604,6 +1671,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -1664,6 +1733,8 @@
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
       "final_status": "not_reproduced",
+      "gap_classification": "primitive_not_emitted",
+      "gap_classification_reason": "strategy emitted no matching primitive signal for the bounded row window",
       "loader_status": "executed",
       "market_granularity": "daily",
       "match_provenance": {
@@ -1717,7 +1788,7 @@
   "run_id": "martinluk_phase5_1_bounded_replay_v1",
   "runner_path": "specs/004-martinluk-primitive/run_phase5_bounded_replay.py",
   "runtime_path": "specs/004-martinluk-primitive/phase5-2-runtime.json",
-  "runtime_sha256": "cb3977c50adf16ec118de3df78d6724aeda97fdc809fa22d082e88b41da16974",
+  "runtime_sha256": "da3e370dd383473e813473003bb590cc270481c84b11a7741a5917f1898148bc",
   "schema_version": "martinluk_phase5_2_bounded_replay_report_v1",
   "validation": {
     "errors": [],

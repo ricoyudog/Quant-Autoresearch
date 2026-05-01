@@ -417,6 +417,88 @@ def test_phase5_1_control_outcome_mapping_and_promotion_excludes_controls(
     assert report["promoted"] is False
 
 
+def test_phase5_2_classifies_row_level_gaps_by_evidence_primitive_and_trace_label(
+    phase5_1: Any,
+    manifest: dict[str, Any],
+    request_payload: dict[str, Any],
+) -> None:
+    trace_label_gap_row_id = "p5-control-amc-null-2"
+    row_outcomes: dict[str, dict[str, Any]] = {}
+    for row in manifest["executable_rows"]:
+        provenance = {
+            "schema_version": "martinluk_phase5_2_match_provenance_v1",
+            "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+            "matched": False,
+            "match_source": "none",
+            "required": {},
+            "matched_signal_count": 0,
+            "matched_signal_ids": [],
+            "trace_signal_count": 0,
+            "trace_rejection_reasons": {},
+            "series_positive_count": 0,
+            "series_positive_dates_sample": [],
+            "series_positive_used": False,
+            "series_positive_ignored_reason": None,
+            "reason": "no matching trace signal",
+        }
+        if row["row_id"] == trace_label_gap_row_id:
+            provenance.update(
+                {
+                    "trace_signal_count": 2,
+                    "trace_rejection_reasons": {"setup_type_mismatch": 2},
+                    "series_positive_count": 1,
+                    "series_positive_dates_sample": [row["allowed_window"]["start"]],
+                    "series_positive_ignored_reason": "row_setup_entry_trigger_requires_trace_match",
+                }
+            )
+        row_outcomes[row["row_id"]] = {
+            "query_id": f"query-{row['row_id']}",
+            "loader_status": "executed",
+            "match_provenance": provenance,
+        }
+
+    report = phase5_1.build_report(
+        manifest,
+        request_payload,
+        {"records": []},
+        row_outcomes,
+        manifest_sha256=request_payload["phase5_manifest_sha256"],
+        request_path=REQUEST_PATH,
+        query_ledger_path=MODULE_PATH.with_name("phase5-2-query-ledger.json"),
+        runtime_path=MODULE_PATH.with_name("phase5-2-runtime.json"),
+        request_sha256="request-sha",
+        query_ledger_sha256="ledger-sha",
+        runtime_sha256="runtime-sha",
+        validation={"passed": True, "errors": []},
+    )
+
+    rows_by_id = {row["row_id"]: row for row in report["row_results"]}
+    assert rows_by_id["p5-public-sofi"]["gap_classification"] == "evidence_not_sufficient"
+    assert (
+        rows_by_id[trace_label_gap_row_id]["gap_classification"]
+        == "trace_label_missing"
+    )
+    assert (
+        rows_by_id["p5-control-sofi-adjacent-1"]["gap_classification"]
+        == "primitive_not_emitted"
+    )
+    assert report["public_replay_candidate_summary"]["gap_classification_counts"] == {
+        "evidence_not_sufficient": 5
+    }
+    assert report["control_summary"]["gap_classification_counts"] == {
+        "primitive_not_emitted": 19,
+        "trace_label_missing": 1,
+    }
+    assert report["audit_only_summary"]["gap_classification_counts"] == {
+        "evidence_not_sufficient": 3
+    }
+    assert report["gap_classification_summary"] == {
+        "evidence_not_sufficient": 8,
+        "primitive_not_emitted": 19,
+        "trace_label_missing": 1,
+    }
+
+
 def test_phase5_2_reports_false_positive_control_ids_and_vetoes_promotion(
     phase5_1: Any,
     manifest: dict[str, Any],

@@ -32,6 +32,14 @@ RUNTIME_SCHEMA_VERSION = "martinluk_phase5_1_runtime_v1"
 REPORT_SCHEMA_VERSION = "martinluk_phase5_2_bounded_replay_report_v1"
 MATCH_PROVENANCE_SCHEMA_VERSION = "martinluk_phase5_2_match_provenance_v1"
 MATCH_SCOPE = "row_symbol_direction_setup_entry_trigger_allowed_window"
+GAP_PRIMITIVE_NOT_EMITTED = "primitive_not_emitted"
+GAP_TRACE_LABEL_MISSING = "trace_label_missing"
+GAP_EVIDENCE_NOT_SUFFICIENT = "evidence_not_sufficient"
+TRACE_LABEL_REJECTION_REASONS = {"setup_type_mismatch", "entry_trigger_mismatch"}
+TRACE_LABEL_SERIES_IGNORED_REASONS = {
+    "row_setup_entry_trigger_requires_trace_match",
+    "trace_present_requires_setup_entry_trigger_match",
+}
 
 PHASE5_MANIFEST_REL = "specs/004-martinluk-primitive/phase5-replay-manifest.json"
 RUNNER_REL = "specs/004-martinluk-primitive/run_phase5_bounded_replay.py"
@@ -926,6 +934,86 @@ def _row_requires_trace_metadata(row: dict[str, Any]) -> bool:
     return bool(row.get("setup_type") or row.get("entry_trigger"))
 
 
+def _trace_label_missing_from_provenance(match_provenance: dict[str, Any]) -> bool:
+    if bool(match_provenance.get("matched")):
+        return False
+
+    ignored_reason = match_provenance.get("series_positive_ignored_reason")
+    if ignored_reason in TRACE_LABEL_SERIES_IGNORED_REASONS:
+        return True
+
+    rejection_reasons = match_provenance.get("trace_rejection_reasons")
+    if not isinstance(rejection_reasons, dict):
+        return False
+
+    trace_signal_count = int(match_provenance.get("trace_signal_count") or 0)
+    return trace_signal_count > 0 and any(
+        int(rejection_reasons.get(reason) or 0) > 0
+        for reason in TRACE_LABEL_REJECTION_REASONS
+    )
+
+
+def _classify_gap(
+    row: dict[str, Any],
+    *,
+    final_status: str,
+    loader_status: str,
+    signal_present: bool,
+    match_provenance: dict[str, Any],
+) -> tuple[str | None, str | None]:
+    row_kind = str(row.get("row_kind"))
+
+    if final_status == "reproduced" or signal_present:
+        return None, None
+
+    if loader_status == "data_missing":
+        return (
+            GAP_EVIDENCE_NOT_SUFFICIENT,
+            "required bounded replay market data was unavailable",
+        )
+
+    if row_kind in AUDIT_ROW_KINDS:
+        return (
+            GAP_EVIDENCE_NOT_SUFFICIENT,
+            "audit-only row is not executable without additional primary evidence",
+        )
+
+    if row_kind == PUBLIC_ROW_KIND and (
+        _as_list(row.get("missing_fields"))
+        or str(row.get("expected_status")) == "insufficient_evidence"
+    ):
+        return (
+            GAP_EVIDENCE_NOT_SUFFICIENT,
+            "public replay candidate still lacks exact public evidence fields",
+        )
+
+    if row_kind in CONTROL_ROW_KINDS and _control_interpretation_blocked(row):
+        return (
+            GAP_EVIDENCE_NOT_SUFFICIENT,
+            "control row cannot be interpreted without violating public-evidence constraints",
+        )
+
+    if _trace_label_missing_from_provenance(match_provenance):
+        return (
+            GAP_TRACE_LABEL_MISSING,
+            "primitive activity exists but row-level trace labels do not match setup_type and entry_trigger",
+        )
+
+    return (
+        GAP_PRIMITIVE_NOT_EMITTED,
+        "strategy emitted no matching primitive signal for the bounded row window",
+    )
+
+
+def _gap_classification_counts(rows: list[dict[str, Any]]) -> dict[str, int]:
+    counts = Counter(
+        str(row.get("gap_classification"))
+        for row in rows
+        if row.get("gap_classification")
+    )
+    return {key: int(counts.get(key, 0)) for key in sorted(counts)}
+
+
 def _apply_series_provenance(
     provenance: dict[str, Any],
     series_dates: list[str],
@@ -1240,6 +1328,14 @@ def _executable_row_result(row: dict[str, Any], query_outcome: dict[str, Any] | 
         final_status = "insufficient_evidence"
         reason = "row kind is not executable for Phase 5.1"
 
+    gap_classification, gap_classification_reason = _classify_gap(
+        row,
+        final_status=final_status,
+        loader_status=loader_status,
+        signal_present=signal_present,
+        match_provenance=match_provenance,
+    )
+
     result = {
         "row_id": row.get("row_id"),
         "row_kind": row.get("row_kind"),
@@ -1256,16 +1352,31 @@ def _executable_row_result(row: dict[str, Any], query_outcome: dict[str, Any] | 
         "loader_status": loader_status,
         "signal_present": signal_present,
         "match_provenance": match_provenance,
+        "gap_classification": gap_classification,
+        "gap_classification_reason": gap_classification_reason,
         "missing_fields": row.get("missing_fields", []),
         "realized_outcome": realized_outcome_na(),
         "reason": reason,
     }
     if control_outcome is None:
         result.pop("control_outcome")
+    if gap_classification is None:
+        result.pop("gap_classification")
+        result.pop("gap_classification_reason")
     return result
 
 
 def _audit_result(row: dict[str, Any]) -> dict[str, Any]:
+    gap_classification, gap_classification_reason = _classify_gap(
+        row,
+        final_status="insufficient_evidence",
+        loader_status="audit_only",
+        signal_present=False,
+        match_provenance=_empty_match_provenance(
+            row,
+            reason="audit-only row is not executable for row-level replay",
+        ),
+    )
     return {
         "row_id": row.get("row_id"),
         "row_kind": row.get("row_kind"),
@@ -1276,6 +1387,8 @@ def _audit_result(row: dict[str, Any]) -> dict[str, Any]:
         "final_status": "insufficient_evidence",
         "market_data_query_allowed": False,
         "missing_fields": row.get("missing_fields", []),
+        "gap_classification": gap_classification,
+        "gap_classification_reason": gap_classification_reason,
         "realized_outcome": realized_outcome_na(),
         "reason": row.get(
             "reason",
@@ -1307,6 +1420,10 @@ def build_report(
     control_results = [row for row in executable_results if row.get("row_kind") in CONTROL_ROW_KINDS]
     audit_results = [_audit_result(row) for row in _audit_rows(manifest)]
 
+    gap_classification_summary = _gap_classification_counts(executable_results + audit_results)
+    public_gap_classification_summary = _gap_classification_counts(public_results)
+    control_gap_classification_summary = _gap_classification_counts(control_results)
+    audit_gap_classification_summary = _gap_classification_counts(audit_results)
     public_status_counts = Counter(str(row.get("final_status")) for row in public_results)
     control_status_counts = Counter(str(row.get("final_status")) for row in control_results)
     control_outcome_counts = Counter(str(row.get("control_outcome")) for row in control_results)
@@ -1366,6 +1483,7 @@ def build_report(
         "promotion_threshold": promotion_threshold,
         "reproduced_public_replay_candidate_count": reproduced_public_count,
         "controls_counted_toward_promotion": 0,
+        "gap_classification_summary": gap_classification_summary,
         "phase5_manifest_path": PHASE5_MANIFEST_REL,
         "phase5_manifest_sha256": manifest_sha256,
         "replay_request_path": repo_rel(request_path),
@@ -1384,6 +1502,7 @@ def build_report(
         "public_replay_candidate_summary": {
             "public_replay_candidate_count": len(public_results),
             "status_counts": dict(sorted(public_status_counts.items())),
+            "gap_classification_counts": public_gap_classification_summary,
         },
         "control_summary": {
             "control_row_count": len(control_results),
@@ -1393,11 +1512,13 @@ def build_report(
             "control_data_missing_count": int(control_outcome_counts.get("data_missing", 0)),
             "control_insufficient_evidence_count": int(control_outcome_counts.get("insufficient_evidence", 0)),
             "status_counts": dict(sorted(control_status_counts.items())),
+            "gap_classification_counts": control_gap_classification_summary,
             "controls_counted_toward_promotion": 0,
         },
         "audit_only_summary": {
             "audit_row_count": len(audit_results),
             "status_counts": dict(sorted(Counter(row["final_status"] for row in audit_results).items())),
+            "gap_classification_counts": audit_gap_classification_summary,
             "market_data_query_allowed": False,
             "market_data_query_policy": "audit_only_rows_do_not_execute_loaders",
         },
@@ -1472,6 +1593,17 @@ def render_markdown_report(report: dict[str, Any]) -> str:
         f"`{report.get('reproduced_public_replay_candidate_count')}`",
         "- Public status counts: "
         f"`{json.dumps(report.get('public_replay_candidate_summary', {}).get('status_counts', {}), sort_keys=True)}`",
+        "",
+        "## Gap classifications",
+        "",
+        "- All gap classifications: "
+        f"`{json.dumps(report.get('gap_classification_summary', {}), sort_keys=True)}`",
+        "- Public gap classifications: "
+        f"`{json.dumps(report.get('public_replay_candidate_summary', {}).get('gap_classification_counts', {}), sort_keys=True)}`",
+        "- Control gap classifications: "
+        f"`{json.dumps(control_summary.get('gap_classification_counts', {}), sort_keys=True)}`",
+        "- Audit-only gap classifications: "
+        f"`{json.dumps(report.get('audit_only_summary', {}).get('gap_classification_counts', {}), sort_keys=True)}`",
         "",
         "## Diagnostic controls",
         "",
@@ -1557,6 +1689,7 @@ def _fail_closed_result(
             "diagnostic_veto_reasons": [],
             "non_diagnostic_blockers": ["bounded_replay_validation_failed"],
         },
+        "gap_classification_summary": {},
         "control_summary": {
             "control_row_count": 0,
             "clean_control_count": 0,
@@ -1565,11 +1698,13 @@ def _fail_closed_result(
             "control_data_missing_count": 0,
             "control_insufficient_evidence_count": 0,
             "status_counts": {},
+            "gap_classification_counts": {},
             "controls_counted_toward_promotion": 0,
         },
         "audit_only_summary": {
             "audit_row_count": 0,
             "status_counts": {},
+            "gap_classification_counts": {},
             "market_data_query_allowed": False,
             "market_data_query_policy": "audit_only_rows_do_not_execute_loaders",
         },
