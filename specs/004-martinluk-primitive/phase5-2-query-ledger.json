@@ -31,6 +31,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-smci-null-2": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit null_date control",
+              "end": "2023-12-15",
+              "start": "2023-12-11"
+            },
+            "direction": "long",
+            "entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+            "row_id": "p5-control-smci-null-2",
+            "setup_type": "weekly_base_tight_risk_breakout",
+            "symbol": "SMCI"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q001-daily-smci",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -113,6 +142,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-smci-adjacent-1": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit adjacent before_window control",
+              "end": "2024-01-12",
+              "start": "2024-01-08"
+            },
+            "direction": "long",
+            "entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+            "row_id": "p5-control-smci-adjacent-1",
+            "setup_type": "weekly_base_tight_risk_breakout",
+            "symbol": "SMCI"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q002-daily-smci",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -195,6 +253,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-smci-null-1": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit null_ticker control",
+              "end": "2024-01-19",
+              "start": "2024-01-16"
+            },
+            "direction": "long",
+            "entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+            "row_id": "p5-control-smci-null-1",
+            "setup_type": "weekly_base_tight_risk_breakout",
+            "symbol": "QQQ"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q003-daily-qqq",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -277,6 +364,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-public-smci": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "public-date-reconstruction candidate window",
+              "end": "2024-01-19",
+              "start": "2024-01-16"
+            },
+            "direction": "long",
+            "entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+            "row_id": "p5-public-smci",
+            "setup_type": "weekly_base_tight_risk_breakout",
+            "symbol": "SMCI"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q004-daily-smci",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -359,6 +475,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-coin-null-2": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit null_date control",
+              "end": "2024-01-26",
+              "start": "2024-01-22"
+            },
+            "direction": "long",
+            "entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+            "row_id": "p5-control-coin-null-2",
+            "setup_type": "theme_linked_inside_day_prior_high",
+            "symbol": "COIN"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q005-daily-coin",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -441,6 +586,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-smci-adjacent-2": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit adjacent after_window control",
+              "end": "2024-01-26",
+              "start": "2024-01-22"
+            },
+            "direction": "long",
+            "entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+            "row_id": "p5-control-smci-adjacent-2",
+            "setup_type": "weekly_base_tight_risk_breakout",
+            "symbol": "SMCI"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q006-daily-smci",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -523,6 +697,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-coin-adjacent-1": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit adjacent before_window control",
+              "end": "2024-02-06",
+              "start": "2024-01-31"
+            },
+            "direction": "long",
+            "entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+            "row_id": "p5-control-coin-adjacent-1",
+            "setup_type": "theme_linked_inside_day_prior_high",
+            "symbol": "COIN"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q007-daily-coin",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -605,6 +808,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-public-coin": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "public-date-reconstruction candidate window",
+              "end": "2024-02-16",
+              "start": "2024-02-07"
+            },
+            "direction": "long",
+            "entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+            "row_id": "p5-public-coin",
+            "setup_type": "theme_linked_inside_day_prior_high",
+            "symbol": "COIN"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q008-daily-coin",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -687,6 +919,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-coin-null-1": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit null_ticker control",
+              "end": "2024-02-16",
+              "start": "2024-02-07"
+            },
+            "direction": "long",
+            "entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+            "row_id": "p5-control-coin-null-1",
+            "setup_type": "theme_linked_inside_day_prior_high",
+            "symbol": "QQQ"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q009-daily-qqq",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -769,6 +1030,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-coin-adjacent-2": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit adjacent after_window control",
+              "end": "2024-02-23",
+              "start": "2024-02-20"
+            },
+            "direction": "long",
+            "entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+            "row_id": "p5-control-coin-adjacent-2",
+            "setup_type": "theme_linked_inside_day_prior_high",
+            "symbol": "COIN"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q010-daily-coin",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -851,6 +1141,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-sofi-null-2": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit null_date control",
+              "end": "2024-09-27",
+              "start": "2024-09-23"
+            },
+            "direction": "long",
+            "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+            "row_id": "p5-control-sofi-null-2",
+            "setup_type": "leader_pullback_prior_day_high",
+            "symbol": "SOFI"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q011-daily-sofi",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -933,6 +1252,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-lmnd-null-2": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit null_date control",
+              "end": "2024-10-24",
+              "start": "2024-10-21"
+            },
+            "direction": "long",
+            "entry_trigger": "prior_day_high_or_inside_day_high_break",
+            "row_id": "p5-control-lmnd-null-2",
+            "setup_type": "high_tight_flag_inside_day",
+            "symbol": "LMND"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q012-daily-lmnd",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -1015,6 +1363,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-sofi-adjacent-1": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit adjacent before_window control",
+              "end": "2024-10-28",
+              "start": "2024-10-22"
+            },
+            "direction": "long",
+            "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+            "row_id": "p5-control-sofi-adjacent-1",
+            "setup_type": "leader_pullback_prior_day_high",
+            "symbol": "SOFI"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q013-daily-sofi",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -1097,6 +1474,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-sofi-null-1": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit null_ticker control",
+              "end": "2024-12-19",
+              "start": "2024-10-29"
+            },
+            "direction": "long",
+            "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+            "row_id": "p5-control-sofi-null-1",
+            "setup_type": "leader_pullback_prior_day_high",
+            "symbol": "QQQ"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q014-daily-qqq",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -1179,6 +1585,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-public-sofi": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "public-date-reconstruction candidate window",
+              "end": "2024-12-19",
+              "start": "2024-10-29"
+            },
+            "direction": "long",
+            "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+            "row_id": "p5-public-sofi",
+            "setup_type": "leader_pullback_prior_day_high",
+            "symbol": "SOFI"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q015-daily-sofi",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -1261,6 +1696,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-lmnd-adjacent-1": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit adjacent before_window control",
+              "end": "2024-11-14",
+              "start": "2024-11-11"
+            },
+            "direction": "long",
+            "entry_trigger": "prior_day_high_or_inside_day_high_break",
+            "row_id": "p5-control-lmnd-adjacent-1",
+            "setup_type": "high_tight_flag_inside_day",
+            "symbol": "LMND"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q016-daily-lmnd",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -1343,6 +1807,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-public-lmnd": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "public-date-reconstruction candidate window",
+              "end": "2024-11-21",
+              "start": "2024-11-18"
+            },
+            "direction": "long",
+            "entry_trigger": "prior_day_high_or_inside_day_high_break",
+            "row_id": "p5-public-lmnd",
+            "setup_type": "high_tight_flag_inside_day",
+            "symbol": "LMND"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q017-daily-lmnd",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -1425,6 +1918,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-lmnd-null-1": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit null_ticker control",
+              "end": "2024-11-21",
+              "start": "2024-11-18"
+            },
+            "direction": "long",
+            "entry_trigger": "prior_day_high_or_inside_day_high_break",
+            "row_id": "p5-control-lmnd-null-1",
+            "setup_type": "high_tight_flag_inside_day",
+            "symbol": "SPY"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q018-daily-spy",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -1507,6 +2029,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-lmnd-adjacent-2": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit adjacent after_window control",
+              "end": "2024-11-27",
+              "start": "2024-11-22"
+            },
+            "direction": "long",
+            "entry_trigger": "prior_day_high_or_inside_day_high_break",
+            "row_id": "p5-control-lmnd-adjacent-2",
+            "setup_type": "high_tight_flag_inside_day",
+            "symbol": "LMND"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q019-daily-lmnd",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -1589,6 +2140,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "load_daily_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-sofi-adjacent-2": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit adjacent after_window control",
+              "end": "2024-12-27",
+              "start": "2024-12-20"
+            },
+            "direction": "long",
+            "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+            "row_id": "p5-control-sofi-adjacent-2",
+            "setup_type": "leader_pullback_prior_day_high",
+            "symbol": "SOFI"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q020-daily-sofi",
       "raw_loader_scope": "date_only_daily_cache",
       "raw_to_effective_filter_proof": {
@@ -1671,6 +2251,45 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "query_minute_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-amc-null-2": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "generated signal series was positive inside allowed_window, but row-level replay requires a trace signal matching setup_type and entry_trigger",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit null_date control",
+              "end": "2024-04-30",
+              "start": "2024-04-29"
+            },
+            "direction": "long",
+            "entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+            "row_id": "p5-control-amc-null-2",
+            "setup_type": "opening_range_high_inside_day_reentry",
+            "symbol": "AMC"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 60,
+          "series_positive_dates_sample": [
+            "2024-04-29",
+            "2024-04-29",
+            "2024-04-29",
+            "2024-04-29",
+            "2024-04-29"
+          ],
+          "series_positive_ignored_reason": "row_setup_entry_trigger_requires_trace_match",
+          "series_positive_used": false,
+          "trace_rejection_reasons": {
+            "direction_mismatch": 1,
+            "entry_trigger_mismatch": 18,
+            "setup_type_mismatch": 18
+          },
+          "trace_signal_count": 18
+        }
+      },
       "query_id": "p5-1-q021-minute-amc",
       "raw_loader_scope": "symbol_date_minute_bars",
       "raw_to_effective_filter_proof": {
@@ -1693,7 +2312,7 @@
         "p5-control-amc-null-2"
       ],
       "signals_by_symbol": {
-        "AMC": true
+        "AMC": false
       },
       "symbols": [
         "AMC"
@@ -1733,6 +2352,40 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "query_minute_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-amc-adjacent-1": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit adjacent before_window control",
+              "end": "2024-05-10",
+              "start": "2024-05-09"
+            },
+            "direction": "long",
+            "entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+            "row_id": "p5-control-amc-adjacent-1",
+            "setup_type": "opening_range_high_inside_day_reentry",
+            "symbol": "AMC"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {
+            "date_window_mismatch": 10,
+            "direction_mismatch": 1,
+            "entry_trigger_mismatch": 10,
+            "setup_type_mismatch": 10
+          },
+          "trace_signal_count": 10
+        }
+      },
       "query_id": "p5-1-q022-minute-amc",
       "raw_loader_scope": "symbol_date_minute_bars",
       "raw_to_effective_filter_proof": {
@@ -1795,6 +2448,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "query_minute_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-public-amc": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "public-date-reconstruction candidate window; intraday replay would require minute bars",
+              "end": "2024-05-14",
+              "start": "2024-05-13"
+            },
+            "direction": "long",
+            "entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+            "row_id": "p5-public-amc",
+            "setup_type": "opening_range_high_inside_day_reentry",
+            "symbol": "AMC"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q023-minute-amc",
       "raw_loader_scope": "symbol_date_minute_bars",
       "raw_to_effective_filter_proof": {
@@ -1857,6 +2539,45 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "query_minute_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-amc-null-1": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "generated signal series was positive inside allowed_window, but row-level replay requires a trace signal matching setup_type and entry_trigger",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit null_ticker control",
+              "end": "2024-05-14",
+              "start": "2024-05-13"
+            },
+            "direction": "long",
+            "entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+            "row_id": "p5-control-amc-null-1",
+            "setup_type": "opening_range_high_inside_day_reentry",
+            "symbol": "SPY"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 317,
+          "series_positive_dates_sample": [
+            "2024-05-13",
+            "2024-05-13",
+            "2024-05-13",
+            "2024-05-13",
+            "2024-05-13"
+          ],
+          "series_positive_ignored_reason": "row_setup_entry_trigger_requires_trace_match",
+          "series_positive_used": false,
+          "trace_rejection_reasons": {
+            "direction_mismatch": 29,
+            "entry_trigger_mismatch": 80,
+            "setup_type_mismatch": 80
+          },
+          "trace_signal_count": 80
+        }
+      },
       "query_id": "p5-1-q024-minute-spy",
       "raw_loader_scope": "symbol_date_minute_bars",
       "raw_to_effective_filter_proof": {
@@ -1879,7 +2600,7 @@
         "p5-control-amc-null-1"
       ],
       "signals_by_symbol": {
-        "SPY": true
+        "SPY": false
       },
       "symbols": [
         "SPY"
@@ -1919,6 +2640,35 @@
       "loader_module": "data.duckdb_connector",
       "loader_name": "query_minute_data",
       "loader_status": "executed",
+      "match_provenance_by_row": {
+        "p5-control-amc-adjacent-2": {
+          "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+          "match_source": "none",
+          "matched": false,
+          "matched_signal_count": 0,
+          "matched_signal_ids": [],
+          "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+          "required": {
+            "allowed_window": {
+              "basis": "explicit adjacent after_window control",
+              "end": "2024-05-16",
+              "start": "2024-05-15"
+            },
+            "direction": "long",
+            "entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+            "row_id": "p5-control-amc-adjacent-2",
+            "setup_type": "opening_range_high_inside_day_reentry",
+            "symbol": "AMC"
+          },
+          "schema_version": "martinluk_phase5_2_match_provenance_v1",
+          "series_positive_count": 0,
+          "series_positive_dates_sample": [],
+          "series_positive_ignored_reason": null,
+          "series_positive_used": false,
+          "trace_rejection_reasons": {},
+          "trace_signal_count": 0
+        }
+      },
       "query_id": "p5-1-q025-minute-amc",
       "raw_loader_scope": "symbol_date_minute_bars",
       "raw_to_effective_filter_proof": {

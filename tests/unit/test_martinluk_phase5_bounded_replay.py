@@ -268,7 +268,17 @@ def test_phase5_2_signal_matching_uses_allowed_window_not_warmup(
             return {"AMC": pd.Series(values, index=frame.index)}
 
         def get_signal_trace(self) -> dict[str, Any]:
-            return {"signals": [{"symbol": "AMC", "direction": "long", "date": trace_date}]}
+            return {
+                "signals": [
+                    {
+                        "symbol": "AMC",
+                        "direction": "long",
+                        "date": trace_date,
+                        "setup_type": target_row["setup_type"],
+                        "entry_trigger": target_row["entry_trigger"],
+                    }
+                ]
+            }
 
     updated, outcomes, errors, loader_calls = phase5_1.execute_query_ledger(
         ledger,
@@ -282,6 +292,72 @@ def test_phase5_2_signal_matching_uses_allowed_window_not_warmup(
     assert loader_calls == 1
     assert updated["records"][0]["signals_by_symbol"] == {"AMC": expected_signal_present}
     assert outcomes["p5-control-amc-adjacent-1"]["signal_present"] is expected_signal_present
+    provenance = outcomes["p5-control-amc-adjacent-1"]["match_provenance"]
+    assert provenance["series_positive_count"] == int(expected_signal_present)
+    assert provenance["matched"] is expected_signal_present
+
+
+def test_phase5_2_specific_rows_ignore_series_only_matches_without_trace_metadata(
+    phase5_1: Any,
+    manifest: dict[str, Any],
+    request_payload: dict[str, Any],
+) -> None:
+    target_row = next(
+        row
+        for row in manifest["executable_rows"]
+        if row["row_id"] == "p5-control-amc-null-2"
+    )
+    manifest["executable_rows"] = [target_row]
+    ledger = phase5_1.build_query_plan(copy.deepcopy(manifest), copy.deepcopy(request_payload), MANIFEST_PATH)
+
+    class FakeLoaders:
+        def load_daily_data(self, *args: Any, **kwargs: Any) -> pd.DataFrame:  # pragma: no cover - not used
+            raise AssertionError("daily loader should not be called")
+
+        def query_minute_data(self, tickers: list[str], start_date: str, end_date: str) -> dict[str, pd.DataFrame]:
+            assert tickers == ["AMC"]
+            assert start_date == "2024-04-28"
+            assert end_date == "2024-04-30"
+            return {
+                "AMC": pd.DataFrame(
+                    {
+                        "ticker": ["AMC", "AMC"],
+                        "session_date": ["2024-04-29", "2024-04-30"],
+                        "open": [3.3, 3.4],
+                        "high": [3.4, 3.5],
+                        "low": [3.2, 3.3],
+                        "close": [3.35, 3.45],
+                        "volume": [1000, 1000],
+                    }
+                )
+            }
+
+    class SeriesOnlyStrategy:
+        def generate_signals(self, frames: dict[str, pd.DataFrame]) -> dict[str, pd.Series]:
+            frame = frames["AMC"]
+            return {"AMC": pd.Series([1.0, 0.0], index=frame.index)}
+
+        def get_signal_trace(self) -> dict[str, Any]:
+            return {"signals": []}
+
+    updated, outcomes, errors, loader_calls = phase5_1.execute_query_ledger(
+        ledger,
+        manifest,
+        request_payload,
+        loaders=FakeLoaders(),
+        strategy_cls=SeriesOnlyStrategy,
+    )
+
+    assert errors == []
+    assert loader_calls == 1
+    assert updated["records"][0]["signals_by_symbol"] == {"AMC": False}
+    outcome = outcomes["p5-control-amc-null-2"]
+    assert outcome["signal_present"] is False
+    provenance = outcome["match_provenance"]
+    assert provenance["matched"] is False
+    assert provenance["series_positive_count"] == 1
+    assert provenance["series_positive_used"] is False
+    assert provenance["series_positive_ignored_reason"] == "row_setup_entry_trigger_requires_trace_match"
 
 
 def test_phase5_1_rejects_existing_phase5_output_paths_without_overwrite(

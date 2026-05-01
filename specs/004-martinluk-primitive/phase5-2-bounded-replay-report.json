@@ -85,19 +85,15 @@
     }
   ],
   "control_summary": {
-    "clean_control_count": 18,
+    "clean_control_count": 20,
     "control_data_missing_count": 0,
     "control_insufficient_evidence_count": 0,
     "control_row_count": 20,
     "controls_counted_toward_promotion": 0,
-    "false_positive_control_count": 2,
-    "false_positive_control_row_ids": [
-      "p5-control-amc-null-1",
-      "p5-control-amc-null-2"
-    ],
+    "false_positive_control_count": 0,
+    "false_positive_control_row_ids": [],
     "status_counts": {
-      "not_reproduced": 18,
-      "reproduced": 2
+      "not_reproduced": 20
     }
   },
   "controls_counted_toward_promotion": 0,
@@ -111,16 +107,11 @@
     "query_ledger_record_count": 25
   },
   "diagnostic_promotion_veto": {
-    "active": true,
+    "active": false,
     "controls_counted_toward_promotion": 0,
-    "false_positive_control_count": 2,
-    "false_positive_control_row_ids": [
-      "p5-control-amc-null-1",
-      "p5-control-amc-null-2"
-    ],
-    "reasons": [
-      "false_positive_controls_present"
-    ]
+    "false_positive_control_count": 0,
+    "false_positive_control_row_ids": [],
+    "reasons": []
   },
   "execution_mode": "bounded_replay",
   "no_overclaim_statement": "Phase 5.1 is a bounded row-level replay of the frozen Phase 5 public candidate/control manifest. It is research-only unless all public replay candidate gates are separately satisfied. It is not a broad backtest, not profit proof, not Martin Luk realized P&L, not private-account replication, and not exact-fill replication. Realized entry, exit, size, fees, slippage, and account P&L remain N/A unless a later primary-fill evidence phase explicitly upgrades the evidence contract.",
@@ -132,14 +123,9 @@
   "promotion_evaluation": {
     "controls_counted_toward_promotion": 0,
     "counted_row_kind": "public_replay_candidate",
-    "diagnostic_veto_reasons": [
-      "false_positive_controls_present"
-    ],
-    "false_positive_control_count": 2,
-    "false_positive_control_row_ids": [
-      "p5-control-amc-null-1",
-      "p5-control-amc-null-2"
-    ],
+    "diagnostic_veto_reasons": [],
+    "false_positive_control_count": 0,
+    "false_positive_control_row_ids": [],
     "non_diagnostic_blockers": [
       "public_replay_candidate_reproduction_below_threshold"
     ],
@@ -156,7 +142,7 @@
     }
   },
   "query_ledger_path": "specs/004-martinluk-primitive/phase5-2-query-ledger.json",
-  "query_ledger_sha256": "ab4314ea10e22a8b52086d365e4882daf53f3baa31152cb8b8e56ab2b9ca3a87",
+  "query_ledger_sha256": "cc17d954561f8ac9a65df09a1cbc7c96e3adfc7763eb0f56d127f0aad6baf422",
   "realized_outcome_fields": {
     "fees": "N/A",
     "realized_account_pnl": "N/A",
@@ -195,6 +181,33 @@
       "final_status": "insufficient_evidence",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "public-date-reconstruction candidate window",
+            "end": "2024-12-19",
+            "start": "2024-10-29"
+          },
+          "direction": "long",
+          "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+          "row_id": "p5-public-sofi",
+          "setup_type": "leader_pullback_prior_day_high",
+          "symbol": "SOFI"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "exact date",
         "entry fill",
@@ -231,6 +244,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit adjacent before_window control",
+            "end": "2024-10-28",
+            "start": "2024-10-22"
+          },
+          "direction": "long",
+          "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+          "row_id": "p5-control-sofi-adjacent-1",
+          "setup_type": "leader_pullback_prior_day_high",
+          "symbol": "SOFI"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "exact date",
         "entry fill",
@@ -267,6 +307,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit adjacent after_window control",
+            "end": "2024-12-27",
+            "start": "2024-12-20"
+          },
+          "direction": "long",
+          "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+          "row_id": "p5-control-sofi-adjacent-2",
+          "setup_type": "leader_pullback_prior_day_high",
+          "symbol": "SOFI"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "exact date",
         "entry fill",
@@ -303,6 +370,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit null_ticker control",
+            "end": "2024-12-19",
+            "start": "2024-10-29"
+          },
+          "direction": "long",
+          "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+          "row_id": "p5-control-sofi-null-1",
+          "setup_type": "leader_pullback_prior_day_high",
+          "symbol": "QQQ"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "control row has no public fill evidence",
         "dry-run market data not queried"
@@ -336,6 +430,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit null_date control",
+            "end": "2024-09-27",
+            "start": "2024-09-23"
+          },
+          "direction": "long",
+          "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+          "row_id": "p5-control-sofi-null-2",
+          "setup_type": "leader_pullback_prior_day_high",
+          "symbol": "SOFI"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "control row has no public fill evidence",
         "dry-run market data not queried"
@@ -368,6 +489,33 @@
       "final_status": "insufficient_evidence",
       "loader_status": "executed",
       "market_granularity": "minute",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "public-date-reconstruction candidate window; intraday replay would require minute bars",
+            "end": "2024-05-14",
+            "start": "2024-05-13"
+          },
+          "direction": "long",
+          "entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+          "row_id": "p5-public-amc",
+          "setup_type": "opening_range_high_inside_day_reentry",
+          "symbol": "AMC"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "exact first attempt timestamp",
         "re-entry timestamp",
@@ -403,6 +551,38 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "minute",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit adjacent before_window control",
+            "end": "2024-05-10",
+            "start": "2024-05-09"
+          },
+          "direction": "long",
+          "entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+          "row_id": "p5-control-amc-adjacent-1",
+          "setup_type": "opening_range_high_inside_day_reentry",
+          "symbol": "AMC"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {
+          "date_window_mismatch": 10,
+          "direction_mismatch": 1,
+          "entry_trigger_mismatch": 10,
+          "setup_type_mismatch": 10
+        },
+        "trace_signal_count": 10
+      },
       "missing_fields": [
         "exact first attempt timestamp",
         "re-entry timestamp",
@@ -438,6 +618,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "minute",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit adjacent after_window control",
+            "end": "2024-05-16",
+            "start": "2024-05-15"
+          },
+          "direction": "long",
+          "entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+          "row_id": "p5-control-amc-adjacent-2",
+          "setup_type": "opening_range_high_inside_day_reentry",
+          "symbol": "AMC"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "exact first attempt timestamp",
         "re-entry timestamp",
@@ -467,12 +674,49 @@
         "start": "2024-05-13"
       },
       "case_id": "MLUK-AMC-ORH-REENTRY-002-NULL-1",
-      "control_outcome": "false_positive_control",
+      "control_outcome": "clean_control",
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
-      "final_status": "reproduced",
+      "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "minute",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "generated signal series was positive inside allowed_window, but row-level replay requires a trace signal matching setup_type and entry_trigger",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit null_ticker control",
+            "end": "2024-05-14",
+            "start": "2024-05-13"
+          },
+          "direction": "long",
+          "entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+          "row_id": "p5-control-amc-null-1",
+          "setup_type": "opening_range_high_inside_day_reentry",
+          "symbol": "SPY"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 317,
+        "series_positive_dates_sample": [
+          "2024-05-13",
+          "2024-05-13",
+          "2024-05-13",
+          "2024-05-13",
+          "2024-05-13"
+        ],
+        "series_positive_ignored_reason": "row_setup_entry_trigger_requires_trace_match",
+        "series_positive_used": false,
+        "trace_rejection_reasons": {
+          "direction_mismatch": 29,
+          "entry_trigger_mismatch": 80,
+          "setup_type_mismatch": 80
+        },
+        "trace_signal_count": 80
+      },
       "missing_fields": [
         "control row has no public fill evidence",
         "dry-run market data not queried"
@@ -487,10 +731,10 @@
         "realized_position_size": "N/A",
         "slippage": "N/A"
       },
-      "reason": "matching primitive signal appeared in a diagnostic control window; not promotion evidence",
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
       "row_id": "p5-control-amc-null-1",
       "row_kind": "null_control_window",
-      "signal_present": true,
+      "signal_present": false,
       "symbol": "SPY"
     },
     {
@@ -500,12 +744,49 @@
         "start": "2024-04-29"
       },
       "case_id": "MLUK-AMC-ORH-REENTRY-002-NULL-2",
-      "control_outcome": "false_positive_control",
+      "control_outcome": "clean_control",
       "direction": "long",
       "evidence_class": "replayable_window_candidate",
-      "final_status": "reproduced",
+      "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "minute",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "generated signal series was positive inside allowed_window, but row-level replay requires a trace signal matching setup_type and entry_trigger",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit null_date control",
+            "end": "2024-04-30",
+            "start": "2024-04-29"
+          },
+          "direction": "long",
+          "entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+          "row_id": "p5-control-amc-null-2",
+          "setup_type": "opening_range_high_inside_day_reentry",
+          "symbol": "AMC"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 60,
+        "series_positive_dates_sample": [
+          "2024-04-29",
+          "2024-04-29",
+          "2024-04-29",
+          "2024-04-29",
+          "2024-04-29"
+        ],
+        "series_positive_ignored_reason": "row_setup_entry_trigger_requires_trace_match",
+        "series_positive_used": false,
+        "trace_rejection_reasons": {
+          "direction_mismatch": 1,
+          "entry_trigger_mismatch": 18,
+          "setup_type_mismatch": 18
+        },
+        "trace_signal_count": 18
+      },
       "missing_fields": [
         "control row has no public fill evidence",
         "dry-run market data not queried"
@@ -520,10 +801,10 @@
         "realized_position_size": "N/A",
         "slippage": "N/A"
       },
-      "reason": "matching primitive signal appeared in a diagnostic control window; not promotion evidence",
+      "reason": "no matching primitive signal appeared in the diagnostic control window",
       "row_id": "p5-control-amc-null-2",
       "row_kind": "null_control_window",
-      "signal_present": true,
+      "signal_present": false,
       "symbol": "AMC"
     },
     {
@@ -538,6 +819,33 @@
       "final_status": "insufficient_evidence",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "public-date-reconstruction candidate window",
+            "end": "2024-02-16",
+            "start": "2024-02-07"
+          },
+          "direction": "long",
+          "entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+          "row_id": "p5-public-coin",
+          "setup_type": "theme_linked_inside_day_prior_high",
+          "symbol": "COIN"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "exact BTC context timestamp",
         "entry/exit fills",
@@ -572,6 +880,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit adjacent before_window control",
+            "end": "2024-02-06",
+            "start": "2024-01-31"
+          },
+          "direction": "long",
+          "entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+          "row_id": "p5-control-coin-adjacent-1",
+          "setup_type": "theme_linked_inside_day_prior_high",
+          "symbol": "COIN"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "exact BTC context timestamp",
         "entry/exit fills",
@@ -606,6 +941,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit adjacent after_window control",
+            "end": "2024-02-23",
+            "start": "2024-02-20"
+          },
+          "direction": "long",
+          "entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+          "row_id": "p5-control-coin-adjacent-2",
+          "setup_type": "theme_linked_inside_day_prior_high",
+          "symbol": "COIN"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "exact BTC context timestamp",
         "entry/exit fills",
@@ -640,6 +1002,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit null_ticker control",
+            "end": "2024-02-16",
+            "start": "2024-02-07"
+          },
+          "direction": "long",
+          "entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+          "row_id": "p5-control-coin-null-1",
+          "setup_type": "theme_linked_inside_day_prior_high",
+          "symbol": "QQQ"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "control row has no public fill evidence",
         "dry-run market data not queried"
@@ -673,6 +1062,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit null_date control",
+            "end": "2024-01-26",
+            "start": "2024-01-22"
+          },
+          "direction": "long",
+          "entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+          "row_id": "p5-control-coin-null-2",
+          "setup_type": "theme_linked_inside_day_prior_high",
+          "symbol": "COIN"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "control row has no public fill evidence",
         "dry-run market data not queried"
@@ -705,6 +1121,33 @@
       "final_status": "insufficient_evidence",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "public-date-reconstruction candidate window",
+            "end": "2024-11-21",
+            "start": "2024-11-18"
+          },
+          "direction": "long",
+          "entry_trigger": "prior_day_high_or_inside_day_high_break",
+          "row_id": "p5-public-lmnd",
+          "setup_type": "high_tight_flag_inside_day",
+          "symbol": "LMND"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "exact split-adjusted prices",
         "partial size",
@@ -739,6 +1182,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit adjacent before_window control",
+            "end": "2024-11-14",
+            "start": "2024-11-11"
+          },
+          "direction": "long",
+          "entry_trigger": "prior_day_high_or_inside_day_high_break",
+          "row_id": "p5-control-lmnd-adjacent-1",
+          "setup_type": "high_tight_flag_inside_day",
+          "symbol": "LMND"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "exact split-adjusted prices",
         "partial size",
@@ -773,6 +1243,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit adjacent after_window control",
+            "end": "2024-11-27",
+            "start": "2024-11-22"
+          },
+          "direction": "long",
+          "entry_trigger": "prior_day_high_or_inside_day_high_break",
+          "row_id": "p5-control-lmnd-adjacent-2",
+          "setup_type": "high_tight_flag_inside_day",
+          "symbol": "LMND"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "exact split-adjusted prices",
         "partial size",
@@ -807,6 +1304,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit null_ticker control",
+            "end": "2024-11-21",
+            "start": "2024-11-18"
+          },
+          "direction": "long",
+          "entry_trigger": "prior_day_high_or_inside_day_high_break",
+          "row_id": "p5-control-lmnd-null-1",
+          "setup_type": "high_tight_flag_inside_day",
+          "symbol": "SPY"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "control row has no public fill evidence",
         "dry-run market data not queried"
@@ -840,6 +1364,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit null_date control",
+            "end": "2024-10-24",
+            "start": "2024-10-21"
+          },
+          "direction": "long",
+          "entry_trigger": "prior_day_high_or_inside_day_high_break",
+          "row_id": "p5-control-lmnd-null-2",
+          "setup_type": "high_tight_flag_inside_day",
+          "symbol": "LMND"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "control row has no public fill evidence",
         "dry-run market data not queried"
@@ -872,6 +1423,33 @@
       "final_status": "insufficient_evidence",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "public-date-reconstruction candidate window",
+            "end": "2024-01-19",
+            "start": "2024-01-16"
+          },
+          "direction": "long",
+          "entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+          "row_id": "p5-public-smci",
+          "setup_type": "weekly_base_tight_risk_breakout",
+          "symbol": "SMCI"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "exact date",
         "actual premature exit",
@@ -906,6 +1484,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit adjacent before_window control",
+            "end": "2024-01-12",
+            "start": "2024-01-08"
+          },
+          "direction": "long",
+          "entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+          "row_id": "p5-control-smci-adjacent-1",
+          "setup_type": "weekly_base_tight_risk_breakout",
+          "symbol": "SMCI"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "exact date",
         "actual premature exit",
@@ -940,6 +1545,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit adjacent after_window control",
+            "end": "2024-01-26",
+            "start": "2024-01-22"
+          },
+          "direction": "long",
+          "entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+          "row_id": "p5-control-smci-adjacent-2",
+          "setup_type": "weekly_base_tight_risk_breakout",
+          "symbol": "SMCI"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "exact date",
         "actual premature exit",
@@ -974,6 +1606,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit null_ticker control",
+            "end": "2024-01-19",
+            "start": "2024-01-16"
+          },
+          "direction": "long",
+          "entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+          "row_id": "p5-control-smci-null-1",
+          "setup_type": "weekly_base_tight_risk_breakout",
+          "symbol": "QQQ"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "control row has no public fill evidence",
         "dry-run market data not queried"
@@ -1007,6 +1666,33 @@
       "final_status": "not_reproduced",
       "loader_status": "executed",
       "market_granularity": "daily",
+      "match_provenance": {
+        "match_scope": "row_symbol_direction_setup_entry_trigger_allowed_window",
+        "match_source": "none",
+        "matched": false,
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "reason": "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window",
+        "required": {
+          "allowed_window": {
+            "basis": "explicit null_date control",
+            "end": "2023-12-15",
+            "start": "2023-12-11"
+          },
+          "direction": "long",
+          "entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+          "row_id": "p5-control-smci-null-2",
+          "setup_type": "weekly_base_tight_risk_breakout",
+          "symbol": "SMCI"
+        },
+        "schema_version": "martinluk_phase5_2_match_provenance_v1",
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_ignored_reason": null,
+        "series_positive_used": false,
+        "trace_rejection_reasons": {},
+        "trace_signal_count": 0
+      },
       "missing_fields": [
         "control row has no public fill evidence",
         "dry-run market data not queried"
@@ -1031,7 +1717,7 @@
   "run_id": "martinluk_phase5_1_bounded_replay_v1",
   "runner_path": "specs/004-martinluk-primitive/run_phase5_bounded_replay.py",
   "runtime_path": "specs/004-martinluk-primitive/phase5-2-runtime.json",
-  "runtime_sha256": "4aec98b9a31a53df1ca6a6f0e4569734fd62027ad71ab8e5206bd40e0c191e51",
+  "runtime_sha256": "cb3977c50adf16ec118de3df78d6724aeda97fdc809fa22d082e88b41da16974",
   "schema_version": "martinluk_phase5_2_bounded_replay_report_v1",
   "validation": {
     "errors": [],

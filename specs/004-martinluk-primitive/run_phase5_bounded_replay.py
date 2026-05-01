@@ -30,6 +30,8 @@ REQUEST_SCHEMA_VERSION = "martinluk_phase5_1_replay_request_v1"
 QUERY_LEDGER_SCHEMA_VERSION = "martinluk_phase5_1_query_ledger_v1"
 RUNTIME_SCHEMA_VERSION = "martinluk_phase5_1_runtime_v1"
 REPORT_SCHEMA_VERSION = "martinluk_phase5_2_bounded_replay_report_v1"
+MATCH_PROVENANCE_SCHEMA_VERSION = "martinluk_phase5_2_match_provenance_v1"
+MATCH_SCOPE = "row_symbol_direction_setup_entry_trigger_allowed_window"
 
 PHASE5_MANIFEST_REL = "specs/004-martinluk-primitive/phase5-replay-manifest.json"
 RUNNER_REL = "specs/004-martinluk-primitive/run_phase5_bounded_replay.py"
@@ -83,6 +85,7 @@ CONTROL_OUTCOME_TO_FINAL_STATUS = {
     "data_missing": "data_missing",
     "insufficient_evidence": "insufficient_evidence",
 }
+DATA_MISSING_STATUSES = {"missing", "unavailable", "not_available"}
 FORBIDDEN_BROAD_REQUEST_KEYS = {
     "universe",
     "dynamic_universe",
@@ -668,6 +671,17 @@ def _series_has_direction_in_date_window(
     start: dt.date,
     end: dt.date,
 ) -> bool:
+    return bool(_series_direction_dates_in_date_window(series, frame, direction, start, end))
+
+
+def _series_direction_dates_in_date_window(
+    series: Any,
+    frame: Any,
+    direction: str,
+    start: dt.date,
+    end: dt.date,
+) -> list[str]:
+    matched_dates: list[str] = []
     for fallback_position, (index, value) in enumerate(_iter_signal_items(series)):
         try:
             numeric = float(value)
@@ -682,8 +696,8 @@ def _series_has_direction_in_date_window(
             continue
         row_date = _frame_row_date(frame, position)
         if row_date is not None and start <= row_date <= end:
-            return True
-    return False
+            matched_dates.append(row_date.isoformat())
+    return matched_dates
 
 
 def _signals_by_symbol(signals: Any, symbols: list[str], direction: str) -> dict[str, bool]:
@@ -765,6 +779,186 @@ def _trace_signal_by_symbol_in_date_window(
     return result
 
 
+def _signal_data_status(signal: dict[str, Any]) -> str:
+    if signal.get("data_available") is False:
+        return "missing"
+    return str(signal.get("data_status", "")).lower()
+
+
+def _signal_ref(signal: dict[str, Any], index: int) -> str:
+    return str(signal.get("signal_id") or signal.get("id") or f"trace_signal_{index}")
+
+
+def _trace_signals(trace: Any) -> list[dict[str, Any]]:
+    if not isinstance(trace, dict):
+        return []
+    return [signal for signal in _as_list(trace.get("signals")) if isinstance(signal, dict)]
+
+
+def _row_match_required_fields(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "row_id": row.get("row_id"),
+        "symbol": row.get("symbol"),
+        "direction": row.get("direction"),
+        "setup_type": row.get("setup_type"),
+        "entry_trigger": row.get("entry_trigger"),
+        "allowed_window": row.get("allowed_window"),
+    }
+
+
+def _empty_match_provenance(
+    row: dict[str, Any],
+    *,
+    matched: bool = False,
+    match_source: str = "none",
+    reason: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "schema_version": MATCH_PROVENANCE_SCHEMA_VERSION,
+        "match_scope": MATCH_SCOPE,
+        "matched": matched,
+        "match_source": match_source,
+        "required": _row_match_required_fields(row),
+        "matched_signal_count": 0,
+        "matched_signal_ids": [],
+        "trace_signal_count": 0,
+        "trace_rejection_reasons": {},
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_used": False,
+        "series_positive_ignored_reason": None,
+        "reason": reason,
+    }
+
+
+def _trace_match_provenance(
+    trace: Any,
+    row: dict[str, Any],
+    start: dt.date,
+    end: dt.date,
+) -> dict[str, Any]:
+    symbol = str(row.get("symbol"))
+    direction = str(row.get("direction"))
+    setup_type = str(row.get("setup_type"))
+    entry_trigger = str(row.get("entry_trigger"))
+    matched_signal_ids: list[str] = []
+    rejection_reasons: Counter[str] = Counter()
+    signals = _trace_signals(trace)
+
+    for index, signal in enumerate(signals):
+        reasons: list[str] = []
+        signal_date = _coerce_date(signal.get("date") or signal.get("session_date"))
+        if str(signal.get("symbol")) != symbol:
+            reasons.append("symbol_mismatch")
+        if str(signal.get("direction")) != direction:
+            reasons.append("direction_mismatch")
+        if str(signal.get("setup_type")) != setup_type:
+            reasons.append("setup_type_mismatch")
+        if str(signal.get("entry_trigger")) != entry_trigger:
+            reasons.append("entry_trigger_mismatch")
+        if signal_date is None or not (start <= signal_date <= end):
+            reasons.append("date_window_mismatch")
+        if _signal_data_status(signal) in DATA_MISSING_STATUSES:
+            reasons.append("data_missing_status")
+
+        if reasons:
+            rejection_reasons.update(reasons)
+            continue
+        matched_signal_ids.append(_signal_ref(signal, index))
+
+    matched = bool(matched_signal_ids)
+    return {
+        "schema_version": MATCH_PROVENANCE_SCHEMA_VERSION,
+        "match_scope": MATCH_SCOPE,
+        "matched": matched,
+        "match_source": "signal_trace" if matched else "none",
+        "required": _row_match_required_fields(row),
+        "matched_signal_count": len(matched_signal_ids),
+        "matched_signal_ids": matched_signal_ids,
+        "trace_signal_count": len(signals),
+        "trace_rejection_reasons": dict(sorted(rejection_reasons.items())),
+        "series_positive_count": 0,
+        "series_positive_dates_sample": [],
+        "series_positive_used": False,
+        "series_positive_ignored_reason": None,
+        "reason": (
+            "matched trace signal with row symbol, direction, setup_type, entry_trigger, and allowed_window"
+            if matched
+            else "no trace signal matched row symbol, direction, setup_type, entry_trigger, and allowed_window"
+        ),
+    }
+
+
+def _series_dates_by_symbol_in_date_window(
+    signals: Any,
+    frames: dict[str, Any],
+    symbols: list[str],
+    direction: str,
+    start: dt.date,
+    end: dt.date,
+) -> dict[str, list[str]]:
+    if isinstance(signals, dict):
+        return {
+            symbol: _series_direction_dates_in_date_window(
+                signals.get(symbol),
+                frames.get(symbol),
+                direction,
+                start,
+                end,
+            )
+            for symbol in symbols
+        }
+    if len(symbols) == 1:
+        symbol = symbols[0]
+        return {
+            symbol: _series_direction_dates_in_date_window(
+                signals,
+                frames.get(symbol),
+                direction,
+                start,
+                end,
+            )
+        }
+    return {symbol: [] for symbol in symbols}
+
+
+def _row_requires_trace_metadata(row: dict[str, Any]) -> bool:
+    return bool(row.get("setup_type") or row.get("entry_trigger"))
+
+
+def _apply_series_provenance(
+    provenance: dict[str, Any],
+    series_dates: list[str],
+    *,
+    trace_required: bool,
+) -> dict[str, Any]:
+    series_positive_count = len(series_dates)
+    provenance["series_positive_count"] = series_positive_count
+    provenance["series_positive_dates_sample"] = series_dates[:5]
+    if not series_positive_count:
+        return provenance
+    if trace_required and not provenance["matched"]:
+        provenance["series_positive_ignored_reason"] = (
+            "row_setup_entry_trigger_requires_trace_match"
+        )
+        provenance["reason"] = (
+            "generated signal series was positive inside allowed_window, but row-level replay requires "
+            "a trace signal matching setup_type and entry_trigger"
+        )
+    elif provenance["trace_signal_count"] == 0:
+        provenance["matched"] = True
+        provenance["match_source"] = "generated_signal_series"
+        provenance["series_positive_used"] = True
+        provenance["reason"] = (
+            "matched generated signal series inside allowed_window; no trace signals were available"
+        )
+    elif not provenance["matched"]:
+        provenance["series_positive_ignored_reason"] = (
+            "trace_present_requires_setup_entry_trigger_match"
+        )
+    return provenance
+
+
 def _merge_signal_maps(primary: dict[str, bool], secondary: dict[str, bool]) -> dict[str, bool]:
     symbols = set(primary) | set(secondary)
     return {symbol: bool(primary.get(symbol) or secondary.get(symbol)) for symbol in symbols}
@@ -773,22 +967,50 @@ def _merge_signal_maps(primary: dict[str, bool], secondary: dict[str, bool]) -> 
 def _execute_strategy(
     strategy_cls: Any,
     frames: dict[str, Any],
-    direction: str,
-    allowed_window: Any | None = None,
-) -> dict[str, bool]:
+    row: dict[str, Any],
+    symbols: list[str],
+) -> tuple[dict[str, bool], dict[str, dict[str, Any]]]:
     strategy = strategy_cls()
     signals = strategy.generate_signals(frames)
     trace = strategy.get_signal_trace() if hasattr(strategy, "get_signal_trace") else {}
-    symbols = list(frames)
-    window = _allowed_window_dates(allowed_window)
+    direction = str(row.get("direction", "long"))
+    window = _allowed_window_dates(row.get("allowed_window"))
     if window is None:
         series_map = _signals_by_symbol(signals, symbols, direction)
         trace_map = _trace_signal_by_symbol(trace, symbols, direction)
-    else:
-        start, end = window
-        series_map = _signals_by_symbol_in_date_window(signals, frames, symbols, direction, start, end)
-        trace_map = _trace_signal_by_symbol_in_date_window(trace, symbols, direction, start, end)
-    return _merge_signal_maps(series_map, trace_map)
+        signal_map = _merge_signal_maps(series_map, trace_map)
+        provenance_by_symbol = {
+            symbol: _empty_match_provenance(
+                row,
+                matched=bool(signal_map.get(symbol)),
+                match_source="legacy_symbol_direction_match" if signal_map.get(symbol) else "none",
+                reason="allowed_window unavailable; fell back to symbol/direction matching",
+            )
+            for symbol in symbols
+        }
+        return signal_map, provenance_by_symbol
+
+    start, end = window
+    series_dates_by_symbol = _series_dates_by_symbol_in_date_window(
+        signals,
+        frames,
+        symbols,
+        direction,
+        start,
+        end,
+    )
+    trace_provenance = _trace_match_provenance(trace, row, start, end)
+    signal_map: dict[str, bool] = {}
+    provenance_by_symbol: dict[str, dict[str, Any]] = {}
+    for symbol in symbols:
+        provenance = _apply_series_provenance(
+            dict(trace_provenance),
+            series_dates_by_symbol.get(symbol, []),
+            trace_required=_row_requires_trace_metadata(row),
+        )
+        signal_map[symbol] = bool(provenance["matched"])
+        provenance_by_symbol[symbol] = provenance
+    return signal_map, provenance_by_symbol
 
 
 def _execute_strategy_for_rows(
@@ -797,17 +1019,22 @@ def _execute_strategy_for_rows(
     row_ids: list[str],
     row_by_id: dict[str, dict[str, Any]],
     symbols: list[str],
-) -> tuple[dict[str, bool], dict[str, dict[str, bool]]]:
+) -> tuple[dict[str, bool], dict[str, dict[str, bool]], dict[str, dict[str, Any]]]:
     aggregate = {symbol: False for symbol in symbols}
     by_row: dict[str, dict[str, bool]] = {}
+    provenance_by_row: dict[str, dict[str, Any]] = {}
     for row_id in row_ids:
         row = row_by_id.get(row_id, {})
-        direction = str(row.get("direction", "long"))
-        row_map = _execute_strategy(strategy_cls, frames, direction, row.get("allowed_window"))
+        row_map, row_provenance = _execute_strategy(strategy_cls, frames, row, symbols)
         by_row[row_id] = row_map
+        row_symbol = str(row.get("symbol"))
+        provenance_by_row[row_id] = row_provenance.get(
+            row_symbol,
+            _empty_match_provenance(row, reason="row symbol missing from strategy output"),
+        )
         for symbol, signal_present in row_map.items():
             aggregate[symbol] = bool(aggregate.get(symbol) or signal_present)
-    return aggregate, by_row
+    return aggregate, by_row, provenance_by_row
 
 
 def execute_query_ledger(
@@ -841,6 +1068,7 @@ def execute_query_ledger(
         start = str(record.get("date_window_start"))
         end = str(record.get("date_window_end"))
         signal_maps_by_row: dict[str, dict[str, bool]] = {}
+        match_provenance_by_row: dict[str, dict[str, Any]] = {}
 
         record["executed"] = True
         loader_call_count += 1
@@ -868,7 +1096,7 @@ def execute_query_ledger(
                     signal_map = {symbol: False for symbol in symbols}
                 else:
                     frames = _frames_by_symbol(filtered, symbols)
-                    signal_map, signal_maps_by_row = _execute_strategy_for_rows(
+                    signal_map, signal_maps_by_row, match_provenance_by_row = _execute_strategy_for_rows(
                         strategy_cls,
                         frames,
                         row_ids,
@@ -909,7 +1137,7 @@ def execute_query_ledger(
                     record["data_missing_reason"] = "minute loader returned no bars for: " + ", ".join(missing)
                     signal_map = {symbol: False for symbol in symbols}
                 else:
-                    signal_map, signal_maps_by_row = _execute_strategy_for_rows(
+                    signal_map, signal_maps_by_row, match_provenance_by_row = _execute_strategy_for_rows(
                         strategy_cls,
                         frames,
                         row_ids,
@@ -933,6 +1161,7 @@ def execute_query_ledger(
                 signal_map = {symbol: False for symbol in symbols}
 
         record["signals_by_symbol"] = signal_map
+        record["match_provenance_by_row"] = match_provenance_by_row
         for row_id in row_ids:
             row = row_by_id.get(row_id, {})
             symbol = str(row.get("symbol"))
@@ -942,6 +1171,10 @@ def execute_query_ledger(
                 "loader_status": record.get("loader_status"),
                 "data_missing_reason": record.get("data_missing_reason"),
                 "signal_present": bool(row_signal_map.get(symbol)),
+                "match_provenance": match_provenance_by_row.get(
+                    row_id,
+                    _empty_match_provenance(row, reason="strategy was not executed for this row"),
+                ),
             }
 
     return query_ledger, row_outcomes, fail_closed_errors, loader_call_count
@@ -958,9 +1191,19 @@ def _control_interpretation_blocked(row: dict[str, Any]) -> bool:
 def _executable_row_result(row: dict[str, Any], query_outcome: dict[str, Any] | None) -> dict[str, Any]:
     query_outcome = query_outcome or {}
     row_kind = str(row.get("row_kind"))
-    signal_present = bool(query_outcome.get("signal_present"))
     loader_status = str(query_outcome.get("loader_status") or "skipped_fail_closed")
     data_missing_reason = query_outcome.get("data_missing_reason")
+    match_provenance = query_outcome.get("match_provenance")
+    if not isinstance(match_provenance, dict):
+        signal_present = bool(query_outcome.get("signal_present"))
+        match_provenance = _empty_match_provenance(
+            row,
+            matched=signal_present,
+            match_source="legacy_row_outcome" if signal_present else "none",
+            reason="row outcome did not include Phase 5.2 match provenance",
+        )
+    else:
+        signal_present = bool(match_provenance.get("matched"))
 
     control_outcome: str | None = None
     if loader_status == "data_missing":
@@ -1012,6 +1255,7 @@ def _executable_row_result(row: dict[str, Any], query_outcome: dict[str, Any] | 
         "query_id": query_outcome.get("query_id"),
         "loader_status": loader_status,
         "signal_present": signal_present,
+        "match_provenance": match_provenance,
         "missing_fields": row.get("missing_fields", []),
         "realized_outcome": realized_outcome_na(),
         "reason": reason,
