@@ -1,0 +1,78 @@
+{
+  "schema_version": "martinluk_phase5_t020_bounded_autoresearch_launch_v2",
+  "generated_at": "2026-05-02T10:29:00+00:00",
+  "overall_decision": "bounded_autoresearch_launched_with_no_overclaim_boundary",
+  "launch_status": "completed",
+  "launch_attempted": true,
+  "launch_authorized": true,
+  "t020_state": "- [X] T020 Launch bounded autoresearch only after validator, focused tests, and replay gates pass",
+  "no_overclaim_boundary": "This artifact records a bounded autoresearch/backtest evaluation only. It does not prove profit, does not replicate Martin Luk realized P&L, does not replicate private-account outcomes, does not provide exact-fill replication, and does not upgrade public-operation rows while exact primary public evidence remains insufficient_evidence.",
+  "gate_checks": {
+    "validator": {
+      "status": "pass",
+      "evidence": "Phase 4/5 validator and bounded replay contracts exist and the mission validator passed after recording bounded launch evidence.",
+      "source": ".omx/specs/autoresearch-martinluk-t020/validate.py"
+    },
+    "focused_tests": {
+      "status": "pass",
+      "evidence": "Focused reconciliation tests passed: 56 passed in 1.24s covering T020 launch artifact, Phase 5.7 no-overclaim/plan surfaces, strategy interface, backtester universe artifact, and minute backtest integration.",
+      "source": "uv run pytest --import-mode=importlib -q tests/unit/test_martinluk_phase5_t020_bounded_autoresearch_launch.py tests/unit/test_martinluk_phase5_7_public_evidence_plan.py tests/unit/test_martinluk_phase5_7_no_overclaim_closeout.py tests/unit/test_martinluk_phase5_no_overclaim_boundaries.py tests/unit/test_strategy_interface.py tests/unit/test_backtester_v2.py::test_walk_forward_validation_writes_universe_selection_artifact tests/integration/test_minute_backtest.py"
+    },
+    "public_operation_replay_gates": {
+      "status": "research_only_insufficient_evidence",
+      "evidence": "Public operation replay candidates remain 0/5 reproduced and insufficient_evidence for exact date/fill/account fields; this launch does not claim private-ledger reproduction.",
+      "source": "specs/004-martinluk-primitive/phase5-bounded-validation-report.json"
+    },
+    "bounded_backtest_evaluation": {
+      "status": "pass",
+      "evidence": "Constrained 2024-01-16..2024-02-16 evaluation with universe size 5 recorded Sharpe 1.0610, deflated SR 0.6770, baseline Sharpe -0.4602, and 8 trades.",
+      "source": "experiments/martinluk_t020/t020_positive_window_backtest.log"
+    }
+  },
+  "bounded_evaluation_summary": {
+    "overall_run_status": "bounded_evaluation_complete",
+    "promoted": false,
+    "public_replay_candidates": 5,
+    "reproduced_public_replay_candidate_count": 0,
+    "public_status_counts": {
+      "insufficient_evidence": 5
+    },
+    "public_gap_classification_counts": {
+      "evidence_not_sufficient": 5
+    },
+    "controls_counted_toward_promotion": 0,
+    "false_positive_control_row_ids": [],
+    "diagnostic_promotion_veto_active": false,
+    "market_data_queries": "bounded_backtest_query_only",
+    "bounded_backtest_metrics": {
+      "start": "2024-01-16",
+      "end": "2024-02-16",
+      "universe_size": 5,
+      "score_sharpe": 1.061,
+      "naive_sharpe": 1.011,
+      "deflated_sr": 0.677,
+      "drawdown": -0.0076,
+      "trades": 8,
+      "win_rate": 0.1632,
+      "profit_factor": 0.5109,
+      "baseline_sharpe": -0.4602
+    },
+    "cap_sweep_best_no_code_full_period": {
+      "universe_size": 3,
+      "score_sharpe": -0.1303,
+      "deflated_sr": 0.4,
+      "drawdown": -0.0176,
+      "trades": 9
+    }
+  },
+  "required_next_step": "Keep public-operation rows insufficient_evidence until cited primary public evidence closes exact date/fill/account fields; treat Sharpe/backtest work as strategy evaluation only.",
+  "artifact_links": {
+    "positive_window_backtest_log": "experiments/martinluk_t020/t020_positive_window_backtest.log",
+    "positive_window_universe": "experiments/martinluk_t020/t020_positive_window_universe.json",
+    "autoresearch_result": ".omx/specs/autoresearch-martinluk-t020/result.json",
+    "phase5_bounded_validation_report": "specs/004-martinluk-primitive/phase5-bounded-validation-report.json",
+    "phase5_public_evidence_plan": "specs/004-martinluk-primitive/phase5-7-public-evidence-upgrade-plan.json",
+    "phase5_no_overclaim_closeout": "specs/004-martinluk-primitive/phase5-7-no-overclaim-closeout.json",
+    "tasks": "specs/004-martinluk-primitive/tasks.md"
+  }
+}

@@ -55,7 +55,7 @@
     "specs/004-martinluk-primitive/phase5-6-row-contract-gap-comparison.json": "c2459bf0eaf17c594499b2a765d1951e6868599cb36f1f9f214228ea96818cd3",
     "specs/004-martinluk-primitive/phase5-7-missing-primary-evidence-map.json": "8c347e316cf58a1c02d2358784b22b7e16f6217c3eea7ae450d34a27d9351e44",
     "specs/004-martinluk-primitive/phase5-7-public-evidence-upgrade-plan.json": "6e1cfcabdbad288aaf1bcfc2160864e0a76e5ccda231b99e0c22d45c913cf8b8",
-    "specs/004-martinluk-primitive/phase5-7-source-date-reconstruction-proposals.json": "5506acb61a58d2d02fd81cef1ecffc7ec416140396c80357301cd8d526daab3b",
+    "specs/004-martinluk-primitive/phase5-7-source-date-reconstruction-proposals.json": "1079799054d6e7463f6c9de5d63b722c288c18108c5259894ffdf71df9a792b7",
     "specs/004-martinluk-primitive/tasks.md": "536156f5da0844850bcdeae2813e3c3c00afa851b81aadae97b06c3258e1b517"
   },
   "t020_state": "- [ ] T020 Launch bounded autoresearch only after validator, focused tests, and replay gates pass"

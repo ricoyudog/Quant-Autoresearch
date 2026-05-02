@@ -7,6 +7,13 @@
         {
           "detail": "transcript idx 459-467 describes SOFI move from about 7 to 11/12, three-day pullback near 9 EMA, prior-day-high entry, day-low stop, 6R trim, and exit below 9 EMA into December",
           "source_id": "lilys_traderlion_2024_transcript"
+        },
+        {
+          "date": "2024-10-29",
+          "detail": "SEC EX-99.1 Q3 2024 earnings release reports SOFI net revenue of $697M, net income of $61M, 30% adjusted net revenue growth, and FY24 guidance raised; use as public catalyst/date context for the reconstructed SOFI window only, not as exact operation-date, fill, trim, exit, or account-equity proof.",
+          "source_id": "sofi_sec_q3_2024_earnings_release",
+          "title": "SoFi Technologies Reports Net Revenue of $697 Million and Net Income of $61 Million for Q3 2024",
+          "url": "https://www.sec.gov/Archives/edgar/data/1818874/000181887424000229/q32024earningsrelease.htm"
         }
       ],
       "current_source_ids": [
@@ -41,6 +48,13 @@
         {
           "detail": "transcript idx 443-458 describes AMC, a first 5m ORH stopout, inside-day/range re-entry, roughly 3.22% stop, 170% move from entry, 100% premarket strength, and 9.50/10 area resistance trim",
           "source_id": "lilys_traderlion_2024_transcript"
+        },
+        {
+          "date": "2024-05-13",
+          "detail": "SEC/issuer-hosted Form 8-K for AMC has period of report May 13, 2024 and confirms AMC Class A common stock trades on NYSE under ticker AMC; use as public date/symbol context around the meme-run window only, not as first-attempt timestamp, re-entry timestamp, stop-adjustment, exit, or fill proof.",
+          "source_id": "amc_sec_2024_05_13_8k",
+          "title": "AMC Entertainment Holdings, Inc. Form 8-K, period of report May 13, 2024",
+          "url": "https://investor.amctheatres.com/sec-filings/all-sec-filings/content/0001104659-24-060813/tm2412799d2_8k.htm"
         }
       ],
       "current_source_ids": [
@@ -78,6 +92,13 @@
         {
           "detail": "secondary article corroborates a COIN trade with entry around 117, 2% stop, and about 20R/40% gain; used only as corroboration",
           "source_id": "financialwisdom_martin_luk_strategy"
+        },
+        {
+          "date": "2024-02-15",
+          "detail": "SEC EX-99.1 Q4/FY2023 shareholder letter reports Coinbase Q4 transaction revenue surged 83% quarter-over-quarter to $529M, tied to higher volatility and crypto asset prices, and discusses Bitcoin ETF participation; use as public crypto-theme catalyst context only, not as BTC-context timestamp, COIN fill, exit, or position-size proof.",
+          "source_id": "coin_sec_q4_2023_shareholder_letter",
+          "title": "Coinbase Fourth Quarter and Full-Year 2023 Shareholder Letter",
+          "url": "https://www.sec.gov/Archives/edgar/data/1679788/000167978824000019/shareholderletterq42023.htm"
         }
       ],
       "current_source_ids": [
@@ -118,10 +139,18 @@
         {
           "detail": "transcript idx 514-530 describes Lemonade high-tight flag, repeated inside days, prior-day-high breakout, 2.5%-3% stop, 8R partial, and volume-driven strength exit",
           "source_id": "lilys_traderlion_2024_transcript"
+        },
+        {
+          "date": "2025-05-06",
+          "detail": "SEC EX-99.1 Shareholder Letter Q1 2025 reports strong Q1 results with 27% in-force premium growth, reiterates FY 2025 guidance, and raises full-year expectations for revenue and GEP; use as public catalyst context only, not as exact fill proof.",
+          "source_id": "lmnd_sec_q1_2025_shareholder_letter",
+          "title": "Shareholder Letter Q1 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/1691421/000169142125000062/lmndshareholderletterq12.htm"
         }
       ],
       "current_source_ids": [
-        "lilys_traderlion_2024_transcript"
+        "lilys_traderlion_2024_transcript",
+        "lmnd_sec_q1_2025_shareholder_letter"
       ],
       "existing_source_ledger_entries": [
         {
@@ -150,10 +179,18 @@
         {
           "detail": "transcript idx 312-336 describes SMCI, watchlist from December 2023, six-month weekly base from August, tight January 2024 candles after failed December breakouts, nonoptimal entry, and preferred prior-day-high breakout",
           "source_id": "lilys_traderlion_2024_transcript"
+        },
+        {
+          "date": "2025-02-11",
+          "detail": "SEC EX-99.1 Supermicro Announces Second Quarter Fiscal Year 2025 Preliminary Financial Information reports preliminary Q2 FY2025 results, updates FY2025 revenue guidance from $26B-$30B to $23.5B-$25B, and discloses DOJ/SEC subpoenas and related litigation; use as public catalyst context only, not as exact fill proof.",
+          "source_id": "smci_sec_q2_fy2025_preliminary_press_release",
+          "title": "Supermicro Announces Second Quarter Fiscal Year 2025 Preliminary Financial Information",
+          "url": "https://www.sec.gov/Archives/edgar/data/1375365/000137536525000001/q225pressrelease.htm"
         }
       ],
       "current_source_ids": [
-        "lilys_traderlion_2024_transcript"
+        "lilys_traderlion_2024_transcript",
+        "smci_sec_q2_fy2025_preliminary_press_release"
       ],
       "existing_source_ledger_entries": [
         {
@@ -176,10 +213,69 @@
       "symbol": "SMCI"
     }
   ],
+  "public_source_near_evidence_probe": [
+    {
+      "symbol": "SOFI",
+      "source_title": "SoFi Reports First Quarter 2026 with Record Net Revenue of $1.1 Billion, Record Member and Product Growth, Net Income of $167 Million",
+      "source_date": "2026-04-29",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1818874/000181887426000020/a2026q1earningsrelease.htm",
+      "supported_fields": [
+        "symbol",
+        "public catalyst/setup",
+        "event/date_window",
+        "source citation"
+      ],
+      "missing_fields_status": "insufficient_evidence",
+      "missing_fields": [
+        "exact date",
+        "entry fill",
+        "partial fill",
+        "final exit fill",
+        "account equity"
+      ]
+    },
+    {
+      "symbol": "AMC",
+      "source_title": "AMC Entertainment Holdings, Inc. Reports Fourth Quarter and Full Year 2025 Results",
+      "source_date": "2026-02-23",
+      "source_url": "https://investor.amctheatres.com/sec-filings/all-sec-filings/content/0001411579-26-000018/amc-20260223xex99d1.htm",
+      "supported_fields": [
+        "symbol",
+        "public catalyst/setup",
+        "event/date_window",
+        "source citation"
+      ],
+      "missing_fields_status": "insufficient_evidence",
+      "missing_fields": [
+        "exact first attempt timestamp",
+        "re-entry timestamp",
+        "stop adjustment timestamps",
+        "all exits"
+      ]
+    },
+    {
+      "symbol": "COIN",
+      "source_title": "Coinbase Delivers on Q4 Financial Outlook, Doubles Total Trading Volume and Crypto Trading Volume Market Share in 2025",
+      "source_date": "2026-02-12",
+      "source_url": "https://investor.coinbase.com/news/news-details/2026/Coinbase-Delivers-on-Q4-Financial-Outlook-Doubles-Total-Trading-Volume-and-Crypto-Trading-Volume-Market-Share-in-2025/default.aspx",
+      "supported_fields": [
+        "symbol",
+        "public catalyst/setup",
+        "event/date_window",
+        "source citation"
+      ],
+      "missing_fields_status": "insufficient_evidence",
+      "missing_fields": [
+        "exact BTC context timestamp",
+        "entry/exit fills",
+        "position size"
+      ]
+    }
+  ],
   "control_gap_policy": "The 20 Phase 5.6 gap rows are controls; do not add source-ledger/public-date-reconstruction entries for them unless future cited public evidence proves the row itself is a public operation.",
   "direct_public_date_reconstruction_updates": [],
   "direct_source_ledger_updates": [],
-  "generated_at": "2026-05-02T03:31:00+00:00",
+  "generated_at": "2026-05-02T10:09:40+00:00",
   "no_overclaim_boundary": "No source-ledger or public-date-reconstruction field is upgraded by this artifact. Existing cited sources remain candidate-window evidence only; exact dates, timestamps, fills, exits, sizes, and account context remain insufficient_evidence until new cited public primary evidence is added.",
   "overall_decision": "proposal_only_no_source_ledger_or_public_date_reconstruction_update",
   "proposal_policy": {
@@ -196,5 +292,91 @@
     "specs/004-martinluk-primitive/public-operation-cases.json": "793017d0e66d96f8de4d429b4a3cf005792dd16f0cf23adecac8c3f96b08c3c3",
     "specs/004-martinluk-primitive/source-ledger.json": "55919c835ba3467f9534206aeb4650752dbd95a5bf04f0bf23118cace824839a"
   },
-  "t020_state": "- [ ] T020 Launch bounded autoresearch only after validator, focused tests, and replay gates pass"
+  "t020_state": "- [ ] T020 Launch bounded autoresearch only after validator, focused tests, and replay gates pass",
+  "bounded_t020_source_near_search": {
+    "generated_at": "2026-05-02T10:09:40+00:00",
+    "scope": "Task 2 proposal-only source-near evidence update for SOFI, AMC, COIN, LMND, and SMCI after Task 1 public-source probe.",
+    "decision": "proposal_only_keep_source_ledger_and_public_date_reconstruction_unchanged",
+    "no_overclaim_boundary": "The added source-near citations support public symbol/date/catalyst context only. They do not close exact operation dates, timestamps, fills, exits, sizes, account equity, realized P&L, or private-account replication; each affected candidate remains insufficient_evidence until those exact fields are cited directly.",
+    "cited_sources_added_to_proposals_only": [
+      {
+        "row_id": "p5-public-amc",
+        "symbol": "AMC",
+        "source_id": "amc_sec_2024_05_13_8k",
+        "title": "AMC Entertainment Holdings, Inc. Form 8-K, period of report May 13, 2024",
+        "date": "2024-05-13",
+        "url": "https://investor.amctheatres.com/sec-filings/all-sec-filings/content/0001104659-24-060813/tm2412799d2_8k.htm",
+        "supports": "public/source-near symbol-date-catalyst context only",
+        "still_missing": [
+          "exact first attempt timestamp",
+          "re-entry timestamp",
+          "stop adjustment timestamps",
+          "all exits"
+        ],
+        "canonical_update": "none_exact_operation_fields_remain_insufficient_evidence"
+      },
+      {
+        "row_id": "p5-public-coin",
+        "symbol": "COIN",
+        "source_id": "coin_sec_q4_2023_shareholder_letter",
+        "title": "Coinbase Fourth Quarter and Full-Year 2023 Shareholder Letter",
+        "date": "2024-02-15",
+        "url": "https://www.sec.gov/Archives/edgar/data/1679788/000167978824000019/shareholderletterq42023.htm",
+        "supports": "public/source-near symbol-date-catalyst context only",
+        "still_missing": [
+          "exact BTC context timestamp",
+          "entry/exit fills",
+          "position size"
+        ],
+        "canonical_update": "none_exact_operation_fields_remain_insufficient_evidence"
+      },
+      {
+        "row_id": "p5-public-lmnd",
+        "symbol": "LMND",
+        "source_id": "lmnd_sec_q1_2025_shareholder_letter",
+        "title": "Shareholder Letter Q1 2025",
+        "date": "2025-05-06",
+        "url": "https://www.sec.gov/Archives/edgar/data/1691421/000169142125000062/lmndshareholderletterq12.htm",
+        "supports": "public/source-near symbol-date-catalyst context only",
+        "still_missing": [
+          "exact split-adjusted prices",
+          "partial size",
+          "volume climax timestamp"
+        ],
+        "canonical_update": "none_exact_operation_fields_remain_insufficient_evidence"
+      },
+      {
+        "row_id": "p5-public-smci",
+        "symbol": "SMCI",
+        "source_id": "smci_sec_q2_fy2025_preliminary_press_release",
+        "title": "Supermicro Announces Second Quarter Fiscal Year 2025 Preliminary Financial Information",
+        "date": "2025-02-11",
+        "url": "https://www.sec.gov/Archives/edgar/data/1375365/000137536525000001/q225pressrelease.htm",
+        "supports": "public/source-near symbol-date-catalyst context only",
+        "still_missing": [
+          "exact date",
+          "actual premature exit",
+          "would-have-held benchmark"
+        ],
+        "canonical_update": "none_exact_operation_fields_remain_insufficient_evidence"
+      },
+      {
+        "row_id": "p5-public-sofi",
+        "symbol": "SOFI",
+        "source_id": "sofi_sec_q3_2024_earnings_release",
+        "title": "SoFi Technologies Reports Net Revenue of $697 Million and Net Income of $61 Million for Q3 2024",
+        "date": "2024-10-29",
+        "url": "https://www.sec.gov/Archives/edgar/data/1818874/000181887424000229/q32024earningsrelease.htm",
+        "supports": "public/source-near symbol-date-catalyst context only",
+        "still_missing": [
+          "exact date",
+          "entry fill",
+          "partial fill",
+          "final exit fill",
+          "account equity"
+        ],
+        "canonical_update": "none_exact_operation_fields_remain_insufficient_evidence"
+      }
+    ]
+  }
 }

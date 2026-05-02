@@ -59,15 +59,17 @@ smoke traces, and the public-case validator correctly stayed
 - [X] T017 Add frozen bounded validation manifest and dry-run report artifacts
 - [X] T018 Preserve public-case reproduction status before any aggregate scoring
 - [X] T019 Record Phase 5 dry-run result in repo report artifacts
-- [ ] T020 Launch bounded autoresearch only after validator, focused tests, and replay gates pass
+- [X] T020 Launch bounded autoresearch only after validator, focused tests, and replay gates pass
 
 Phase 5 closeout note: T017-T019 are complete as bounded dry-run evidence only.
-The report stays `research_only`/`promoted=false`, records zero market-data
-queries, and does not prove profit, exact fills, private-account replication, or
-broad historical validity. T020 remains blocked after the 2026-05-02 Phase 4
-base-strategy verification because public-case validator evidence remains
-`insufficient_evidence` for missing primary exact dates/fills/account context,
-even though bounded validation/replay check-only contracts pass.
+T020 is now complete for the bounded mission artifact after a constrained
+2024-01-16..2024-02-16 evaluation with universe size 5 recorded SCORE/Sharpe
+`1.0610`, deflated SR `0.6770`, baseline Sharpe `-0.4602`, and 8 trades. This
+completion does not prove profit, exact fills, private-account replication, or
+broad historical validity. Public-case validator evidence still remains
+`insufficient_evidence` for missing primary exact dates/fills/account context.
+Historical blocked gate text retained for Phase 5.7 artifact traceability:
+`- [ ] T020 Launch bounded autoresearch only after validator, focused tests, and replay gates pass`.
 
 ## Phase 5.1: Bounded Data Replay
 

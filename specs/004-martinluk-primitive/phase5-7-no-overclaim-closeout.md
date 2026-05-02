@@ -32,7 +32,7 @@ Phase 5.7 artifacts are evidence-mapping and proposal artifacts only. They do no
 
 - `specs/004-martinluk-primitive/phase5-7-public-evidence-upgrade-plan.json` SHA-256 `6e1cfcabdbad288aaf1bcfc2160864e0a76e5ccda231b99e0c22d45c913cf8b8`
 - `specs/004-martinluk-primitive/phase5-7-missing-primary-evidence-map.json` SHA-256 `8c347e316cf58a1c02d2358784b22b7e16f6217c3eea7ae450d34a27d9351e44`
-- `specs/004-martinluk-primitive/phase5-7-source-date-reconstruction-proposals.json` SHA-256 `5506acb61a58d2d02fd81cef1ecffc7ec416140396c80357301cd8d526daab3b`
+- `specs/004-martinluk-primitive/phase5-7-source-date-reconstruction-proposals.json` SHA-256 `1079799054d6e7463f6c9de5d63b722c288c18108c5259894ffdf71df9a792b7`
 - `specs/004-martinluk-primitive/phase5-2-bounded-replay-report.json` SHA-256 `ae4586d1071630b60b6ae004bf111880cf0af28bb07eea61ef9556f46ea75297`
 - `specs/004-martinluk-primitive/phase5-6-evidence-gap-classification-packet.json` SHA-256 `8075db5d7943a50f0281a10c966f813564f40210b7f226e200068b2db4377aff`
 - `specs/004-martinluk-primitive/phase5-6-row-contract-gap-comparison.json` SHA-256 `c2459bf0eaf17c594499b2a765d1951e6868599cb36f1f9f214228ea96818cd3`
