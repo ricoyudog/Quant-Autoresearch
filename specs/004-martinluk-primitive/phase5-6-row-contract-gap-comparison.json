@@ -1,0 +1,888 @@
+{
+  "active_strategy_trace_contract": {
+    "long_trace_labels": {
+      "case_id_pattern": "PHASE4-{ticker}-ORH",
+      "entry_trigger": "opening_range_high_breakout",
+      "line_ranges": [
+        "210-230",
+        "249-269"
+      ],
+      "setup_type": "leader_pullback_orh"
+    },
+    "path": "src/strategies/active_strategy.py",
+    "public_row_contracts_not_currently_emitted": [
+      [
+        "high_tight_flag_inside_day",
+        "prior_day_high_or_inside_day_high_break"
+      ],
+      [
+        "leader_pullback_prior_day_high",
+        "break_or_reclaim_above_prior_day_high_after_pullback"
+      ],
+      [
+        "opening_range_high_inside_day_reentry",
+        "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt"
+      ],
+      [
+        "theme_linked_inside_day_prior_high",
+        "inside_day_high_or_prior_high_break_or_low_of_day_reclaim"
+      ],
+      [
+        "weekly_base_tight_risk_breakout",
+        "base_breakout_or_tight_intraday_continuation_trigger"
+      ]
+    ],
+    "schema_version": "martinluk_public_signal_trace_v1",
+    "short_trace_labels": {
+      "case_id_pattern": "V1-{ticker}-SHORT",
+      "entry_trigger": "resistance_rejection_breakdown",
+      "line_ranges": [
+        "297-317",
+        "336-355"
+      ],
+      "setup_type": "declining_ema_avwap_bounce_short"
+    }
+  },
+  "contract_consistency": {
+    "control_row_count": 20,
+    "manifest_row_count": 25,
+    "match_required_fields_align_with_manifest": true,
+    "mismatches": [],
+    "public_row_count": 5,
+    "report_row_count": 25
+  },
+  "decision": {
+    "eligible_trace_label_patch_rows": [],
+    "patch_active_strategy_trace_labels": false,
+    "reason": "No row has both an already-emitted public-case primitive and primary public evidence for exact setup_type/entry_trigger/timestamp semantics. Existing trace_label_missing rows are diagnostic controls with generic ORH/series activity, not source-supported AMC re-entry trace labels.",
+    "recommended_next_step": "keep Phase 5.2 report classifications unchanged; use this artifact as bounded evidence for any future primitive-specific implementation or test slice"
+  },
+  "gap_classification_summary": {
+    "evidence_not_sufficient": 8,
+    "primitive_not_emitted": 17,
+    "trace_label_missing": 3
+  },
+  "generated_at": "2026-05-02T02:37:31Z",
+  "inputs": {
+    "active_strategy": {
+      "path": "src/strategies/active_strategy.py",
+      "sha256": "4116d921eb060fbe7b19ba3c625317aa8464a51e9ced8435a15b19d61c6cf705"
+    },
+    "phase5_2_report": {
+      "path": "specs/004-martinluk-primitive/phase5-2-bounded-replay-report.json",
+      "sha256": "ae4586d1071630b60b6ae004bf111880cf0af28bb07eea61ef9556f46ea75297"
+    },
+    "phase5_manifest": {
+      "path": "specs/004-martinluk-primitive/phase5-replay-manifest.json",
+      "sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725"
+    },
+    "public_date_reconstruction": {
+      "path": "specs/004-martinluk-primitive/public-date-reconstruction.md",
+      "sha256": "a6c652e9a6963d261287dfdb3f4b78091fcbcf03b5b56ecf70a0525d41f96150"
+    },
+    "public_operation_cases": {
+      "path": "specs/004-martinluk-primitive/public-operation-cases.json",
+      "sha256": "793017d0e66d96f8de4d429b4a3cf005792dd16f0cf23adecac8c3f96b08c3c3"
+    },
+    "source_ledger": {
+      "path": "specs/004-martinluk-primitive/source-ledger.json",
+      "sha256": "55919c835ba3467f9534206aeb4650752dbd95a5bf04f0bf23118cace824839a"
+    }
+  },
+  "no_overclaim_boundary": "Phase 5.1 is a bounded row-level replay of the frozen Phase 5 public candidate/control manifest. It is research-only unless all public replay candidate gates are separately satisfied. It is not a broad backtest, not profit proof, not Martin Luk realized P&L, not private-account replication, and not exact-fill replication. Realized entry, exit, size, fees, slippage, and account P&L remain N/A unless a later primary-fill evidence phase explicitly upgrades the evidence contract.",
+  "primitive_not_emitted_grouped_by_parent_case": {
+    "MLUK-AMC-ORH-REENTRY-002": {
+      "count": 1,
+      "row_ids": [
+        "p5-control-amc-adjacent-2"
+      ]
+    },
+    "MLUK-COIN-BTC-INSIDEDAY-003": {
+      "count": 4,
+      "row_ids": [
+        "p5-control-coin-adjacent-1",
+        "p5-control-coin-adjacent-2",
+        "p5-control-coin-null-1",
+        "p5-control-coin-null-2"
+      ]
+    },
+    "MLUK-LMND-HIGHTIGHTFLAG-004": {
+      "count": 4,
+      "row_ids": [
+        "p5-control-lmnd-adjacent-1",
+        "p5-control-lmnd-adjacent-2",
+        "p5-control-lmnd-null-1",
+        "p5-control-lmnd-null-2"
+      ]
+    },
+    "MLUK-SMCI-WEEKLYBASE-005": {
+      "count": 4,
+      "row_ids": [
+        "p5-control-smci-adjacent-1",
+        "p5-control-smci-adjacent-2",
+        "p5-control-smci-null-1",
+        "p5-control-smci-null-2"
+      ]
+    },
+    "MLUK-SOFI-PULLBACK-PDH-001": {
+      "count": 4,
+      "row_ids": [
+        "p5-control-sofi-adjacent-1",
+        "p5-control-sofi-adjacent-2",
+        "p5-control-sofi-null-1",
+        "p5-control-sofi-null-2"
+      ]
+    }
+  },
+  "primitive_not_emitted_rows": [
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent before_window control",
+        "end": "2024-10-28",
+        "start": "2024-10-22"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "before_window",
+      "parent_case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit adjacent before_window control",
+          "end": "2024-10-28",
+          "start": "2024-10-22"
+        },
+        "direction": "long",
+        "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+        "row_id": "p5-control-sofi-adjacent-1",
+        "setup_type": "leader_pullback_prior_day_high",
+        "symbol": "SOFI"
+      },
+      "row_id": "p5-control-sofi-adjacent-1",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "symbol": "SOFI",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent after_window control",
+        "end": "2024-12-27",
+        "start": "2024-12-20"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "after_window",
+      "parent_case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit adjacent after_window control",
+          "end": "2024-12-27",
+          "start": "2024-12-20"
+        },
+        "direction": "long",
+        "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+        "row_id": "p5-control-sofi-adjacent-2",
+        "setup_type": "leader_pullback_prior_day_high",
+        "symbol": "SOFI"
+      },
+      "row_id": "p5-control-sofi-adjacent-2",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "symbol": "SOFI",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_ticker control",
+        "end": "2024-12-19",
+        "start": "2024-10-29"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "null_ticker",
+      "parent_case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit null_ticker control",
+          "end": "2024-12-19",
+          "start": "2024-10-29"
+        },
+        "direction": "long",
+        "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+        "row_id": "p5-control-sofi-null-1",
+        "setup_type": "leader_pullback_prior_day_high",
+        "symbol": "QQQ"
+      },
+      "row_id": "p5-control-sofi-null-1",
+      "row_kind": "null_control_window",
+      "series_positive_count": 0,
+      "symbol": "QQQ",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_date control",
+        "end": "2024-09-27",
+        "start": "2024-09-23"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "null_date",
+      "parent_case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit null_date control",
+          "end": "2024-09-27",
+          "start": "2024-09-23"
+        },
+        "direction": "long",
+        "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+        "row_id": "p5-control-sofi-null-2",
+        "setup_type": "leader_pullback_prior_day_high",
+        "symbol": "SOFI"
+      },
+      "row_id": "p5-control-sofi-null-2",
+      "row_kind": "null_control_window",
+      "series_positive_count": 0,
+      "symbol": "SOFI",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent after_window control",
+        "end": "2024-05-16",
+        "start": "2024-05-15"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "after_window",
+      "parent_case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit adjacent after_window control",
+          "end": "2024-05-16",
+          "start": "2024-05-15"
+        },
+        "direction": "long",
+        "entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+        "row_id": "p5-control-amc-adjacent-2",
+        "setup_type": "opening_range_high_inside_day_reentry",
+        "symbol": "AMC"
+      },
+      "row_id": "p5-control-amc-adjacent-2",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "symbol": "AMC",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent before_window control",
+        "end": "2024-02-06",
+        "start": "2024-01-31"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "before_window",
+      "parent_case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit adjacent before_window control",
+          "end": "2024-02-06",
+          "start": "2024-01-31"
+        },
+        "direction": "long",
+        "entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+        "row_id": "p5-control-coin-adjacent-1",
+        "setup_type": "theme_linked_inside_day_prior_high",
+        "symbol": "COIN"
+      },
+      "row_id": "p5-control-coin-adjacent-1",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "symbol": "COIN",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent after_window control",
+        "end": "2024-02-23",
+        "start": "2024-02-20"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "after_window",
+      "parent_case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit adjacent after_window control",
+          "end": "2024-02-23",
+          "start": "2024-02-20"
+        },
+        "direction": "long",
+        "entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+        "row_id": "p5-control-coin-adjacent-2",
+        "setup_type": "theme_linked_inside_day_prior_high",
+        "symbol": "COIN"
+      },
+      "row_id": "p5-control-coin-adjacent-2",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "symbol": "COIN",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_ticker control",
+        "end": "2024-02-16",
+        "start": "2024-02-07"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "null_ticker",
+      "parent_case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit null_ticker control",
+          "end": "2024-02-16",
+          "start": "2024-02-07"
+        },
+        "direction": "long",
+        "entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+        "row_id": "p5-control-coin-null-1",
+        "setup_type": "theme_linked_inside_day_prior_high",
+        "symbol": "QQQ"
+      },
+      "row_id": "p5-control-coin-null-1",
+      "row_kind": "null_control_window",
+      "series_positive_count": 0,
+      "symbol": "QQQ",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_date control",
+        "end": "2024-01-26",
+        "start": "2024-01-22"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "null_date",
+      "parent_case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit null_date control",
+          "end": "2024-01-26",
+          "start": "2024-01-22"
+        },
+        "direction": "long",
+        "entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+        "row_id": "p5-control-coin-null-2",
+        "setup_type": "theme_linked_inside_day_prior_high",
+        "symbol": "COIN"
+      },
+      "row_id": "p5-control-coin-null-2",
+      "row_kind": "null_control_window",
+      "series_positive_count": 0,
+      "symbol": "COIN",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent before_window control",
+        "end": "2024-11-14",
+        "start": "2024-11-11"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "before_window",
+      "parent_case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit adjacent before_window control",
+          "end": "2024-11-14",
+          "start": "2024-11-11"
+        },
+        "direction": "long",
+        "entry_trigger": "prior_day_high_or_inside_day_high_break",
+        "row_id": "p5-control-lmnd-adjacent-1",
+        "setup_type": "high_tight_flag_inside_day",
+        "symbol": "LMND"
+      },
+      "row_id": "p5-control-lmnd-adjacent-1",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "symbol": "LMND",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent after_window control",
+        "end": "2024-11-27",
+        "start": "2024-11-22"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "after_window",
+      "parent_case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit adjacent after_window control",
+          "end": "2024-11-27",
+          "start": "2024-11-22"
+        },
+        "direction": "long",
+        "entry_trigger": "prior_day_high_or_inside_day_high_break",
+        "row_id": "p5-control-lmnd-adjacent-2",
+        "setup_type": "high_tight_flag_inside_day",
+        "symbol": "LMND"
+      },
+      "row_id": "p5-control-lmnd-adjacent-2",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "symbol": "LMND",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_ticker control",
+        "end": "2024-11-21",
+        "start": "2024-11-18"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "null_ticker",
+      "parent_case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit null_ticker control",
+          "end": "2024-11-21",
+          "start": "2024-11-18"
+        },
+        "direction": "long",
+        "entry_trigger": "prior_day_high_or_inside_day_high_break",
+        "row_id": "p5-control-lmnd-null-1",
+        "setup_type": "high_tight_flag_inside_day",
+        "symbol": "SPY"
+      },
+      "row_id": "p5-control-lmnd-null-1",
+      "row_kind": "null_control_window",
+      "series_positive_count": 0,
+      "symbol": "SPY",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_date control",
+        "end": "2024-10-24",
+        "start": "2024-10-21"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "null_date",
+      "parent_case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit null_date control",
+          "end": "2024-10-24",
+          "start": "2024-10-21"
+        },
+        "direction": "long",
+        "entry_trigger": "prior_day_high_or_inside_day_high_break",
+        "row_id": "p5-control-lmnd-null-2",
+        "setup_type": "high_tight_flag_inside_day",
+        "symbol": "LMND"
+      },
+      "row_id": "p5-control-lmnd-null-2",
+      "row_kind": "null_control_window",
+      "series_positive_count": 0,
+      "symbol": "LMND",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent before_window control",
+        "end": "2024-01-12",
+        "start": "2024-01-08"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "before_window",
+      "parent_case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit adjacent before_window control",
+          "end": "2024-01-12",
+          "start": "2024-01-08"
+        },
+        "direction": "long",
+        "entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+        "row_id": "p5-control-smci-adjacent-1",
+        "setup_type": "weekly_base_tight_risk_breakout",
+        "symbol": "SMCI"
+      },
+      "row_id": "p5-control-smci-adjacent-1",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "symbol": "SMCI",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent after_window control",
+        "end": "2024-01-26",
+        "start": "2024-01-22"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "after_window",
+      "parent_case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit adjacent after_window control",
+          "end": "2024-01-26",
+          "start": "2024-01-22"
+        },
+        "direction": "long",
+        "entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+        "row_id": "p5-control-smci-adjacent-2",
+        "setup_type": "weekly_base_tight_risk_breakout",
+        "symbol": "SMCI"
+      },
+      "row_id": "p5-control-smci-adjacent-2",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "symbol": "SMCI",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_ticker control",
+        "end": "2024-01-19",
+        "start": "2024-01-16"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "null_ticker",
+      "parent_case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit null_ticker control",
+          "end": "2024-01-19",
+          "start": "2024-01-16"
+        },
+        "direction": "long",
+        "entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+        "row_id": "p5-control-smci-null-1",
+        "setup_type": "weekly_base_tight_risk_breakout",
+        "symbol": "QQQ"
+      },
+      "row_id": "p5-control-smci-null-1",
+      "row_kind": "null_control_window",
+      "series_positive_count": 0,
+      "symbol": "QQQ",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_date control",
+        "end": "2023-12-15",
+        "start": "2023-12-11"
+      },
+      "conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "control_role": "null_date",
+      "parent_case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit null_date control",
+          "end": "2023-12-15",
+          "start": "2023-12-11"
+        },
+        "direction": "long",
+        "entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+        "row_id": "p5-control-smci-null-2",
+        "setup_type": "weekly_base_tight_risk_breakout",
+        "symbol": "SMCI"
+      },
+      "row_id": "p5-control-smci-null-2",
+      "row_kind": "null_control_window",
+      "series_positive_count": 0,
+      "symbol": "SMCI",
+      "trace_signal_count": 0
+    }
+  ],
+  "public_replay_candidate_contracts": [
+    {
+      "allowed_window": {
+        "basis": "public-date-reconstruction candidate window",
+        "end": "2024-12-19",
+        "start": "2024-10-29"
+      },
+      "case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "direction": "long",
+      "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+      "missing_fields": [
+        "exact date",
+        "entry fill",
+        "partial fill",
+        "final exit fill",
+        "account equity"
+      ],
+      "missing_source_refs": [],
+      "phase5_2_final_status": "insufficient_evidence",
+      "phase5_2_gap_classification": "evidence_not_sufficient",
+      "public_case_contract_matches_manifest": true,
+      "public_date_reconstruction_status": "reconstructed_candidate_not_exact_fill",
+      "public_date_window": {
+        "end": "2024-12-19",
+        "start": "2024-10-29"
+      },
+      "row_id": "p5-public-sofi",
+      "setup_type": "leader_pullback_prior_day_high",
+      "source_refs_exist": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "SOFI"
+    },
+    {
+      "allowed_window": {
+        "basis": "public-date-reconstruction candidate window; intraday replay would require minute bars",
+        "end": "2024-05-14",
+        "start": "2024-05-13"
+      },
+      "case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "direction": "long",
+      "entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+      "missing_fields": [
+        "exact first attempt timestamp",
+        "re-entry timestamp",
+        "stop adjustment timestamps",
+        "all exits"
+      ],
+      "missing_source_refs": [],
+      "phase5_2_final_status": "insufficient_evidence",
+      "phase5_2_gap_classification": "evidence_not_sufficient",
+      "public_case_contract_matches_manifest": true,
+      "public_date_reconstruction_status": "reconstructed_candidate_not_exact_fill",
+      "public_date_window": {
+        "end": "2024-05-14",
+        "start": "2024-05-13"
+      },
+      "row_id": "p5-public-amc",
+      "setup_type": "opening_range_high_inside_day_reentry",
+      "source_refs_exist": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "AMC"
+    },
+    {
+      "allowed_window": {
+        "basis": "public-date-reconstruction candidate window",
+        "end": "2024-02-16",
+        "start": "2024-02-07"
+      },
+      "case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "direction": "long",
+      "entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+      "missing_fields": [
+        "exact BTC context timestamp",
+        "entry/exit fills",
+        "position size"
+      ],
+      "missing_source_refs": [],
+      "phase5_2_final_status": "insufficient_evidence",
+      "phase5_2_gap_classification": "evidence_not_sufficient",
+      "public_case_contract_matches_manifest": true,
+      "public_date_reconstruction_status": "reconstructed_candidate_not_exact_fill",
+      "public_date_window": {
+        "end": "2024-02-16",
+        "start": "2024-02-07"
+      },
+      "row_id": "p5-public-coin",
+      "setup_type": "theme_linked_inside_day_prior_high",
+      "source_refs_exist": [
+        "financialwisdom_martin_luk_strategy",
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "COIN"
+    },
+    {
+      "allowed_window": {
+        "basis": "public-date-reconstruction candidate window",
+        "end": "2024-11-21",
+        "start": "2024-11-18"
+      },
+      "case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "direction": "long",
+      "entry_trigger": "prior_day_high_or_inside_day_high_break",
+      "missing_fields": [
+        "exact split-adjusted prices",
+        "partial size",
+        "volume climax timestamp"
+      ],
+      "missing_source_refs": [],
+      "phase5_2_final_status": "insufficient_evidence",
+      "phase5_2_gap_classification": "evidence_not_sufficient",
+      "public_case_contract_matches_manifest": true,
+      "public_date_reconstruction_status": "reconstructed_candidate_not_exact_fill",
+      "public_date_window": {
+        "end": "2024-11-21",
+        "start": "2024-11-18"
+      },
+      "row_id": "p5-public-lmnd",
+      "setup_type": "high_tight_flag_inside_day",
+      "source_refs_exist": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "LMND"
+    },
+    {
+      "allowed_window": {
+        "basis": "public-date-reconstruction candidate window",
+        "end": "2024-01-19",
+        "start": "2024-01-16"
+      },
+      "case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "direction": "long",
+      "entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+      "missing_fields": [
+        "exact date",
+        "actual premature exit",
+        "would-have-held benchmark"
+      ],
+      "missing_source_refs": [],
+      "phase5_2_final_status": "insufficient_evidence",
+      "phase5_2_gap_classification": "evidence_not_sufficient",
+      "public_case_contract_matches_manifest": true,
+      "public_date_reconstruction_status": "reconstructed_candidate_not_exact_fill",
+      "public_date_window": {
+        "end": "2024-01-19",
+        "start": "2024-01-16"
+      },
+      "row_id": "p5-public-smci",
+      "setup_type": "weekly_base_tight_risk_breakout",
+      "source_refs_exist": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "SMCI"
+    }
+  ],
+  "schema_version": "martinluk_phase5_6_row_contract_gap_comparison_v1",
+  "scope": "bounded_evidence_first_row_contract_comparison_no_broad_autoresearch",
+  "trace_label_missing_rows": [
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent before_window control",
+        "end": "2024-05-10",
+        "start": "2024-05-09"
+      },
+      "conclusion": "do_not_patch_trace_label_without_new_primary_evidence",
+      "control_role": "before_window",
+      "parent_case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "public_missing_fields": [
+        "exact first attempt timestamp",
+        "re-entry timestamp",
+        "stop adjustment timestamps",
+        "all exits"
+      ],
+      "reason": "generic strategy activity exists, but public AMC evidence lacks exact first-attempt/re-entry/stop-adjustment timestamps and active_strategy emits generic ORH labels rather than the AMC re-entry contract",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit adjacent before_window control",
+          "end": "2024-05-10",
+          "start": "2024-05-09"
+        },
+        "direction": "long",
+        "entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+        "row_id": "p5-control-amc-adjacent-1",
+        "setup_type": "opening_range_high_inside_day_reentry",
+        "symbol": "AMC"
+      },
+      "row_id": "p5-control-amc-adjacent-1",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "series_positive_ignored_reason": null,
+      "source_ids": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "AMC",
+      "trace_rejection_reasons": {
+        "date_window_mismatch": 10,
+        "direction_mismatch": 1,
+        "entry_trigger_mismatch": 10,
+        "setup_type_mismatch": 10
+      },
+      "trace_signal_count": 10
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_ticker control",
+        "end": "2024-05-14",
+        "start": "2024-05-13"
+      },
+      "conclusion": "do_not_patch_trace_label_without_new_primary_evidence",
+      "control_role": "null_ticker",
+      "parent_case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "public_missing_fields": [
+        "exact first attempt timestamp",
+        "re-entry timestamp",
+        "stop adjustment timestamps",
+        "all exits"
+      ],
+      "reason": "generic strategy activity exists, but public AMC evidence lacks exact first-attempt/re-entry/stop-adjustment timestamps and active_strategy emits generic ORH labels rather than the AMC re-entry contract",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit null_ticker control",
+          "end": "2024-05-14",
+          "start": "2024-05-13"
+        },
+        "direction": "long",
+        "entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+        "row_id": "p5-control-amc-null-1",
+        "setup_type": "opening_range_high_inside_day_reentry",
+        "symbol": "SPY"
+      },
+      "row_id": "p5-control-amc-null-1",
+      "row_kind": "null_control_window",
+      "series_positive_count": 317,
+      "series_positive_ignored_reason": "row_setup_entry_trigger_requires_trace_match",
+      "source_ids": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "SPY",
+      "trace_rejection_reasons": {
+        "direction_mismatch": 29,
+        "entry_trigger_mismatch": 80,
+        "setup_type_mismatch": 80
+      },
+      "trace_signal_count": 80
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_date control",
+        "end": "2024-04-30",
+        "start": "2024-04-29"
+      },
+      "conclusion": "do_not_patch_trace_label_without_new_primary_evidence",
+      "control_role": "null_date",
+      "parent_case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "public_missing_fields": [
+        "exact first attempt timestamp",
+        "re-entry timestamp",
+        "stop adjustment timestamps",
+        "all exits"
+      ],
+      "reason": "generic strategy activity exists, but public AMC evidence lacks exact first-attempt/re-entry/stop-adjustment timestamps and active_strategy emits generic ORH labels rather than the AMC re-entry contract",
+      "required_contract": {
+        "allowed_window": {
+          "basis": "explicit null_date control",
+          "end": "2024-04-30",
+          "start": "2024-04-29"
+        },
+        "direction": "long",
+        "entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+        "row_id": "p5-control-amc-null-2",
+        "setup_type": "opening_range_high_inside_day_reentry",
+        "symbol": "AMC"
+      },
+      "row_id": "p5-control-amc-null-2",
+      "row_kind": "null_control_window",
+      "series_positive_count": 60,
+      "series_positive_ignored_reason": "row_setup_entry_trigger_requires_trace_match",
+      "source_ids": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "AMC",
+      "trace_rejection_reasons": {
+        "direction_mismatch": 1,
+        "entry_trigger_mismatch": 18,
+        "setup_type_mismatch": 18
+      },
+      "trace_signal_count": 18
+    }
+  ]
+}
