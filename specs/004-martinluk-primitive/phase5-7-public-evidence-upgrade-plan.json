@@ -1,0 +1,307 @@
+{
+  "broad_autoresearch_allowed": false,
+  "current_replay_status": {
+    "controls_counted_toward_promotion": 0,
+    "diagnostic_promotion_veto_active": false,
+    "false_positive_control_row_ids": [],
+    "gap_classification_summary": {
+      "evidence_not_sufficient": 8,
+      "primitive_not_emitted": 17,
+      "trace_label_missing": 3
+    },
+    "overall_run_status": "research_only",
+    "promoted": false,
+    "public_gap_classification_counts": {
+      "evidence_not_sufficient": 5
+    },
+    "public_replay_candidate_count": 5,
+    "public_status_counts": {
+      "insufficient_evidence": 5
+    },
+    "reproduced_public_replay_candidate_count": 0
+  },
+  "generated_at": "2026-05-02T03:18:00+00:00",
+  "handoff_notes": {
+    "shared_boundary": "If public evidence is unavailable or not primary enough, record the gap rather than inventing dates, fills, labels, profit, or private-account outcomes.",
+    "worker_1_priority": "public replay candidate evidence mapping and cited source-ledger/public-date-reconstruction proposals",
+    "worker_2_priority": "20 Phase 5.6 gap rows, missing-field taxonomy, and verification/no-overclaim artifact assertions"
+  },
+  "new_primary_public_evidence_added": false,
+  "no_overclaim_boundary": "Phase 5.7 is a planning artifact only. It preserves insufficient_evidence, research_only, promoted=false, and N/A realized outcomes. It is not a broad backtest, not profit proof, not Martin Luk realized P&L, not private-account replication, not exact-fill replication, and not evidence to launch T020.",
+  "overall_decision": "keep_t020_blocked_and_collect_primary_public_evidence_only",
+  "phase5_6_inputs": {
+    "eligible_trace_label_patch_rows": [],
+    "gap_classification_summary": {
+      "evidence_not_sufficient": 8,
+      "primitive_not_emitted": 17,
+      "trace_label_missing": 3
+    },
+    "overall_decision": "do_not_patch_trace_labels_and_do_not_launch_t020",
+    "patch_active_strategy_trace_labels": false,
+    "reviewed_gap_rows": 20,
+    "safe_trace_label_patches": []
+  },
+  "phase5_7_upgrade_sequence": [
+    {
+      "action": "For each missing public field, search only for public primary or source-near evidence that states the operation-level date, timestamp, fill, trim, exit, stop-management, size, or benchmark detail directly.",
+      "step": "evidence_search",
+      "stop_condition": "If no cited primary evidence supports the missing field, keep the row insufficient_evidence and record the gap; do not infer from market bars alone."
+    },
+    {
+      "action": "Only propose source-ledger or public-date-reconstruction changes when the cited evidence can be tied to a specific missing field and source ID.",
+      "step": "ledger_or_date_reconstruction_proposal",
+      "stop_condition": "No cited evidence means proposal-only/no-op; do not update exact dates, fills, or labels."
+    },
+    {
+      "action": "After evidence-backed artifact updates, rerun validator and bounded replay gates with the frozen no-overclaim contract.",
+      "step": "bounded_validator_replay",
+      "stop_condition": "Any remaining public candidate with insufficient_evidence keeps promoted=false and blocks T020."
+    },
+    {
+      "action": "Review T020 only after all five public replay candidates have evidence-backed reproduction and diagnostic controls remain clean.",
+      "step": "t020_gate_review",
+      "stop_condition": "Until that condition is met, T020 stays unchecked and no broad autoresearch launches."
+    }
+  ],
+  "public_candidate_upgrade_matrix": [
+    {
+      "candidate_window": {
+        "end": "2024-12-19",
+        "start": "2024-10-29"
+      },
+      "case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "current_phase5_2_final_status": "insufficient_evidence",
+      "current_phase5_2_gap_classification": "evidence_not_sufficient",
+      "entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+      "missing_primary_public_fields": [
+        "exact date",
+        "entry fill",
+        "partial fill",
+        "final exit fill",
+        "account equity"
+      ],
+      "missing_source_refs": [],
+      "required_primary_evidence": [
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "exact date",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        },
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "entry fill",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        },
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "partial fill",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        },
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "final exit fill",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        },
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "account equity",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        }
+      ],
+      "row_id": "p5-public-sofi",
+      "setup_type": "leader_pullback_prior_day_high",
+      "source_refs_exist": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "SOFI",
+      "upgrade_status": "blocked_pending_cited_primary_public_evidence",
+      "window_status": "reconstructed_candidate_not_exact_fill"
+    },
+    {
+      "candidate_window": {
+        "end": "2024-05-14",
+        "start": "2024-05-13"
+      },
+      "case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "current_phase5_2_final_status": "insufficient_evidence",
+      "current_phase5_2_gap_classification": "evidence_not_sufficient",
+      "entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+      "missing_primary_public_fields": [
+        "exact first attempt timestamp",
+        "re-entry timestamp",
+        "stop adjustment timestamps",
+        "all exits"
+      ],
+      "missing_source_refs": [],
+      "required_primary_evidence": [
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "exact first attempt timestamp",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        },
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "re-entry timestamp",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        },
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "stop adjustment timestamps",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        },
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "all exits",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        }
+      ],
+      "row_id": "p5-public-amc",
+      "setup_type": "opening_range_high_inside_day_reentry",
+      "source_refs_exist": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "AMC",
+      "upgrade_status": "blocked_pending_cited_primary_public_evidence",
+      "window_status": "reconstructed_candidate_not_exact_fill"
+    },
+    {
+      "candidate_window": {
+        "end": "2024-02-16",
+        "start": "2024-02-07"
+      },
+      "case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "current_phase5_2_final_status": "insufficient_evidence",
+      "current_phase5_2_gap_classification": "evidence_not_sufficient",
+      "entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+      "missing_primary_public_fields": [
+        "exact BTC context timestamp",
+        "entry/exit fills",
+        "position size"
+      ],
+      "missing_source_refs": [],
+      "required_primary_evidence": [
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "exact BTC context timestamp",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        },
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "entry/exit fills",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        },
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "position size",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        }
+      ],
+      "row_id": "p5-public-coin",
+      "setup_type": "theme_linked_inside_day_prior_high",
+      "source_refs_exist": [
+        "financialwisdom_martin_luk_strategy",
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "COIN",
+      "upgrade_status": "blocked_pending_cited_primary_public_evidence",
+      "window_status": "reconstructed_candidate_not_exact_fill"
+    },
+    {
+      "candidate_window": {
+        "end": "2024-11-21",
+        "start": "2024-11-18"
+      },
+      "case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "current_phase5_2_final_status": "insufficient_evidence",
+      "current_phase5_2_gap_classification": "evidence_not_sufficient",
+      "entry_trigger": "prior_day_high_or_inside_day_high_break",
+      "missing_primary_public_fields": [
+        "exact split-adjusted prices",
+        "partial size",
+        "volume climax timestamp"
+      ],
+      "missing_source_refs": [],
+      "required_primary_evidence": [
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "exact split-adjusted prices",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        },
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "partial size",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        },
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "volume climax timestamp",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        }
+      ],
+      "row_id": "p5-public-lmnd",
+      "setup_type": "high_tight_flag_inside_day",
+      "source_refs_exist": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "LMND",
+      "upgrade_status": "blocked_pending_cited_primary_public_evidence",
+      "window_status": "reconstructed_candidate_not_exact_fill"
+    },
+    {
+      "candidate_window": {
+        "end": "2024-01-19",
+        "start": "2024-01-16"
+      },
+      "case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "current_phase5_2_final_status": "insufficient_evidence",
+      "current_phase5_2_gap_classification": "evidence_not_sufficient",
+      "entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+      "missing_primary_public_fields": [
+        "exact date",
+        "actual premature exit",
+        "would-have-held benchmark"
+      ],
+      "missing_source_refs": [],
+      "required_primary_evidence": [
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "exact date",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        },
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "actual premature exit",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        },
+        {
+          "ledger_action": "do_not_update_source_ledger_or_public_date_reconstruction_until_cited_evidence_exists",
+          "missing_field": "would-have-held benchmark",
+          "required_upgrade_evidence": "cited public primary evidence with enough operation-level detail to support this field without private-account inference"
+        }
+      ],
+      "row_id": "p5-public-smci",
+      "setup_type": "weekly_base_tight_risk_breakout",
+      "source_refs_exist": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "SMCI",
+      "upgrade_status": "blocked_pending_cited_primary_public_evidence",
+      "window_status": "reconstructed_candidate_not_exact_fill"
+    }
+  ],
+  "public_date_reconstruction_update_policy": "do_not_replace_candidate_windows_with_exact_dates_or_timestamps_without_cited_primary_public_evidence",
+  "schema_version": "martinluk_phase5_7_public_evidence_upgrade_plan_v1",
+  "scope": "Phase 5.7 public-evidence upgrade plan derived from Phase 5.6 artifacts; no new public evidence is introduced by this plan.",
+  "source_artifacts": {
+    "specs/004-martinluk-primitive/phase5-2-bounded-replay-report.json": "ae4586d1071630b60b6ae004bf111880cf0af28bb07eea61ef9556f46ea75297",
+    "specs/004-martinluk-primitive/phase5-6-evidence-gap-classification-packet.json": "8075db5d7943a50f0281a10c966f813564f40210b7f226e200068b2db4377aff",
+    "specs/004-martinluk-primitive/phase5-6-row-contract-gap-comparison.json": "c2459bf0eaf17c594499b2a765d1951e6868599cb36f1f9f214228ea96818cd3",
+    "specs/004-martinluk-primitive/phase5-replay-manifest.json": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725",
+    "specs/004-martinluk-primitive/public-date-reconstruction.md": "a6c652e9a6963d261287dfdb3f4b78091fcbcf03b5b56ecf70a0525d41f96150",
+    "specs/004-martinluk-primitive/public-operation-cases.json": "793017d0e66d96f8de4d429b4a3cf005792dd16f0cf23adecac8c3f96b08c3c3",
+    "specs/004-martinluk-primitive/source-ledger.json": "55919c835ba3467f9534206aeb4650752dbd95a5bf04f0bf23118cace824839a",
+    "specs/004-martinluk-primitive/tasks.md": "536156f5da0844850bcdeae2813e3c3c00afa851b81aadae97b06c3258e1b517"
+  },
+  "source_ledger_update_policy": "proposal_only_until_cited_primary_public_evidence_supports_the_specific_missing_field",
+  "t020_state": "- [ ] T020 Launch bounded autoresearch only after validator, focused tests, and replay gates pass"
+}

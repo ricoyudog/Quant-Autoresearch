@@ -1,0 +1,62 @@
+{
+  "artifact_checks": {
+    "missing_primary_evidence_map": {
+      "overall_decision": "record_missing_primary_evidence_without_upgrading_replay_or_launching_t020",
+      "path": "specs/004-martinluk-primitive/phase5-7-missing-primary-evidence-map.json",
+      "phase5_6_gap_rows": 20,
+      "public_replay_candidate_rows": 5
+    },
+    "public_evidence_upgrade_plan": {
+      "broad_autoresearch_allowed": false,
+      "new_primary_public_evidence_added": false,
+      "overall_decision": "keep_t020_blocked_and_collect_primary_public_evidence_only",
+      "path": "specs/004-martinluk-primitive/phase5-7-public-evidence-upgrade-plan.json"
+    },
+    "source_date_reconstruction_proposals": {
+      "direct_public_date_reconstruction_updates": [],
+      "direct_source_ledger_updates": [],
+      "overall_decision": "proposal_only_no_source_ledger_or_public_date_reconstruction_update",
+      "path": "specs/004-martinluk-primitive/phase5-7-source-date-reconstruction-proposals.json"
+    }
+  },
+  "generated_at": "2026-05-02T03:34:00+00:00",
+  "no_overclaim_boundary": "Phase 5.7 artifacts are evidence-mapping and proposal artifacts only. They do not add public sources, update exact dates/fills, patch trace labels, prove profit, reproduce Martin Luk private-account outcomes, or authorize broad autoresearch/T020.",
+  "overall_decision": "preserve_insufficient_evidence_no_overclaim_and_keep_t020_blocked",
+  "ownership_coordination": {
+    "shared_boundary": "If public evidence is unavailable or not primary enough, record the gap rather than invent dates, fills, labels, profit, or private-account outcomes.",
+    "worker_1_owned_outputs": [
+      "phase5-7-public-evidence-upgrade-plan.*",
+      "phase5-7-missing-primary-evidence-map.*",
+      "phase5-7-source-date-reconstruction-proposals.*",
+      "phase5-7-no-overclaim-closeout.*"
+    ],
+    "worker_1_scope": "public replay candidate evidence mapping and cited source-ledger/public-date-reconstruction proposals",
+    "worker_2_scope_acknowledged": "20 Phase 5.6 gap rows, missing-field taxonomy, and verification/no-overclaim artifact assertions; worker-1 did not edit worker-2-owned Phase 5.6 taxonomy artifacts in this slice"
+  },
+  "replay_status_checks": {
+    "controls_counted_toward_promotion": 0,
+    "diagnostic_promotion_veto_active": false,
+    "false_positive_control_row_ids": [],
+    "overall_run_status": "research_only",
+    "promoted": false,
+    "public_gap_classification_counts": {
+      "evidence_not_sufficient": 5
+    },
+    "public_status_counts": {
+      "insufficient_evidence": 5
+    },
+    "reproduced_public_replay_candidate_count": 0
+  },
+  "schema_version": "martinluk_phase5_7_no_overclaim_closeout_v1",
+  "scope": "Worker-1 Phase 5.7 guardrail closeout for public replay candidate evidence mapping and cited source/date proposals.",
+  "source_artifacts": {
+    "specs/004-martinluk-primitive/phase5-2-bounded-replay-report.json": "ae4586d1071630b60b6ae004bf111880cf0af28bb07eea61ef9556f46ea75297",
+    "specs/004-martinluk-primitive/phase5-6-evidence-gap-classification-packet.json": "8075db5d7943a50f0281a10c966f813564f40210b7f226e200068b2db4377aff",
+    "specs/004-martinluk-primitive/phase5-6-row-contract-gap-comparison.json": "c2459bf0eaf17c594499b2a765d1951e6868599cb36f1f9f214228ea96818cd3",
+    "specs/004-martinluk-primitive/phase5-7-missing-primary-evidence-map.json": "8c347e316cf58a1c02d2358784b22b7e16f6217c3eea7ae450d34a27d9351e44",
+    "specs/004-martinluk-primitive/phase5-7-public-evidence-upgrade-plan.json": "6e1cfcabdbad288aaf1bcfc2160864e0a76e5ccda231b99e0c22d45c913cf8b8",
+    "specs/004-martinluk-primitive/phase5-7-source-date-reconstruction-proposals.json": "5506acb61a58d2d02fd81cef1ecffc7ec416140396c80357301cd8d526daab3b",
+    "specs/004-martinluk-primitive/tasks.md": "536156f5da0844850bcdeae2813e3c3c00afa851b81aadae97b06c3258e1b517"
+  },
+  "t020_state": "- [ ] T020 Launch bounded autoresearch only after validator, focused tests, and replay gates pass"
+}

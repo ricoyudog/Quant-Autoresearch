@@ -1,6 +1,6 @@
 {
   "schema_version": "martinluk_phase5_6_evidence_gap_classification_packet_v1",
-  "generated_at": "2026-05-02T02:37:30+00:00",
+  "generated_at": "2026-05-02T03:13:14+00:00",
   "source_artifacts": {
     "specs/004-martinluk-primitive/phase5-2-bounded-replay-report.json": "ae4586d1071630b60b6ae004bf111880cf0af28bb07eea61ef9556f46ea75297",
     "specs/004-martinluk-primitive/public-operation-cases.json": "793017d0e66d96f8de4d429b4a3cf005792dd16f0cf23adecac8c3f96b08c3c3",
@@ -62,6 +62,54 @@
       "trace_label_missing rows are diagnostic control activity; relabeling would overclaim reproduction evidence"
     ]
   },
+  "missing_field_taxonomy": {
+    "allowed_categories": [
+      "exact_date_missing",
+      "setup_entry_label_missing",
+      "fill_missing",
+      "exit_missing",
+      "account_context_missing"
+    ],
+    "scope": "Classifies parent_public_case_evidence.missing_fields and source_ledger_evidence.missing_fields for each of the 20 Phase 5.6 gap rows; these classifications are blockers, not promotion evidence.",
+    "field_to_category": {
+      "exact date": "exact_date_missing",
+      "entry fill": "fill_missing",
+      "partial fill": "fill_missing",
+      "final exit fill": "exit_missing",
+      "account equity": "account_context_missing",
+      "exact first attempt timestamp": "exact_date_missing",
+      "re-entry timestamp": "exact_date_missing",
+      "stop adjustment timestamps": "exit_missing",
+      "all exits": "exit_missing",
+      "exact BTC context timestamp": "exact_date_missing",
+      "entry/exit fills": "fill_missing",
+      "position size": "account_context_missing",
+      "exact split-adjusted prices": "fill_missing",
+      "partial size": "fill_missing",
+      "volume climax timestamp": "exact_date_missing",
+      "actual premature exit": "exit_missing",
+      "would-have-held benchmark": "exit_missing"
+    },
+    "source_ledger_field_to_category": {
+      "exact dates/fills": "exact_date_missing",
+      "complete fills": "fill_missing",
+      "portfolio sizing": "account_context_missing",
+      "exact full execution ledger": "fill_missing"
+    },
+    "row_gap_category": {
+      "field": "required setup_type/entry_trigger trace match",
+      "category": "setup_entry_label_missing",
+      "evidence_status": "not_satisfied_by_current_trace_or_series",
+      "rationale": "No reviewed control row has a source-backed exact setup_type/entry_trigger trace match that can be patched without overclaiming."
+    },
+    "category_definitions": {
+      "exact_date_missing": "public evidence gives only a candidate date/window or lacks exact intraday/context timestamp evidence",
+      "setup_entry_label_missing": "the current trace contract does not provide the row-required setup_type and entry_trigger match",
+      "fill_missing": "public evidence does not expose exact entry, partial, exit, adjusted price, or size/fill details needed for reproduction",
+      "exit_missing": "public evidence does not expose exact exit, stop-management, premature-exit, or held-benchmark evidence",
+      "account_context_missing": "public evidence does not expose account equity, position size, portfolio sizing, or account-level context"
+    }
+  },
   "rows": [
     {
       "row_id": "p5-control-sofi-adjacent-1",
@@ -100,6 +148,38 @@
           "partial fill",
           "final exit fill",
           "account equity"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact date",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "candidate window exists, but no source-backed exact operation date"
+          },
+          {
+            "field": "entry fill",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "entry execution fill remains unavailable"
+          },
+          {
+            "field": "partial fill",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "partial execution fill remains unavailable"
+          },
+          {
+            "field": "final exit fill",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "final exit execution fill remains unavailable"
+          },
+          {
+            "field": "account equity",
+            "category": "account_context_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "account equity/context remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
@@ -114,7 +194,21 @@
         ],
         "missing_fields": [
           "exact dates/fills"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact dates/fills",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level note combines exact dates and fills; parent-case fields provide the fill-specific blockers"
+          }
         ]
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -154,6 +248,38 @@
           "partial fill",
           "final exit fill",
           "account equity"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact date",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "candidate window exists, but no source-backed exact operation date"
+          },
+          {
+            "field": "entry fill",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "entry execution fill remains unavailable"
+          },
+          {
+            "field": "partial fill",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "partial execution fill remains unavailable"
+          },
+          {
+            "field": "final exit fill",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "final exit execution fill remains unavailable"
+          },
+          {
+            "field": "account equity",
+            "category": "account_context_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "account equity/context remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
@@ -168,7 +294,21 @@
         ],
         "missing_fields": [
           "exact dates/fills"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact dates/fills",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level note combines exact dates and fills; parent-case fields provide the fill-specific blockers"
+          }
         ]
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -209,6 +349,38 @@
           "partial fill",
           "final exit fill",
           "account equity"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact date",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "candidate window exists, but no source-backed exact operation date"
+          },
+          {
+            "field": "entry fill",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "entry execution fill remains unavailable"
+          },
+          {
+            "field": "partial fill",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "partial execution fill remains unavailable"
+          },
+          {
+            "field": "final exit fill",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "final exit execution fill remains unavailable"
+          },
+          {
+            "field": "account equity",
+            "category": "account_context_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "account equity/context remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
@@ -223,7 +395,21 @@
         ],
         "missing_fields": [
           "exact dates/fills"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact dates/fills",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level note combines exact dates and fills; parent-case fields provide the fill-specific blockers"
+          }
         ]
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -263,6 +449,38 @@
           "partial fill",
           "final exit fill",
           "account equity"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact date",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "candidate window exists, but no source-backed exact operation date"
+          },
+          {
+            "field": "entry fill",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "entry execution fill remains unavailable"
+          },
+          {
+            "field": "partial fill",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "partial execution fill remains unavailable"
+          },
+          {
+            "field": "final exit fill",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "final exit execution fill remains unavailable"
+          },
+          {
+            "field": "account equity",
+            "category": "account_context_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "account equity/context remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
@@ -277,7 +495,21 @@
         ],
         "missing_fields": [
           "exact dates/fills"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact dates/fills",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level note combines exact dates and fills; parent-case fields provide the fill-specific blockers"
+          }
         ]
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -321,6 +553,32 @@
           "re-entry timestamp",
           "stop adjustment timestamps",
           "all exits"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact first attempt timestamp",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "first intraday attempt timestamp remains unavailable"
+          },
+          {
+            "field": "re-entry timestamp",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "re-entry timestamp remains unavailable"
+          },
+          {
+            "field": "stop adjustment timestamps",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "stop-management timing remains unavailable"
+          },
+          {
+            "field": "all exits",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "exit sequence/timing remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
@@ -335,7 +593,21 @@
         ],
         "missing_fields": [
           "complete fills"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "complete fills",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level complete execution fills remain unavailable"
+          }
         ]
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -374,6 +646,32 @@
           "re-entry timestamp",
           "stop adjustment timestamps",
           "all exits"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact first attempt timestamp",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "first intraday attempt timestamp remains unavailable"
+          },
+          {
+            "field": "re-entry timestamp",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "re-entry timestamp remains unavailable"
+          },
+          {
+            "field": "stop adjustment timestamps",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "stop-management timing remains unavailable"
+          },
+          {
+            "field": "all exits",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "exit sequence/timing remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
@@ -388,7 +686,21 @@
         ],
         "missing_fields": [
           "complete fills"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "complete fills",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level complete execution fills remain unavailable"
+          }
         ]
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -432,6 +744,32 @@
           "re-entry timestamp",
           "stop adjustment timestamps",
           "all exits"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact first attempt timestamp",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "first intraday attempt timestamp remains unavailable"
+          },
+          {
+            "field": "re-entry timestamp",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "re-entry timestamp remains unavailable"
+          },
+          {
+            "field": "stop adjustment timestamps",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "stop-management timing remains unavailable"
+          },
+          {
+            "field": "all exits",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "exit sequence/timing remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
@@ -446,7 +784,21 @@
         ],
         "missing_fields": [
           "complete fills"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "complete fills",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level complete execution fills remain unavailable"
+          }
         ]
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -489,6 +841,32 @@
           "re-entry timestamp",
           "stop adjustment timestamps",
           "all exits"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact first attempt timestamp",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "first intraday attempt timestamp remains unavailable"
+          },
+          {
+            "field": "re-entry timestamp",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "re-entry timestamp remains unavailable"
+          },
+          {
+            "field": "stop adjustment timestamps",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "stop-management timing remains unavailable"
+          },
+          {
+            "field": "all exits",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "exit sequence/timing remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
@@ -503,7 +881,21 @@
         ],
         "missing_fields": [
           "complete fills"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "complete fills",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level complete execution fills remain unavailable"
+          }
         ]
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -541,6 +933,26 @@
           "exact BTC context timestamp",
           "entry/exit fills",
           "position size"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact BTC context timestamp",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "BTC context timing remains unavailable"
+          },
+          {
+            "field": "entry/exit fills",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "entry and exit execution fills remain unavailable"
+          },
+          {
+            "field": "position size",
+            "category": "account_context_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "position/account sizing remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
@@ -556,7 +968,27 @@
         "missing_fields": [
           "complete fills",
           "portfolio sizing"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "complete fills",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level complete execution fills remain unavailable"
+          },
+          {
+            "field": "portfolio sizing",
+            "category": "account_context_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level portfolio/account sizing remains unavailable"
+          }
         ]
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -594,6 +1026,26 @@
           "exact BTC context timestamp",
           "entry/exit fills",
           "position size"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact BTC context timestamp",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "BTC context timing remains unavailable"
+          },
+          {
+            "field": "entry/exit fills",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "entry and exit execution fills remain unavailable"
+          },
+          {
+            "field": "position size",
+            "category": "account_context_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "position/account sizing remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
@@ -609,7 +1061,27 @@
         "missing_fields": [
           "complete fills",
           "portfolio sizing"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "complete fills",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level complete execution fills remain unavailable"
+          },
+          {
+            "field": "portfolio sizing",
+            "category": "account_context_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level portfolio/account sizing remains unavailable"
+          }
         ]
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -648,6 +1120,26 @@
           "exact BTC context timestamp",
           "entry/exit fills",
           "position size"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact BTC context timestamp",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "BTC context timing remains unavailable"
+          },
+          {
+            "field": "entry/exit fills",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "entry and exit execution fills remain unavailable"
+          },
+          {
+            "field": "position size",
+            "category": "account_context_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "position/account sizing remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
@@ -663,7 +1155,27 @@
         "missing_fields": [
           "complete fills",
           "portfolio sizing"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "complete fills",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level complete execution fills remain unavailable"
+          },
+          {
+            "field": "portfolio sizing",
+            "category": "account_context_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level portfolio/account sizing remains unavailable"
+          }
         ]
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -701,6 +1213,26 @@
           "exact BTC context timestamp",
           "entry/exit fills",
           "position size"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact BTC context timestamp",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "BTC context timing remains unavailable"
+          },
+          {
+            "field": "entry/exit fills",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "entry and exit execution fills remain unavailable"
+          },
+          {
+            "field": "position size",
+            "category": "account_context_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "position/account sizing remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
@@ -716,7 +1248,27 @@
         "missing_fields": [
           "complete fills",
           "portfolio sizing"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "complete fills",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level complete execution fills remain unavailable"
+          },
+          {
+            "field": "portfolio sizing",
+            "category": "account_context_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level portfolio/account sizing remains unavailable"
+          }
         ]
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -754,13 +1306,40 @@
           "exact split-adjusted prices",
           "partial size",
           "volume climax timestamp"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact split-adjusted prices",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "exact adjusted execution prices remain unavailable"
+          },
+          {
+            "field": "partial size",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "partial execution size remains unavailable"
+          },
+          {
+            "field": "volume climax timestamp",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "intraday volume-climax timing remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
         "symbol_or_theme": null,
         "evidence_class": null,
         "available_fields": [],
-        "missing_fields": []
+        "missing_fields": [],
+        "missing_field_classifications": []
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -798,13 +1377,40 @@
           "exact split-adjusted prices",
           "partial size",
           "volume climax timestamp"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact split-adjusted prices",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "exact adjusted execution prices remain unavailable"
+          },
+          {
+            "field": "partial size",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "partial execution size remains unavailable"
+          },
+          {
+            "field": "volume climax timestamp",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "intraday volume-climax timing remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
         "symbol_or_theme": null,
         "evidence_class": null,
         "available_fields": [],
-        "missing_fields": []
+        "missing_fields": [],
+        "missing_field_classifications": []
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -843,13 +1449,40 @@
           "exact split-adjusted prices",
           "partial size",
           "volume climax timestamp"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact split-adjusted prices",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "exact adjusted execution prices remain unavailable"
+          },
+          {
+            "field": "partial size",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "partial execution size remains unavailable"
+          },
+          {
+            "field": "volume climax timestamp",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "intraday volume-climax timing remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
         "symbol_or_theme": null,
         "evidence_class": null,
         "available_fields": [],
-        "missing_fields": []
+        "missing_fields": [],
+        "missing_field_classifications": []
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -887,13 +1520,40 @@
           "exact split-adjusted prices",
           "partial size",
           "volume climax timestamp"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact split-adjusted prices",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "exact adjusted execution prices remain unavailable"
+          },
+          {
+            "field": "partial size",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "partial execution size remains unavailable"
+          },
+          {
+            "field": "volume climax timestamp",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "intraday volume-climax timing remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
         "symbol_or_theme": null,
         "evidence_class": null,
         "available_fields": [],
-        "missing_fields": []
+        "missing_fields": [],
+        "missing_field_classifications": []
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -931,6 +1591,26 @@
           "exact date",
           "actual premature exit",
           "would-have-held benchmark"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact date",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "candidate window exists, but no source-backed exact operation date"
+          },
+          {
+            "field": "actual premature exit",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "actual premature exit remains unavailable"
+          },
+          {
+            "field": "would-have-held benchmark",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "counterfactual held benchmark remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
@@ -944,7 +1624,21 @@
         ],
         "missing_fields": [
           "exact full execution ledger"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact full execution ledger",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level full execution ledger remains unavailable"
+          }
         ]
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -982,6 +1676,26 @@
           "exact date",
           "actual premature exit",
           "would-have-held benchmark"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact date",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "candidate window exists, but no source-backed exact operation date"
+          },
+          {
+            "field": "actual premature exit",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "actual premature exit remains unavailable"
+          },
+          {
+            "field": "would-have-held benchmark",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "counterfactual held benchmark remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
@@ -995,7 +1709,21 @@
         ],
         "missing_fields": [
           "exact full execution ledger"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact full execution ledger",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level full execution ledger remains unavailable"
+          }
         ]
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -1034,6 +1762,26 @@
           "exact date",
           "actual premature exit",
           "would-have-held benchmark"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact date",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "candidate window exists, but no source-backed exact operation date"
+          },
+          {
+            "field": "actual premature exit",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "actual premature exit remains unavailable"
+          },
+          {
+            "field": "would-have-held benchmark",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "counterfactual held benchmark remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
@@ -1047,7 +1795,21 @@
         ],
         "missing_fields": [
           "exact full execution ledger"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact full execution ledger",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level full execution ledger remains unavailable"
+          }
         ]
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     },
     {
@@ -1085,6 +1847,26 @@
           "exact date",
           "actual premature exit",
           "would-have-held benchmark"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact date",
+            "category": "exact_date_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "candidate window exists, but no source-backed exact operation date"
+          },
+          {
+            "field": "actual premature exit",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "actual premature exit remains unavailable"
+          },
+          {
+            "field": "would-have-held benchmark",
+            "category": "exit_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "counterfactual held benchmark remains unavailable"
+          }
         ]
       },
       "source_ledger_evidence": {
@@ -1098,7 +1880,21 @@
         ],
         "missing_fields": [
           "exact full execution ledger"
+        ],
+        "missing_field_classifications": [
+          {
+            "field": "exact full execution ledger",
+            "category": "fill_missing",
+            "evidence_status": "public_evidence_missing",
+            "rationale": "source-level full execution ledger remains unavailable"
+          }
         ]
+      },
+      "row_gap_missing_field_classification": {
+        "field": "required setup_type/entry_trigger trace match",
+        "category": "setup_entry_label_missing",
+        "evidence_status": "not_satisfied_by_current_trace_or_series",
+        "rationale": "current strategy traces either do not emit a matching primitive or emit generic control activity that cannot be relabeled into public-case evidence"
       }
     }
   ]

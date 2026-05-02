@@ -1,0 +1,1685 @@
+{
+  "current_replay_status": {
+    "controls_counted_toward_promotion": 0,
+    "diagnostic_promotion_veto_active": false,
+    "false_positive_control_row_ids": [],
+    "gap_classification_summary": {
+      "evidence_not_sufficient": 8,
+      "primitive_not_emitted": 17,
+      "trace_label_missing": 3
+    },
+    "overall_run_status": "research_only",
+    "promoted": false,
+    "public_gap_classification_counts": {
+      "evidence_not_sufficient": 5
+    },
+    "public_replay_candidate_count": 5,
+    "public_status_counts": {
+      "insufficient_evidence": 5
+    },
+    "reproduced_public_replay_candidate_count": 0
+  },
+  "generated_at": "2026-05-02T03:29:00+00:00",
+  "no_overclaim_boundary": "This artifact identifies missing primary public evidence only. It does not add sources, update exact dates/fills, patch trace labels, prove profit, replicate private-account outcomes, or authorize T020/broad autoresearch.",
+  "overall_decision": "record_missing_primary_evidence_without_upgrading_replay_or_launching_t020",
+  "phase5_6_gap_row_missing_evidence": [
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent before_window control",
+        "end": "2024-10-28",
+        "start": "2024-10-22"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "leader_pullback_prior_day_high / break_or_reclaim_above_prior_day_high_after_pullback",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact date",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "entry fill",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "partial fill",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "final exit fill",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "account_context_primary_evidence_missing",
+          "field": "account equity",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact dates/fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        }
+      ],
+      "parent_case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+      "required_setup_type": "leader_pullback_prior_day_high",
+      "row_id": "p5-control-sofi-adjacent-1",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "SOFI",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent after_window control",
+        "end": "2024-12-27",
+        "start": "2024-12-20"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "leader_pullback_prior_day_high / break_or_reclaim_above_prior_day_high_after_pullback",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact date",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "entry fill",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "partial fill",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "final exit fill",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "account_context_primary_evidence_missing",
+          "field": "account equity",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact dates/fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        }
+      ],
+      "parent_case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+      "required_setup_type": "leader_pullback_prior_day_high",
+      "row_id": "p5-control-sofi-adjacent-2",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "SOFI",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_ticker control",
+        "end": "2024-12-19",
+        "start": "2024-10-29"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "null_ticker_control_must_not_be_upgraded",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "null_control_public_operation_link_missing",
+          "field": "source-supported link between null ticker control and a public operation",
+          "required_primary_evidence": "cited public evidence tying this null ticker/window to the public case; absent that, the row must remain a control"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "leader_pullback_prior_day_high / break_or_reclaim_above_prior_day_high_after_pullback",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact date",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "entry fill",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "partial fill",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "final exit fill",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "account_context_primary_evidence_missing",
+          "field": "account equity",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact dates/fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        }
+      ],
+      "parent_case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+      "required_setup_type": "leader_pullback_prior_day_high",
+      "row_id": "p5-control-sofi-null-1",
+      "row_kind": "null_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "QQQ",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_date control",
+        "end": "2024-09-27",
+        "start": "2024-09-23"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "leader_pullback_prior_day_high / break_or_reclaim_above_prior_day_high_after_pullback",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact date",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "entry fill",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "partial fill",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "final exit fill",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "account_context_primary_evidence_missing",
+          "field": "account equity",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact dates/fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        }
+      ],
+      "parent_case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "break_or_reclaim_above_prior_day_high_after_pullback",
+      "required_setup_type": "leader_pullback_prior_day_high",
+      "row_id": "p5-control-sofi-null-2",
+      "row_kind": "null_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "SOFI",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent before_window control",
+        "end": "2024-05-10",
+        "start": "2024-05-09"
+      },
+      "comparison_conclusion": "do_not_patch_trace_label_without_new_primary_evidence",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "label_patch_would_turn_diagnostic_control_activity_into_reproduction_evidence",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "trace_label_missing",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "opening_range_high_inside_day_reentry / 5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "diagnostic_control_relabel_primary_evidence_missing",
+          "field": "exact public-case trace labels for diagnostic activity",
+          "required_primary_evidence": "cited public evidence for exact first-attempt/re-entry/stop-management timing; otherwise diagnostic control activity must not be relabeled as reproduction"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact first attempt timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "re-entry timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "stop adjustment timestamps",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exit_or_benchmark_primary_evidence_missing",
+          "field": "all exits",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "complete fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        }
+      ],
+      "parent_case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+      "required_setup_type": "opening_range_high_inside_day_reentry",
+      "row_id": "p5-control-amc-adjacent-1",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "source_ids": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "AMC",
+      "trace_signal_count": 10
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent after_window control",
+        "end": "2024-05-16",
+        "start": "2024-05-15"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "opening_range_high_inside_day_reentry / 5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact first attempt timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "re-entry timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "stop adjustment timestamps",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exit_or_benchmark_primary_evidence_missing",
+          "field": "all exits",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "complete fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        }
+      ],
+      "parent_case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+      "required_setup_type": "opening_range_high_inside_day_reentry",
+      "row_id": "p5-control-amc-adjacent-2",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "AMC",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_ticker control",
+        "end": "2024-05-14",
+        "start": "2024-05-13"
+      },
+      "comparison_conclusion": "do_not_patch_trace_label_without_new_primary_evidence",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "null_ticker_control_must_not_be_upgraded",
+        "label_patch_would_turn_diagnostic_control_activity_into_reproduction_evidence",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "trace_label_missing",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "null_control_public_operation_link_missing",
+          "field": "source-supported link between null ticker control and a public operation",
+          "required_primary_evidence": "cited public evidence tying this null ticker/window to the public case; absent that, the row must remain a control"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "opening_range_high_inside_day_reentry / 5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "diagnostic_control_relabel_primary_evidence_missing",
+          "field": "exact public-case trace labels for diagnostic activity",
+          "required_primary_evidence": "cited public evidence for exact first-attempt/re-entry/stop-management timing; otherwise diagnostic control activity must not be relabeled as reproduction"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact first attempt timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "re-entry timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "stop adjustment timestamps",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exit_or_benchmark_primary_evidence_missing",
+          "field": "all exits",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "complete fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        }
+      ],
+      "parent_case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+      "required_setup_type": "opening_range_high_inside_day_reentry",
+      "row_id": "p5-control-amc-null-1",
+      "row_kind": "null_control_window",
+      "series_positive_count": 317,
+      "source_ids": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "SPY",
+      "trace_signal_count": 80
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_date control",
+        "end": "2024-04-30",
+        "start": "2024-04-29"
+      },
+      "comparison_conclusion": "do_not_patch_trace_label_without_new_primary_evidence",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "label_patch_would_turn_diagnostic_control_activity_into_reproduction_evidence",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "trace_label_missing",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "opening_range_high_inside_day_reentry / 5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "diagnostic_control_relabel_primary_evidence_missing",
+          "field": "exact public-case trace labels for diagnostic activity",
+          "required_primary_evidence": "cited public evidence for exact first-attempt/re-entry/stop-management timing; otherwise diagnostic control activity must not be relabeled as reproduction"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact first attempt timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "re-entry timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "stop adjustment timestamps",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exit_or_benchmark_primary_evidence_missing",
+          "field": "all exits",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "complete fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        }
+      ],
+      "parent_case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "5m_ORH_or_later_tight_intraday_range_high_after_failed_first_attempt",
+      "required_setup_type": "opening_range_high_inside_day_reentry",
+      "row_id": "p5-control-amc-null-2",
+      "row_kind": "null_control_window",
+      "series_positive_count": 60,
+      "source_ids": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "AMC",
+      "trace_signal_count": 18
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent before_window control",
+        "end": "2024-02-06",
+        "start": "2024-01-31"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "theme_linked_inside_day_prior_high / inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact BTC context timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "entry/exit fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "position size",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "complete fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        },
+        {
+          "category": "operation_detail_primary_evidence_missing",
+          "field": "portfolio sizing",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        }
+      ],
+      "parent_case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+      "required_setup_type": "theme_linked_inside_day_prior_high",
+      "row_id": "p5-control-coin-adjacent-1",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "COIN",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent after_window control",
+        "end": "2024-02-23",
+        "start": "2024-02-20"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "theme_linked_inside_day_prior_high / inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact BTC context timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "entry/exit fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "position size",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "complete fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        },
+        {
+          "category": "operation_detail_primary_evidence_missing",
+          "field": "portfolio sizing",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        }
+      ],
+      "parent_case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+      "required_setup_type": "theme_linked_inside_day_prior_high",
+      "row_id": "p5-control-coin-adjacent-2",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "COIN",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_ticker control",
+        "end": "2024-02-16",
+        "start": "2024-02-07"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "null_ticker_control_must_not_be_upgraded",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "null_control_public_operation_link_missing",
+          "field": "source-supported link between null ticker control and a public operation",
+          "required_primary_evidence": "cited public evidence tying this null ticker/window to the public case; absent that, the row must remain a control"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "theme_linked_inside_day_prior_high / inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact BTC context timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "entry/exit fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "position size",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "complete fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        },
+        {
+          "category": "operation_detail_primary_evidence_missing",
+          "field": "portfolio sizing",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        }
+      ],
+      "parent_case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+      "required_setup_type": "theme_linked_inside_day_prior_high",
+      "row_id": "p5-control-coin-null-1",
+      "row_kind": "null_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "QQQ",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_date control",
+        "end": "2024-01-26",
+        "start": "2024-01-22"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "theme_linked_inside_day_prior_high / inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact BTC context timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "entry/exit fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "position size",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "complete fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        },
+        {
+          "category": "operation_detail_primary_evidence_missing",
+          "field": "portfolio sizing",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        }
+      ],
+      "parent_case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "inside_day_high_or_prior_high_break_or_low_of_day_reclaim",
+      "required_setup_type": "theme_linked_inside_day_prior_high",
+      "row_id": "p5-control-coin-null-2",
+      "row_kind": "null_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "COIN",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent before_window control",
+        "end": "2024-11-14",
+        "start": "2024-11-11"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "high_tight_flag_inside_day / prior_day_high_or_inside_day_high_break",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "exact split-adjusted prices",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "partial size",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "volume climax timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        }
+      ],
+      "parent_case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "prior_day_high_or_inside_day_high_break",
+      "required_setup_type": "high_tight_flag_inside_day",
+      "row_id": "p5-control-lmnd-adjacent-1",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "LMND",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent after_window control",
+        "end": "2024-11-27",
+        "start": "2024-11-22"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "high_tight_flag_inside_day / prior_day_high_or_inside_day_high_break",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "exact split-adjusted prices",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "partial size",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "volume climax timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        }
+      ],
+      "parent_case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "prior_day_high_or_inside_day_high_break",
+      "required_setup_type": "high_tight_flag_inside_day",
+      "row_id": "p5-control-lmnd-adjacent-2",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "LMND",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_ticker control",
+        "end": "2024-11-21",
+        "start": "2024-11-18"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "null_ticker_control_must_not_be_upgraded",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "null_control_public_operation_link_missing",
+          "field": "source-supported link between null ticker control and a public operation",
+          "required_primary_evidence": "cited public evidence tying this null ticker/window to the public case; absent that, the row must remain a control"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "high_tight_flag_inside_day / prior_day_high_or_inside_day_high_break",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "exact split-adjusted prices",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "partial size",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "volume climax timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        }
+      ],
+      "parent_case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "prior_day_high_or_inside_day_high_break",
+      "required_setup_type": "high_tight_flag_inside_day",
+      "row_id": "p5-control-lmnd-null-1",
+      "row_kind": "null_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "SPY",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_date control",
+        "end": "2024-10-24",
+        "start": "2024-10-21"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "high_tight_flag_inside_day / prior_day_high_or_inside_day_high_break",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "exact split-adjusted prices",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "partial size",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "volume climax timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        }
+      ],
+      "parent_case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "prior_day_high_or_inside_day_high_break",
+      "required_setup_type": "high_tight_flag_inside_day",
+      "row_id": "p5-control-lmnd-null-2",
+      "row_kind": "null_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "LMND",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent before_window control",
+        "end": "2024-01-12",
+        "start": "2024-01-08"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "weekly_base_tight_risk_breakout / base_breakout_or_tight_intraday_continuation_trigger",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact date",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exit_or_benchmark_primary_evidence_missing",
+          "field": "actual premature exit",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exit_or_benchmark_primary_evidence_missing",
+          "field": "would-have-held benchmark",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "operation_detail_primary_evidence_missing",
+          "field": "exact full execution ledger",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        }
+      ],
+      "parent_case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+      "required_setup_type": "weekly_base_tight_risk_breakout",
+      "row_id": "p5-control-smci-adjacent-1",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "SMCI",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit adjacent after_window control",
+        "end": "2024-01-26",
+        "start": "2024-01-22"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "weekly_base_tight_risk_breakout / base_breakout_or_tight_intraday_continuation_trigger",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact date",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exit_or_benchmark_primary_evidence_missing",
+          "field": "actual premature exit",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exit_or_benchmark_primary_evidence_missing",
+          "field": "would-have-held benchmark",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "operation_detail_primary_evidence_missing",
+          "field": "exact full execution ledger",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        }
+      ],
+      "parent_case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+      "required_setup_type": "weekly_base_tight_risk_breakout",
+      "row_id": "p5-control-smci-adjacent-2",
+      "row_kind": "adjacent_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "SMCI",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_ticker control",
+        "end": "2024-01-19",
+        "start": "2024-01-16"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "null_ticker_control_must_not_be_upgraded",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "null_control_public_operation_link_missing",
+          "field": "source-supported link between null ticker control and a public operation",
+          "required_primary_evidence": "cited public evidence tying this null ticker/window to the public case; absent that, the row must remain a control"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "weekly_base_tight_risk_breakout / base_breakout_or_tight_intraday_continuation_trigger",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact date",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exit_or_benchmark_primary_evidence_missing",
+          "field": "actual premature exit",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exit_or_benchmark_primary_evidence_missing",
+          "field": "would-have-held benchmark",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "operation_detail_primary_evidence_missing",
+          "field": "exact full execution ledger",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        }
+      ],
+      "parent_case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+      "required_setup_type": "weekly_base_tight_risk_breakout",
+      "row_id": "p5-control-smci-null-1",
+      "row_kind": "null_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "QQQ",
+      "trace_signal_count": 0
+    },
+    {
+      "allowed_window": {
+        "basis": "explicit null_date control",
+        "end": "2023-12-15",
+        "start": "2023-12-11"
+      },
+      "comparison_conclusion": "no_existing_primitive_to_relabel_or_patch",
+      "decision_reasons": [
+        "row_is_control_not_public_operation_evidence",
+        "active_strategy_does_not_emit_exact_required_setup_entry_pair",
+        "no_matching_primitive_trace_or_series_to_relabel",
+        "parent_public_case_still_missing_exact_fill_or_intraday_management_fields"
+      ],
+      "evidence_status": "control_gap_preserved_until_cited_primary_evidence_and_bounded_replay_support_both_exist",
+      "gap_classification": "primitive_not_emitted",
+      "missing_primary_evidence": [
+        {
+          "category": "control_identity_primary_evidence_missing",
+          "field": "public operation identity for this row symbol/window",
+          "required_primary_evidence": "cited public primary evidence that the control row itself is a Martin Luk public operation rather than an adjacent/null diagnostic row"
+        },
+        {
+          "category": "setup_entry_label_primary_evidence_missing",
+          "field": "weekly_base_tight_risk_breakout / base_breakout_or_tight_intraday_continuation_trigger",
+          "required_primary_evidence": "source-backed exact setup/entry semantics and timestamp context before any label or trace-contract change"
+        },
+        {
+          "category": "primitive_trace_support_missing",
+          "field": "matching primitive trace or qualifying series evidence in the bounded row window",
+          "required_primary_evidence": "not a public-primary field by itself; even with new public evidence, implementation/replay support must still emit the row-required primitive before reproduction can be claimed"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact date",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exit_or_benchmark_primary_evidence_missing",
+          "field": "actual premature exit",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "exit_or_benchmark_primary_evidence_missing",
+          "field": "would-have-held benchmark",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "parent_public_case"
+        },
+        {
+          "category": "operation_detail_primary_evidence_missing",
+          "field": "exact full execution ledger",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient",
+          "source_scope": "source_ledger_case_study"
+        }
+      ],
+      "parent_case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "patch_decision": "do_not_patch_preserve_gap_classification",
+      "required_entry_trigger": "base_breakout_or_tight_intraday_continuation_trigger",
+      "required_setup_type": "weekly_base_tight_risk_breakout",
+      "row_id": "p5-control-smci-null-2",
+      "row_kind": "null_control_window",
+      "series_positive_count": 0,
+      "source_ids": [],
+      "symbol": "SMCI",
+      "trace_signal_count": 0
+    }
+  ],
+  "public_candidate_missing_evidence": [
+    {
+      "candidate_window": {
+        "end": "2024-12-19",
+        "start": "2024-10-29"
+      },
+      "case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "current_gap_classification": "evidence_not_sufficient",
+      "current_status": "insufficient_evidence",
+      "evidence_status": "insufficient_evidence_until_each_missing_primary_field_is_cited",
+      "missing_primary_evidence": [
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact date",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "entry fill",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "partial fill",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "final exit fill",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        },
+        {
+          "category": "account_context_primary_evidence_missing",
+          "field": "account equity",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        }
+      ],
+      "row_id": "p5-public-sofi",
+      "source_refs_exist": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "SOFI"
+    },
+    {
+      "candidate_window": {
+        "end": "2024-05-14",
+        "start": "2024-05-13"
+      },
+      "case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "current_gap_classification": "evidence_not_sufficient",
+      "current_status": "insufficient_evidence",
+      "evidence_status": "insufficient_evidence_until_each_missing_primary_field_is_cited",
+      "missing_primary_evidence": [
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact first attempt timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "re-entry timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "stop adjustment timestamps",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        },
+        {
+          "category": "exit_or_benchmark_primary_evidence_missing",
+          "field": "all exits",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        }
+      ],
+      "row_id": "p5-public-amc",
+      "source_refs_exist": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "AMC"
+    },
+    {
+      "candidate_window": {
+        "end": "2024-02-16",
+        "start": "2024-02-07"
+      },
+      "case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "current_gap_classification": "evidence_not_sufficient",
+      "current_status": "insufficient_evidence",
+      "evidence_status": "insufficient_evidence_until_each_missing_primary_field_is_cited",
+      "missing_primary_evidence": [
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact BTC context timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "entry/exit fills",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "position size",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        }
+      ],
+      "row_id": "p5-public-coin",
+      "source_refs_exist": [
+        "financialwisdom_martin_luk_strategy",
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "COIN"
+    },
+    {
+      "candidate_window": {
+        "end": "2024-11-21",
+        "start": "2024-11-18"
+      },
+      "case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "current_gap_classification": "evidence_not_sufficient",
+      "current_status": "insufficient_evidence",
+      "evidence_status": "insufficient_evidence_until_each_missing_primary_field_is_cited",
+      "missing_primary_evidence": [
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "exact split-adjusted prices",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        },
+        {
+          "category": "fill_size_or_price_primary_evidence_missing",
+          "field": "partial size",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        },
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "volume climax timestamp",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        }
+      ],
+      "row_id": "p5-public-lmnd",
+      "source_refs_exist": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "LMND"
+    },
+    {
+      "candidate_window": {
+        "end": "2024-01-19",
+        "start": "2024-01-16"
+      },
+      "case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "current_gap_classification": "evidence_not_sufficient",
+      "current_status": "insufficient_evidence",
+      "evidence_status": "insufficient_evidence_until_each_missing_primary_field_is_cited",
+      "missing_primary_evidence": [
+        {
+          "category": "exact_date_or_timestamp_primary_evidence_missing",
+          "field": "exact date",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        },
+        {
+          "category": "exit_or_benchmark_primary_evidence_missing",
+          "field": "actual premature exit",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        },
+        {
+          "category": "exit_or_benchmark_primary_evidence_missing",
+          "field": "would-have-held benchmark",
+          "required_primary_evidence": "public primary/source-near operation evidence that states this field directly; market-bar inference alone is not sufficient"
+        }
+      ],
+      "row_id": "p5-public-smci",
+      "source_refs_exist": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "symbol": "SMCI"
+    }
+  ],
+  "schema_version": "martinluk_phase5_7_missing_primary_evidence_map_v1",
+  "scope": "Evidence-only map of missing primary public evidence for 5 public replay candidates and 20 Phase 5.6 gap rows.",
+  "source_artifacts": {
+    "specs/004-martinluk-primitive/phase5-2-bounded-replay-report.json": "ae4586d1071630b60b6ae004bf111880cf0af28bb07eea61ef9556f46ea75297",
+    "specs/004-martinluk-primitive/phase5-6-evidence-gap-classification-packet.json": "8075db5d7943a50f0281a10c966f813564f40210b7f226e200068b2db4377aff",
+    "specs/004-martinluk-primitive/phase5-6-row-contract-gap-comparison.json": "c2459bf0eaf17c594499b2a765d1951e6868599cb36f1f9f214228ea96818cd3",
+    "specs/004-martinluk-primitive/phase5-7-public-evidence-upgrade-plan.json": "6e1cfcabdbad288aaf1bcfc2160864e0a76e5ccda231b99e0c22d45c913cf8b8",
+    "specs/004-martinluk-primitive/public-date-reconstruction.md": "a6c652e9a6963d261287dfdb3f4b78091fcbcf03b5b56ecf70a0525d41f96150",
+    "specs/004-martinluk-primitive/public-operation-cases.json": "793017d0e66d96f8de4d429b4a3cf005792dd16f0cf23adecac8c3f96b08c3c3",
+    "specs/004-martinluk-primitive/source-ledger.json": "55919c835ba3467f9534206aeb4650752dbd95a5bf04f0bf23118cace824839a"
+  },
+  "summary": {
+    "gap_rows_by_classification": {
+      "primitive_not_emitted": 17,
+      "trace_label_missing": 3
+    },
+    "missing_evidence_requirement_categories": {
+      "account_context_primary_evidence_missing": 5,
+      "control_identity_primary_evidence_missing": 20,
+      "diagnostic_control_relabel_primary_evidence_missing": 3,
+      "exact_date_or_timestamp_primary_evidence_missing": 39,
+      "exit_or_benchmark_primary_evidence_missing": 15,
+      "fill_size_or_price_primary_evidence_missing": 43,
+      "null_control_public_operation_link_missing": 5,
+      "operation_detail_primary_evidence_missing": 8,
+      "primitive_trace_support_missing": 17,
+      "setup_entry_label_primary_evidence_missing": 20
+    },
+    "phase5_6_gap_rows": 20,
+    "public_replay_candidate_rows": 5
+  },
+  "t020_state": "- [ ] T020 Launch bounded autoresearch only after validator, focused tests, and replay gates pass"
+}

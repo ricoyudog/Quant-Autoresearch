@@ -1,6 +1,6 @@
 # MartinLuk Phase 5.6 Evidence Gap Classification Packet
 
-Generated at: `2026-05-02T02:37:30+00:00`
+Generated at: `2026-05-02T03:13:14+00:00`
 
 ## Decision
 
@@ -12,6 +12,38 @@ Generated at: `2026-05-02T02:37:30+00:00`
 ## No-overclaim boundary
 
 This packet preserves insufficient_evidence and control-row diagnostics. It is not a broad backtest, profit proof, Martin Luk private-account replication, exact-fill replication, or evidence to launch T020.
+
+
+## Missing-field taxonomy
+
+The Phase 5.6 packet now classifies every parent public-case and source-ledger missing field in the machine-readable artifact. These classifications are blockers that preserve `insufficient_evidence`; they are not promotion evidence.
+
+Allowed categories: `exact_date_missing`, `setup_entry_label_missing`, `fill_missing`, `exit_missing`, `account_context_missing`.
+
+| Field | Classification | Scope / rationale |
+| --- | --- | --- |
+| `exact date` | `exact_date_missing` | candidate window exists, but no source-backed exact operation date |
+| `exact first attempt timestamp` | `exact_date_missing` | first intraday attempt timestamp remains unavailable |
+| `re-entry timestamp` | `exact_date_missing` | re-entry timestamp remains unavailable |
+| `exact BTC context timestamp` | `exact_date_missing` | BTC context timing remains unavailable |
+| `volume climax timestamp` | `exact_date_missing` | intraday volume-climax timing remains unavailable |
+| `entry fill` | `fill_missing` | entry execution fill remains unavailable |
+| `partial fill` | `fill_missing` | partial execution fill remains unavailable |
+| `entry/exit fills` | `fill_missing` | entry and exit execution fills remain unavailable |
+| `exact split-adjusted prices` | `fill_missing` | exact adjusted execution prices remain unavailable |
+| `partial size` | `fill_missing` | partial execution size remains unavailable |
+| `final exit fill` | `exit_missing` | final exit execution fill remains unavailable |
+| `stop adjustment timestamps` | `exit_missing` | stop-management timing remains unavailable |
+| `all exits` | `exit_missing` | exit sequence/timing remains unavailable |
+| `actual premature exit` | `exit_missing` | actual premature exit remains unavailable |
+| `would-have-held benchmark` | `exit_missing` | counterfactual held benchmark remains unavailable |
+| `account equity` | `account_context_missing` | account equity/context remains unavailable |
+| `position size` | `account_context_missing` | position/account sizing remains unavailable |
+| `required setup_type/entry_trigger trace match` | `setup_entry_label_missing` | all 20 reviewed control rows lack a source-backed exact setup/entry trace match safe to patch |
+| `exact dates/fills` | `exact_date_missing` | source-level compound date/fill note; parent-case fields retain fill-specific blockers |
+| `complete fills` | `fill_missing` | source-level complete execution fills remain unavailable |
+| `portfolio sizing` | `account_context_missing` | source-level portfolio/account sizing remains unavailable |
+| `exact full execution ledger` | `fill_missing` | source-level full execution ledger remains unavailable |
 
 ## Source artifacts
 

@@ -1,0 +1,200 @@
+{
+  "candidate_proposals": [
+    {
+      "blocked_reason": "Existing cited public evidence supports candidate-window reconstruction only, not exact operation-level date/timestamp/fill/exit/size/account proof.",
+      "case_id": "MLUK-SOFI-PULLBACK-PDH-001",
+      "cited_public_evidence_currently_available": [
+        {
+          "detail": "transcript idx 459-467 describes SOFI move from about 7 to 11/12, three-day pullback near 9 EMA, prior-day-high entry, day-low stop, 6R trim, and exit below 9 EMA into December",
+          "source_id": "lilys_traderlion_2024_transcript"
+        }
+      ],
+      "current_source_ids": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "existing_source_ledger_entries": [
+        {
+          "confidence": "medium_high",
+          "current_use": "Provides detailed 2024 rules and trade examples: swing holding horizon, EMA/dollar-volume/AVWAP indicators, ADR filters, ORH/IRH entries, stop logic, trims and 9/21/50 EMA trailing, scanners, SMCI/COIN/GME/AMC/SOFI/Lemonade cases.",
+          "source_id": "lilys_traderlion_2024_transcript",
+          "type": "interview_transcript_and_summary",
+          "url": "https://lilys.ai/ko/notes/887808"
+        }
+      ],
+      "missing_primary_evidence_fields": [
+        "exact date",
+        "entry fill",
+        "partial fill",
+        "final exit fill",
+        "account equity"
+      ],
+      "proposal": "Search for or add only newly cited public primary/source-near evidence that directly closes one or more missing fields; otherwise keep source-ledger and public-date-reconstruction unchanged.",
+      "public_date_reconstruction_action": "no_direct_update_keep_reconstructed_candidate_not_exact_fill",
+      "row_id": "p5-public-sofi",
+      "source_ledger_action": "no_direct_update_existing_sources_do_not_close_missing_primary_fields",
+      "symbol": "SOFI"
+    },
+    {
+      "blocked_reason": "Existing cited public evidence supports candidate-window reconstruction only, not exact operation-level date/timestamp/fill/exit/size/account proof.",
+      "case_id": "MLUK-AMC-ORH-REENTRY-002",
+      "cited_public_evidence_currently_available": [
+        {
+          "detail": "transcript idx 443-458 describes AMC, a first 5m ORH stopout, inside-day/range re-entry, roughly 3.22% stop, 170% move from entry, 100% premarket strength, and 9.50/10 area resistance trim",
+          "source_id": "lilys_traderlion_2024_transcript"
+        }
+      ],
+      "current_source_ids": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "existing_source_ledger_entries": [
+        {
+          "confidence": "medium_high",
+          "current_use": "Provides detailed 2024 rules and trade examples: swing holding horizon, EMA/dollar-volume/AVWAP indicators, ADR filters, ORH/IRH entries, stop logic, trims and 9/21/50 EMA trailing, scanners, SMCI/COIN/GME/AMC/SOFI/Lemonade cases.",
+          "source_id": "lilys_traderlion_2024_transcript",
+          "type": "interview_transcript_and_summary",
+          "url": "https://lilys.ai/ko/notes/887808"
+        }
+      ],
+      "missing_primary_evidence_fields": [
+        "exact first attempt timestamp",
+        "re-entry timestamp",
+        "stop adjustment timestamps",
+        "all exits"
+      ],
+      "proposal": "Search for or add only newly cited public primary/source-near evidence that directly closes one or more missing fields; otherwise keep source-ledger and public-date-reconstruction unchanged.",
+      "public_date_reconstruction_action": "no_direct_update_keep_reconstructed_candidate_not_exact_fill",
+      "row_id": "p5-public-amc",
+      "source_ledger_action": "no_direct_update_existing_sources_do_not_close_missing_primary_fields",
+      "symbol": "AMC"
+    },
+    {
+      "blocked_reason": "Existing cited public evidence supports candidate-window reconstruction only, not exact operation-level date/timestamp/fill/exit/size/account proof.",
+      "case_id": "MLUK-COIN-BTC-INSIDEDAY-003",
+      "cited_public_evidence_currently_available": [
+        {
+          "detail": "transcript idx 360-366 describes COIN bought near low-of-day reclaim while Bitcoin formed an inside-day/prior-high breakout context",
+          "source_id": "lilys_traderlion_2024_transcript"
+        },
+        {
+          "detail": "secondary article corroborates a COIN trade with entry around 117, 2% stop, and about 20R/40% gain; used only as corroboration",
+          "source_id": "financialwisdom_martin_luk_strategy"
+        }
+      ],
+      "current_source_ids": [
+        "lilys_traderlion_2024_transcript",
+        "financialwisdom_martin_luk_strategy"
+      ],
+      "existing_source_ledger_entries": [
+        {
+          "confidence": "medium_high",
+          "current_use": "Provides detailed 2024 rules and trade examples: swing holding horizon, EMA/dollar-volume/AVWAP indicators, ADR filters, ORH/IRH entries, stop logic, trims and 9/21/50 EMA trailing, scanners, SMCI/COIN/GME/AMC/SOFI/Lemonade cases.",
+          "source_id": "lilys_traderlion_2024_transcript",
+          "type": "interview_transcript_and_summary",
+          "url": "https://lilys.ai/ko/notes/887808"
+        },
+        {
+          "confidence": "medium_low",
+          "current_use": "Secondary synthesis of scans, ADR, opening range, EMA convergence, risk controls, and example case studies. Use as corroboration only, not sole rule source.",
+          "source_id": "financialwisdom_martin_luk_strategy",
+          "type": "secondary_strategy_article",
+          "url": "https://www.financialwisdomtv.com/post/martin-luk-s-1358-swing-trading-strategy-from-gamestop-blow-up-to-us-investing-champion"
+        }
+      ],
+      "missing_primary_evidence_fields": [
+        "exact BTC context timestamp",
+        "entry/exit fills",
+        "position size"
+      ],
+      "proposal": "Search for or add only newly cited public primary/source-near evidence that directly closes one or more missing fields; otherwise keep source-ledger and public-date-reconstruction unchanged.",
+      "public_date_reconstruction_action": "no_direct_update_keep_reconstructed_candidate_not_exact_fill",
+      "row_id": "p5-public-coin",
+      "source_ledger_action": "no_direct_update_existing_sources_do_not_close_missing_primary_fields",
+      "symbol": "COIN"
+    },
+    {
+      "blocked_reason": "Existing cited public evidence supports candidate-window reconstruction only, not exact operation-level date/timestamp/fill/exit/size/account proof.",
+      "case_id": "MLUK-LMND-HIGHTIGHTFLAG-004",
+      "cited_public_evidence_currently_available": [
+        {
+          "detail": "transcript idx 514-530 describes Lemonade high-tight flag, repeated inside days, prior-day-high breakout, 2.5%-3% stop, 8R partial, and volume-driven strength exit",
+          "source_id": "lilys_traderlion_2024_transcript"
+        }
+      ],
+      "current_source_ids": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "existing_source_ledger_entries": [
+        {
+          "confidence": "medium_high",
+          "current_use": "Provides detailed 2024 rules and trade examples: swing holding horizon, EMA/dollar-volume/AVWAP indicators, ADR filters, ORH/IRH entries, stop logic, trims and 9/21/50 EMA trailing, scanners, SMCI/COIN/GME/AMC/SOFI/Lemonade cases.",
+          "source_id": "lilys_traderlion_2024_transcript",
+          "type": "interview_transcript_and_summary",
+          "url": "https://lilys.ai/ko/notes/887808"
+        }
+      ],
+      "missing_primary_evidence_fields": [
+        "exact split-adjusted prices",
+        "partial size",
+        "volume climax timestamp"
+      ],
+      "proposal": "Search for or add only newly cited public primary/source-near evidence that directly closes one or more missing fields; otherwise keep source-ledger and public-date-reconstruction unchanged.",
+      "public_date_reconstruction_action": "no_direct_update_keep_reconstructed_candidate_not_exact_fill",
+      "row_id": "p5-public-lmnd",
+      "source_ledger_action": "no_direct_update_existing_sources_do_not_close_missing_primary_fields",
+      "symbol": "LMND"
+    },
+    {
+      "blocked_reason": "Existing cited public evidence supports candidate-window reconstruction only, not exact operation-level date/timestamp/fill/exit/size/account proof.",
+      "case_id": "MLUK-SMCI-WEEKLYBASE-005",
+      "cited_public_evidence_currently_available": [
+        {
+          "detail": "transcript idx 312-336 describes SMCI, watchlist from December 2023, six-month weekly base from August, tight January 2024 candles after failed December breakouts, nonoptimal entry, and preferred prior-day-high breakout",
+          "source_id": "lilys_traderlion_2024_transcript"
+        }
+      ],
+      "current_source_ids": [
+        "lilys_traderlion_2024_transcript"
+      ],
+      "existing_source_ledger_entries": [
+        {
+          "confidence": "medium_high",
+          "current_use": "Provides detailed 2024 rules and trade examples: swing holding horizon, EMA/dollar-volume/AVWAP indicators, ADR filters, ORH/IRH entries, stop logic, trims and 9/21/50 EMA trailing, scanners, SMCI/COIN/GME/AMC/SOFI/Lemonade cases.",
+          "source_id": "lilys_traderlion_2024_transcript",
+          "type": "interview_transcript_and_summary",
+          "url": "https://lilys.ai/ko/notes/887808"
+        }
+      ],
+      "missing_primary_evidence_fields": [
+        "exact date",
+        "actual premature exit",
+        "would-have-held benchmark"
+      ],
+      "proposal": "Search for or add only newly cited public primary/source-near evidence that directly closes one or more missing fields; otherwise keep source-ledger and public-date-reconstruction unchanged.",
+      "public_date_reconstruction_action": "no_direct_update_keep_reconstructed_candidate_not_exact_fill",
+      "row_id": "p5-public-smci",
+      "source_ledger_action": "no_direct_update_existing_sources_do_not_close_missing_primary_fields",
+      "symbol": "SMCI"
+    }
+  ],
+  "control_gap_policy": "The 20 Phase 5.6 gap rows are controls; do not add source-ledger/public-date-reconstruction entries for them unless future cited public evidence proves the row itself is a public operation.",
+  "direct_public_date_reconstruction_updates": [],
+  "direct_source_ledger_updates": [],
+  "generated_at": "2026-05-02T03:31:00+00:00",
+  "no_overclaim_boundary": "No source-ledger or public-date-reconstruction field is upgraded by this artifact. Existing cited sources remain candidate-window evidence only; exact dates, timestamps, fills, exits, sizes, and account context remain insufficient_evidence until new cited public primary evidence is added.",
+  "overall_decision": "proposal_only_no_source_ledger_or_public_date_reconstruction_update",
+  "proposal_policy": {
+    "allowed": "Add or update source-ledger/public-date-reconstruction only when cited public evidence directly supports a specific missing field.",
+    "current_result": "No direct canonical source/date updates are made in this task.",
+    "not_allowed": "Do not infer exact dates/fills/labels from daily bars, diagnostic controls, generic strategy descriptions, or uncited assumptions."
+  },
+  "schema_version": "martinluk_phase5_7_source_date_proposals_v1",
+  "scope": "Evidence-gated source-ledger/public-date-reconstruction proposals for Phase 5.7.",
+  "source_artifacts": {
+    "specs/004-martinluk-primitive/phase5-7-missing-primary-evidence-map.json": "8c347e316cf58a1c02d2358784b22b7e16f6217c3eea7ae450d34a27d9351e44",
+    "specs/004-martinluk-primitive/phase5-7-public-evidence-upgrade-plan.json": "6e1cfcabdbad288aaf1bcfc2160864e0a76e5ccda231b99e0c22d45c913cf8b8",
+    "specs/004-martinluk-primitive/public-date-reconstruction.md": "a6c652e9a6963d261287dfdb3f4b78091fcbcf03b5b56ecf70a0525d41f96150",
+    "specs/004-martinluk-primitive/public-operation-cases.json": "793017d0e66d96f8de4d429b4a3cf005792dd16f0cf23adecac8c3f96b08c3c3",
+    "specs/004-martinluk-primitive/source-ledger.json": "55919c835ba3467f9534206aeb4650752dbd95a5bf04f0bf23118cace824839a"
+  },
+  "t020_state": "- [ ] T020 Launch bounded autoresearch only after validator, focused tests, and replay gates pass"
+}
