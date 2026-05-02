@@ -1,0 +1,119 @@
+{
+  "schema_version": "martinluk_phase4_base_strategy_verification_v1",
+  "generated_at": "2026-05-02T06:45:00Z",
+  "scope": "Phase 4 MartinLuk primitive base strategy verification",
+  "strategy_surface": "src/strategies/active_strategy.py",
+  "test_surface": "tests/unit/test_strategy_interface.py",
+  "replication_boundary": {
+    "target": "public_operation_reproducibility",
+    "not_target": [
+      "private-account replication",
+      "exact-fill replication",
+      "profit proof",
+      "broad historical validity"
+    ]
+  },
+  "gitnexus_pre_edit_impact": {
+    "TradingStrategy": {
+      "risk": "HIGH",
+      "direct_callers": 20,
+      "note": "No strategy code edit was required in this verification pass."
+    },
+    "TradingStrategy.generate_signal_series": {
+      "risk": "LOW",
+      "direct_callers": 1,
+      "affected_process": "generate_signals"
+    }
+  },
+  "verification_results": [
+    {
+      "name": "strategy_interface_unit_tests",
+      "command": "uv run pytest tests/unit/test_strategy_interface.py -q --import-mode=importlib",
+      "status": "passed",
+      "evidence": "36 passed in 1.76s",
+      "covers_tasks": ["T013", "T014", "T015"]
+    },
+    {
+      "name": "martinluk_focused_unit_tests",
+      "command": "uv run pytest tests/unit/test_martinluk_public_validator.py tests/unit/test_martinluk_phase5_bounded_validation.py tests/unit/test_martinluk_phase5_bounded_replay.py tests/unit/test_martinluk_phase5_no_overclaim_boundaries.py tests/unit/test_martinluk_phase5_6_missing_field_taxonomy.py tests/unit/test_martinluk_phase5_7_public_evidence_plan.py tests/unit/test_martinluk_phase5_7_missing_primary_evidence_map.py tests/unit/test_martinluk_phase5_7_source_date_proposals.py tests/unit/test_martinluk_phase5_7_no_overclaim_closeout.py -q --import-mode=importlib",
+      "status": "passed",
+      "evidence": "118 passed in 0.22s",
+      "covers_tasks": ["T016", "T020_blocked_evidence"]
+    },
+    {
+      "name": "compile_and_json_validation",
+      "command": "uv run python -m py_compile src/strategies/active_strategy.py specs/004-martinluk-primitive/validate_public_cases.py specs/004-martinluk-primitive/run_phase5_bounded_validation.py specs/004-martinluk-primitive/run_phase5_bounded_replay.py && for f in specs/004-martinluk-primitive/*.json; do uv run python -m json.tool $f >/dev/null; done",
+      "status": "passed",
+      "evidence": "compile/json PASS"
+    },
+    {
+      "name": "active_strategy_phase4_trace_smoke",
+      "command": "PYTHONPATH=src uv run python - <<'PY' ... generate long+short smoke traces ... PY",
+      "status": "passed",
+      "evidence": {
+        "schema_version": "martinluk_public_signal_trace_v1",
+        "replication_target": "public_operation_reproducibility",
+        "signal_symbols": ["PHASE4LONG", "PHASE4SHORT"],
+        "directions": ["long", "short"],
+        "series_last": {"PHASE4LONG": 0.0, "PHASE4SHORT": 0.0},
+        "diagnostics_nested": false
+      },
+      "covers_tasks": ["T014", "T016"]
+    },
+    {
+      "name": "public_case_validator_fixture",
+      "command": "uv run python specs/004-martinluk-primitive/validate_public_cases.py --signals-path specs/004-martinluk-primitive/fixtures/signal-trace-public-cases-insufficient-evidence.json",
+      "status": "expected_insufficient_evidence",
+      "evidence": {
+        "cli_exit_code": 1,
+        "validator_status": "insufficient_evidence",
+        "classification_counts": {
+          "insufficient_evidence": 8,
+          "reproduced": 0,
+          "not_reproduced": 0,
+          "data_missing": 0
+        }
+      },
+      "covers_tasks": ["T016"],
+      "boundary_note": "This is the correct no-overclaim result while public primary evidence for exact dates/fills/account context is missing."
+    },
+    {
+      "name": "phase5_bounded_validation_check_only",
+      "command": "uv run python specs/004-martinluk-primitive/run_phase5_bounded_validation.py --check-only",
+      "status": "passed",
+      "evidence": {
+        "passed": true,
+        "executable_row_count": 25,
+        "public_replay_candidate_count": 5,
+        "adjacent_control_count": 10,
+        "null_control_count": 10,
+        "audit_row_count": 3,
+        "errors": [],
+        "warnings": []
+      },
+      "covers_tasks": ["T020_prerequisite_check"]
+    },
+    {
+      "name": "phase5_bounded_replay_check_only",
+      "command": "uv run python specs/004-martinluk-primitive/run_phase5_bounded_replay.py --check-only",
+      "status": "passed",
+      "evidence": {
+        "passed": true,
+        "errors": [],
+        "warnings": [],
+        "phase5_manifest_sha256": "cfc867254cf2ca731397395083903b63c8c60b804deb6949a502288d031ed725"
+      },
+      "covers_tasks": ["T020_prerequisite_check"]
+    }
+  ],
+  "task_outcomes": {
+    "T012": "complete: GitNexus impact analysis was run before considering strategy edits",
+    "T013": "complete: focused strategy-interface tests exist for leader universe, ORH entry, hard stop, and 9 EMA exit",
+    "T014": "complete: active_strategy.py implements bounded leader_pullback_orh behavior and validator trace side band",
+    "T015": "complete: focused strategy-interface tests pass",
+    "T016": "complete: public-case validator was run with the bounded insufficient-evidence trace fixture and interpreted as a no-overclaim gate",
+    "T020": "blocked: bounded validation/replay check-only gates pass, but public-case validator remains insufficient_evidence and primary public evidence is still missing for exact dates/fills/account context"
+  },
+  "overall_decision": "phase4_base_strategy_verified_t020_still_blocked",
+  "broad_autoresearch_allowed": false
+}

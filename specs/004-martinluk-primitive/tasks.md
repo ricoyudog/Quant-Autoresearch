@@ -38,11 +38,21 @@ exception; see `phase3-verification.md`. This is not a claim that
 
 ## Phase 4: Dry-Run Primitive Implementation
 
-- [ ] T012 Run GitNexus impact analysis for `src/strategies/active_strategy.py` symbols before editing
-- [ ] T013 Add failing strategy-interface tests for leader universe, ORH/IRH entry, hard stop, and 9 EMA exit
-- [ ] T014 Implement `leader_pullback_orh` behavior in `src/strategies/active_strategy.py`
-- [ ] T015 Run `pytest tests/unit/test_strategy_interface.py -q`
-- [ ] T016 Run `python3 specs/004-martinluk-primitive/validate_public_cases.py --signals-path <trace>`
+- [X] T012 Run GitNexus impact analysis for `src/strategies/active_strategy.py` symbols before editing
+- [X] T013 Add failing strategy-interface tests for leader universe, ORH/IRH entry, hard stop, and 9 EMA exit
+- [X] T014 Implement `leader_pullback_orh` behavior in `src/strategies/active_strategy.py`
+- [X] T015 Run `pytest tests/unit/test_strategy_interface.py -q`
+- [X] T016 Run `python3 specs/004-martinluk-primitive/validate_public_cases.py --signals-path <trace>`
+
+Phase 4 verification note (2026-05-02): T012-T016 are complete as bounded
+base-strategy verification. GitNexus impact analysis was run before any
+strategy-symbol edit consideration; no strategy code change was required in
+this pass. Focused strategy-interface tests passed (`36 passed`), MartinLuk
+focused validator/replay/no-overclaim tests passed (`118 passed`), compile/JSON
+validation passed, the active strategy emitted validator-compatible long/short
+smoke traces, and the public-case validator correctly stayed
+`insufficient_evidence` for missing primary dates/fills/account context. See
+`phase4-base-strategy-verification.md`.
 
 ## Phase 5: Bounded Validation and Replay Gate
 
@@ -54,8 +64,10 @@ exception; see `phase3-verification.md`. This is not a claim that
 Phase 5 closeout note: T017-T019 are complete as bounded dry-run evidence only.
 The report stays `research_only`/`promoted=false`, records zero market-data
 queries, and does not prove profit, exact fills, private-account replication, or
-broad historical validity. T020 remains blocked until later phases explicitly
-approve bounded autoresearch.
+broad historical validity. T020 remains blocked after the 2026-05-02 Phase 4
+base-strategy verification because public-case validator evidence remains
+`insufficient_evidence` for missing primary exact dates/fills/account context,
+even though bounded validation/replay check-only contracts pass.
 
 ## Phase 5.1: Bounded Data Replay
 
